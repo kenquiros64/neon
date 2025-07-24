@@ -1,0 +1,1 @@
+export type CounterMap = Record<string, number>;

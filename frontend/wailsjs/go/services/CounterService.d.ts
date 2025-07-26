@@ -4,4 +4,4 @@ import {models} from '../models';
 
 export function GetAllCountsFromToday():Promise<Array<models.Count>>;
 
-export function Increment(arg1:string):Promise<models.Count>;
+export function Increment(arg1:string,arg2:number):Promise<models.Count>;

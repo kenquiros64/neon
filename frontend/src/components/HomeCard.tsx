@@ -26,9 +26,13 @@ import {models} from "../../wailsjs/go/models";
 // IMAGES
 import routeLight from "../assets/images/route_light.svg";
 import routeDark from "../assets/images/route_dark.svg";
-import { to12HourFormat, to24HourFormat } from "../util/Helpers";
+import { to12HourFormat, to24HourFormat, calculateRemainingTime } from "../util/Helpers";
 
-const HomeCard: React.FC = () => {
+interface HomeCardProps {
+    onShowDialog?: (ticketType: 'normal' | 'gold') => void;
+}
+
+const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
     const {theme} = useTheme();
     const {
         selectedTime, setSelectedTime,
@@ -40,6 +44,26 @@ const HomeCard: React.FC = () => {
         incrementCount,
         getAllCounts,
     } = useTicketState();
+
+    // State for dynamic time updates
+    const [remainingTimeText, setRemainingTimeText] = React.useState<string>('');
+
+    // Update remaining time every minute
+    React.useEffect(() => {
+        const updateRemainingTime = () => {
+            if (selectedTime) {
+                setRemainingTimeText(calculateRemainingTime(selectedTime));
+            }
+        };
+
+        // Update immediately
+        updateRemainingTime();
+
+        // Update every minute
+        const interval = setInterval(updateRemainingTime, 60000);
+
+        return () => clearInterval(interval);
+    }, [selectedTime]);
 
     const handleChange = (event: SelectChangeEvent<string>) => {
         const timeString = event.target.value as string;
@@ -115,11 +139,19 @@ const HomeCard: React.FC = () => {
     };
 
     const handleGoldTicket = () => {
-        incrementCount(1, "gold");
+        if (onShowDialog) {
+            onShowDialog('gold');
+        } else {
+            incrementCount(1, "gold");
+        }
     }
 
-    const  handleNormalTicket = () => {
-        incrementCount(1, "normal");
+    const handleNormalTicket = () => {
+        if (onShowDialog) {
+            onShowDialog('normal');
+        } else {
+            incrementCount(1, "normal");
+        }
     }
 
     return (
@@ -151,7 +183,7 @@ const HomeCard: React.FC = () => {
                         </Typography>
                         <Box>
                             <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
-                                🕐 Sale en 15 minutos
+                                🕐 {remainingTimeText || 'Calculando...'}
                             </Typography>
                         </Box>
                     </Box>

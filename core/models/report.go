@@ -4,7 +4,7 @@ import "time"
 
 // Report represents a report in the database
 type Report struct {
-	ID              string     `json:"id" db:"id" goqu:"omitempty,skipinsert"`
+	ID              int64      `json:"id" db:"id" goqu:"omitempty,skipinsert"`
 	Username        string     `json:"username" db:"username" goqu:"omitempty"`
 	InitialCash     int        `json:"initial_cash" db:"initial_cash" goqu:"omitempty"`
 	FinalCash       *int       `json:"final_cash" db:"final_cash" goqu:"omitnil"`

@@ -193,7 +193,7 @@ func (d *Database) initTables() error {
 func (d *Database) createReportsTable() error {
 	query := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
-			id TEXT PRIMARY KEY,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			username TEXT NOT NULL,
 			initial_cash INTEGER NOT NULL,
 			final_cash INTEGER,
@@ -222,7 +222,7 @@ func (d *Database) createReportsTable() error {
 func (d *Database) createTicketsTable() error {
 	query := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
-			id TEXT PRIMARY KEY,
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			departure TEXT NOT NULL,
 			destination TEXT NOT NULL,
 			username TEXT NOT NULL,
@@ -231,7 +231,7 @@ func (d *Database) createTicketsTable() error {
 			fare INTEGER NOT NULL DEFAULT 0,
 			is_gold BOOLEAN NOT NULL DEFAULT 0,
 			is_null BOOLEAN NOT NULL DEFAULT 0,
-			report_id TEXT NOT NULL,
+			report_id INTEGER NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME,
 			FOREIGN KEY (report_id) REFERENCES %s(id) ON DELETE CASCADE

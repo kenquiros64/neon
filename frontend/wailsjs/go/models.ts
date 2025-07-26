@@ -92,7 +92,7 @@ export namespace models {
 	}
 	
 	export class Ticket {
-	    id: string;
+	    id: number;
 	    departure: string;
 	    destination: string;
 	    username: string;
@@ -102,7 +102,7 @@ export namespace models {
 	    id_number: string;
 	    is_gold: boolean;
 	    is_null: boolean;
-	    report_id: string;
+	    report_id: number;
 	    created_at: string;
 	    updated_at: string;
 	

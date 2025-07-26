@@ -49,3 +49,36 @@ export const nextDeparture = (route: models.Route, timetable: "normal" | "holida
         .sort((a: { minutes: number }, b: { minutes: number }) => a.minutes - b.minutes);
     return sortedTimes.length > 0 ? sortedTimes[0].time : times[0];
 };
+
+export const calculateRemainingTime = (selectedTime: models.Time) => {
+    const now = new Date();
+    const currentTime = new models.Time({
+        hour: now.getHours(),
+        minute: now.getMinutes(),
+    });
+    
+    const currentMinutes = toMinutesOfDay(currentTime);
+    const selectedMinutes = toMinutesOfDay(selectedTime);
+    
+    let diffMinutes = selectedMinutes - currentMinutes;
+    
+    // If the selected time is earlier than current time, it means it's for tomorrow
+    if (diffMinutes < 0) {
+        diffMinutes += 24 * 60; // Add 24 hours worth of minutes
+    }
+    
+    // Convert to hours and minutes
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+    
+    // Format the output
+    if (hours === 0 && minutes === 0) {
+        return "¡Ya es hora!";
+    } else if (hours === 0) {
+        return `Sale en ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+    } else if (minutes === 0) {
+        return `Sale en ${hours} hora${hours !== 1 ? 's' : ''}`;
+    } else {
+        return `Sale en ${hours}h ${minutes}m`;
+    }
+};

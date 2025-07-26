@@ -23,20 +23,31 @@ func (t *TicketService) startup(ctx context.Context) {
 	t.ctx = ctx
 }
 
-// AddTicket adds a ticket
-func (t *TicketService) AddTicket(ticket []models.Ticket) error {
+// AddTicket adds a ticket and returns the tickets with generated IDs
+func (t *TicketService) AddTicket(ticket []models.Ticket) ([]models.Ticket, error) {
 	repository := local.NewTicketRepository(t.ctx, t.localDB)
-	if err := repository.BulkAdd(ticket); err != nil {
-		return err
+	output, err := repository.BulkAdd(ticket)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return output, nil
 }
 
 // UpdateTickets updates tickets
 func (t *TicketService) UpdateTickets(tickets []models.Ticket) error {
 	repository := local.NewTicketRepository(t.ctx, t.localDB)
 	if err := repository.BulkUpdate(tickets); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteTickets deletes a bulk of tickets
+func (t *TicketService) DeleteTickets(tickets []models.Ticket) error {
+	repository := local.NewTicketRepository(t.ctx, t.localDB)
+	if err := repository.BulkDelete(tickets); err != nil {
 		return err
 	}
 

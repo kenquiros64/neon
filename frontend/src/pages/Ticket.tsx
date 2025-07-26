@@ -6,18 +6,20 @@ import NoReport from "../components/NoReport";
 import {useTicketState} from "../states/TicketState";
 import {toast} from "react-toastify";
 import {Avatar, Badge, Box, Grid, ListItemAvatar, TextField, Typography, CardMedia} from "@mui/material";
-import IconButton from "@mui/material/IconButton";
 import {People, QuestionMarkOutlined, TripOrigin, LocationOn, Route as RouteIcon, DirectionsBus, Star, LocalAtm} from "@mui/icons-material";
 import HomeCard from "../components/HomeCard";
 import Divider from "@mui/material/Divider";
+import TicketPurchaseDialog from "../components/TicketPurchaseDialog";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import routeList from "../assets/images/map.png";
 import stopList from "../assets/images/stop_list.svg";
 import ListItemText from "@mui/material/ListItemText";
-import { to12HourFormat, nextDeparture, fullRouteName } from "../util/Helpers";
+import { to12HourFormat, nextDeparture, fullRouteName, to24HourFormat } from "../util/Helpers";
 import {useTheme} from "../themes/ThemeProvider";
+import { AddTicket } from "../../wailsjs/go/services/TicketService";
+import { models } from "../../wailsjs/go/models";
 
 // IMAGES
 import routeLight from "../assets/images/route_light.svg";
@@ -26,6 +28,8 @@ import routeDark from "../assets/images/route_dark.svg";
 const Ticket: React.FC = () => {
     // const { report, checkReportStatus } = useReportState();
     const [showDialog, setShowDialog] = useState(false);
+    const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
+    const [purchaseTicketType, setPurchaseTicketType] = useState<'normal' | 'gold'>('normal');
     const {code, setCode, incrementCount} = useTicketState();
     const { user } = useAuthState();
     const {theme} = useTheme();
@@ -127,14 +131,80 @@ const Ticket: React.FC = () => {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === ' ') {
             e.preventDefault(); // Prevent space from being typed
-            // Sell regular ticket
-            incrementCount(1, "normal");
+            // Show dialog for regular ticket
+            setPurchaseTicketType('normal');
+            setShowPurchaseDialog(true);
         } else if (e.key === 'Enter') {
             e.preventDefault(); // Prevent form submission
-            // Sell gold ticket
-            incrementCount(1, "gold");
+            // Show dialog for gold ticket
+            setPurchaseTicketType('gold');
+            setShowPurchaseDialog(true);
         }
     };
+
+    const handlePurchaseConfirm = async (quantity: number, idNumber?: string) => {
+        try {
+            // Create ticket objects based on quantity
+            const ticketsToAdd: models.Ticket[] = [];
+            const currentSelectedStop = selectedRoute?.stops.find(stop => stop.code === selectedStopID);
+            
+            if (!currentSelectedStop || !selectedRoute || !selectedTime || !user) {
+                toast.error("Faltan datos para crear el ticket");
+                return;
+            }
+
+            for (let i = 0; i < quantity; i++) {
+                const ticket = new models.Ticket({
+                    id: 0, // Will be set by database
+                    departure: selectedRoute.departure,
+                    destination: selectedRoute.destination,
+                    username: user.username,
+                    stop: currentSelectedStop.name,
+                    time: to24HourFormat(selectedTime),
+                    fare: purchaseTicketType === 'gold' ? currentSelectedStop.gold_fare : currentSelectedStop.fare,
+                    id_number: idNumber || "",
+                    is_gold: purchaseTicketType === 'gold',
+                    is_null: false,
+                    report_id: 1,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+                ticketsToAdd.push(ticket);
+            }
+
+            // Save tickets to database
+            const savedTickets = await AddTicket(ticketsToAdd);
+            
+            // Only increment counts if database save was successful
+            incrementCount(quantity, purchaseTicketType);
+            
+            // Show success message
+            toast.success(`${quantity} ticket${quantity > 1 ? 's' : ''} guardado${quantity > 1 ? 's' : ''} exitosamente`);
+            
+            setShowPurchaseDialog(false);
+            
+            console.log("Tickets saved successfully:", savedTickets);
+            
+        } catch (error) {
+            console.error("Error saving tickets:", error);
+            toast.error("Error al guardar los tickets. No se modificaron los conteos.");
+            // Don't close dialog or increment counts on error
+        }
+    };
+
+    const handlePurchaseCancel = () => {
+        setShowPurchaseDialog(false);
+        // Refocus the input after dialog closes
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 100);
+    };
+
+    const handleShowDialogFromHomeCard = (ticketType: 'normal' | 'gold') => {
+        setPurchaseTicketType(ticketType);
+        setShowPurchaseDialog(true);
+    };
+
 
     useEffect(() => {
         if (routesLoading) {
@@ -218,7 +288,7 @@ const Ticket: React.FC = () => {
                     />
                 </Box>
                 <Box sx={{alignItems: "center", display: "flex", height: "100%"}}>
-                    <HomeCard/>
+                    <HomeCard onShowDialog={handleShowDialogFromHomeCard}/>
                 </Box>
             </Grid>
             <Divider sx={{height: "100%"}} orientation={"vertical"} flexItem/>
@@ -698,6 +768,17 @@ const Ticket: React.FC = () => {
                     })}
                 </List>
             </Grid>
+
+            {/* Ticket Purchase Dialog */}
+            <TicketPurchaseDialog
+                open={showPurchaseDialog}
+                onClose={handlePurchaseCancel}
+                onConfirm={handlePurchaseConfirm}
+                ticketType={purchaseTicketType}
+                route={selectedRoute}
+                stop={selectedRoute?.stops.find(stop => stop.code === selectedStopID) || null}
+                selectedTime={selectedTime}
+            />
         </Grid>;
 };
 

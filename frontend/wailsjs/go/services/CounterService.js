@@ -6,6 +6,6 @@ export function GetAllCountsFromToday() {
   return window['go']['services']['CounterService']['GetAllCountsFromToday']();
 }
 
-export function Increment(arg1) {
-  return window['go']['services']['CounterService']['Increment'](arg1);
+export function Increment(arg1, arg2) {
+  return window['go']['services']['CounterService']['Increment'](arg1, arg2);
 }

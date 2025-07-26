@@ -40,7 +40,7 @@ func (c *CounterService) GetAllCountsFromToday() ([]models.Count, error) {
 }
 
 // Increment increments the count for a given key
-func (c *CounterService) Increment(key string) (models.Count, error) {
+func (c *CounterService) Increment(key string, qty int) (models.Count, error) {
 	repository := local.NewCountRepository(c.localDB)
 	count, err := repository.FindByKey(key)
 	if err != nil {
@@ -50,7 +50,7 @@ func (c *CounterService) Increment(key string) (models.Count, error) {
 	if count == nil {
 		count = &models.Count{
 			Key:       key,
-			Value:     1,
+			Value:     qty,
 			LastReset: time.Now().Format(constants.DateLayout),
 		}
 		if err := repository.Insert(*count); err != nil {
@@ -59,7 +59,7 @@ func (c *CounterService) Increment(key string) (models.Count, error) {
 		return *count, nil
 	}
 
-	count.Value++
+	count.Value += qty
 	count.LastReset = time.Now().Format(constants.DateLayout)
 
 	if err := repository.Update(*count); err != nil {

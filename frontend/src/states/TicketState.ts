@@ -90,7 +90,7 @@ export const useTicketState = create<TicketState & Actions>()((set, get) => ({
 
         let key = generateCounterKey(route, stop, time, type === "gold");
 
-        Increment(key).then((count: models.Count) => {
+        Increment(key, qty).then((count: models.Count) => {
             // Update the current counts
             if (type === "gold") {
                 set({ currentGoldCount: count.value });

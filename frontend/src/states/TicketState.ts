@@ -1,14 +1,20 @@
 import {create} from "zustand/index";
 import {models} from "../../wailsjs/go/models";
 import {CounterMap} from "../models/CounterMap";
+import { fullRouteName, 
+    generateCounterKey, 
+    generateCounterPrefixesKeys, 
+    to24HourFormat 
+} from "../util/Helpers";
+import { GetAllCountsFromToday, Increment } from "../../wailsjs/go/services/CounterService";
 
 
 type TicketState = {
     // SELECTED
-    selectedRoute: models.Route | null;
-    selectedStop: models.Stop | null;
+    selectedRoute: models.Route;
+    selectedStop: models.Stop;
     selectedTimetable: 'normal' | 'holiday';
-    selectedTime: models.Time | null;
+    selectedTime: models.Time;
 
     // VALUES
     code: string;
@@ -28,14 +34,27 @@ type Actions = {
     incrementCount: (qty: number, type: "normal" | "gold") => void;
     getAllCounts: () => void;
     resetTicketState: () => void;
-    getCount: (stop: string) => number;
-    getStopCounts: () => void;
+    getCount: (stop: models.Stop) => number;
 }
 
 const initialState: TicketState = {
-    selectedRoute: null,
-    selectedStop: null,
-    selectedTime: null,
+    selectedRoute: {
+        departure: "",
+        destination: "",
+        stops: [],
+        timetable: [],
+        holiday_timetable: [],
+        id: [],
+        convertValues: () => {},
+    },
+    selectedStop: {
+        name: "",
+        code: "",
+        is_main: false,
+        fare: 0,
+        gold_fare: 0,
+    },
+    selectedTime: { hour: 0, minute: 0 },
     selectedTimetable: 'normal',
 
     code: "",
@@ -64,92 +83,67 @@ export const useTicketState = create<TicketState & Actions>()((set, get) => ({
     },
     incrementCount: (qty: number, type: "normal" | "gold") => {
         const stop = get().selectedStop;
-        if (!stop) {
-            return;
-        }
         const time = get().selectedTime;
-        if (!time) {
-            return;
-        }
         const route = get().selectedRoute;
-        if (!route) {
-            return;
-        }
 
         const routeTimeCounts = get().routeTimeCounts;
 
-        // let key = `${route.toKey()}-${stop.name.toLowerCase()}-${time.toShortString()}`;
-        // const original = key;
-        // if (type === "gold") {
-        //     key += "-gold";
-        // }
-        // invoke<number>("increment_stop_counter", { key, qty }).then((value: number) => {
-        //     if (type === "gold") {
-        //         set({ currentGoldCount: value });
-        //     } else {
-        //         set({ currentCount: value });
-        //     }
-        //     routeTimeCounts[original] = (routeTimeCounts[original] || 0) + qty;
-        // });
+        let key = generateCounterKey(route, stop, time, type === "gold");
+
+        Increment(key).then((count: models.Count) => {
+            // Update the current counts
+            if (type === "gold") {
+                set({ currentGoldCount: count.value });
+            } else {
+                set({ currentCount: count.value });
+            }
+            
+            const updatedRouteCounts = { ...routeTimeCounts };
+            updatedRouteCounts[key] = count.value;
+            set({ routeTimeCounts: updatedRouteCounts });
+        }).catch((error) => {
+            console.error("Error incrementing count:", error);
+        });
     },
     getAllCounts: () => {
-        let selectedRoute = get().selectedRoute;
-        let selectedTime = get().selectedTime;
-        if (!selectedRoute || !selectedTime) {
-            return;
-        }
+        GetAllCountsFromToday().then((counts: models.Count[]) => {
+            let counterMap: CounterMap = {};
+            for (let count of counts) {
+                console.log(`Code: ${count.key}, Count: ${count.value}, Last Reset: ${count.last_reset}`);
+                counterMap[count.key] = count.value;
+            }
+            set({ routeTimeCounts: counterMap });
+            
+            // Update current counts after loading all counts
+            const state = get();
+            const stop = state.selectedStop;
+            const route = state.selectedRoute;
+            const time = state.selectedTime;
 
-        // const prefixes = selectedRoute?.generateCounterKeys(selectedTime);
-        // invoke<CounterMap>("bulk_counts_by_prefixes", { prefixes }).then((counter: CounterMap) => {
-        //     for (let code in counter) {
-        //         console.log(`Code: ${code}, Count: ${counter[code]}`);
-        //     }
-        //     set({ routeTimeCounts: counter });
-        // });
+            if (route && stop && time) {
+                const key = generateCounterKey(route, stop, time, false);
+                const goldKey = generateCounterKey(route, stop, time, true);
+                
+                set({ 
+                    currentCount: counterMap[key] || 0,
+                    currentGoldCount: counterMap[goldKey] || 0
+                });
+            }
+        }).catch((error) => {
+            console.error("Error getting all counts:", error);
+        });
     },
-    getCount: (stop: string) => {
+    getCount: (stop: models.Stop) => {
         const time = get().selectedTime;
-        if (!time) {
-            return 0;
-        }
         const route = get().selectedRoute;
-        if (!route) {
-            return 0;
-        }
 
-        // const key = `${route.toKey()}-${stop.toLowerCase()}-${time.toShortString()}`;
-        // if (!key) {
-        //     return 0;
-        // }
-        // return get().routeTimeCounts[key] || 0;
-        return 0;
-    },
-    getStopCounts: () => {
-        const selectedRoute = get().selectedRoute;
-        if (!selectedRoute) {
-            return;
-        }
-        const time = get().selectedTime;
-        if (!time) {
-            return 0;
-        }
-        const stop = get().selectedStop?.name;
-        if (!stop) {
-            return 0;
-        }
+        const key = generateCounterKey(route, stop, time, false);
+        const goldKey = generateCounterKey(route, stop, time, true);
 
-        // const key = `${selectedRoute.toKey()}-${stop.toLowerCase()}-${time.toShortString()}`;
-        // invoke<CounterMap>("get_stop_counters", { key }).then((counter: CounterMap) => {
-        //     set({ currentGoldCount: 0 });
-        //     set({ currentCount: 0 });
-        //     for (let code in counter) {
-        //         if (code.endsWith("gold")) {
-        //             set({ currentGoldCount: counter[code] });
-        //         } else {
-        //             set({ currentCount: counter[code] });
-        //         }
-        //     }
-        // });
+        const count = get().routeTimeCounts[key] || 0;
+        const goldCount = get().routeTimeCounts[goldKey] || 0;
+        
+        return count + goldCount;
     },
     resetTicketState: () => {
         set(initialState)

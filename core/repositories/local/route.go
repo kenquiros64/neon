@@ -37,8 +37,8 @@ func (r *RouteRepository) All() ([]models.Route, error) {
 	routes := make([]models.Route, len(docs))
 	for i, doc := range docs {
 		var route models.Route
-		err = doc.Unmarshal(&route)
-		if err != nil {
+
+		if err = doc.Unmarshal(&route); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal route: %w", err)
 		}
 		routes[i] = route

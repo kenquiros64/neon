@@ -1,15 +1,12 @@
 import {create} from "zustand/index";
 import {models} from "../../wailsjs/go/models";
+import { GetRoutes } from "../../wailsjs/go/services/RouteService";
 
 type RoutesState = {
-    // LISTS
     routes: models.Route[];
 
-    // VALUES
-    loading: boolean;
-    error: string | null;
+    routesLoading: boolean;
 }
-
 
 type Actions = {
     fetchRoutes: () => void;
@@ -18,32 +15,21 @@ type Actions = {
 
 const initialState: RoutesState = {
     routes: [],
-    loading: true,
-    error: null,
+    routesLoading: true,
 }
 
 export const useRoutesState = create<RoutesState & Actions>()((set) => ({
     ...initialState,
     fetchRoutes: () => {
-        set({ loading: true });
-        // invoke<any[]>("fetch_routes").then((routes: any[]) => {
-
-        //     const parsedRoutes = routes.map((routeJson) => {
-        //         try {
-        //             return Route.fromJSON(routeJson);
-        //         } catch (e) {
-        //             return null;
-        //         }
-        //     }).filter((route): route is Route =>
-        //         route !== null && route.stops.length > 0 && route.timetable.length > 0 && route.holidayTimetable.length > 0
-        //     );
-
-        //     set({ routes: parsedRoutes, loading: false });
-        // }).catch((error: any) => {
-        //     set({ error: error.message, loading: false });
-        // });
+        set({ routesLoading: true });
+        GetRoutes().then((routes: models.Route[]) => {
+            set({ routes, routesLoading: false });
+        }).catch((error) => {
+            set({ routesLoading: false });
+        });
     },
     resetRoutesState: () => {
         set(initialState)
     },
 }))
+

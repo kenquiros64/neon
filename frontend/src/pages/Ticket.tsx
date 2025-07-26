@@ -5,26 +5,32 @@ import {useAuthState} from "../states/AuthState";
 import NoReport from "../components/NoReport";
 import {useTicketState} from "../states/TicketState";
 import {toast} from "react-toastify";
-import {Avatar, Badge, Box, Grid, ListItemAvatar, TextField, Typography} from "@mui/material";
+import {Avatar, Badge, Box, Grid, ListItemAvatar, TextField, Typography, CardMedia} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
-import {People, QuestionMarkOutlined} from "@mui/icons-material";
+import {People, QuestionMarkOutlined, TripOrigin, LocationOn, Route as RouteIcon, DirectionsBus, Star, LocalAtm} from "@mui/icons-material";
 import HomeCard from "../components/HomeCard";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
-import routeList from "../assets/images/route_list.png";
-import stopList from "../assets/images/stop_list.png";
+import routeList from "../assets/images/map.png";
+import stopList from "../assets/images/stop_list.svg";
 import ListItemText from "@mui/material/ListItemText";
+import { to12HourFormat, nextDeparture, fullRouteName } from "../util/Helpers";
+import {useTheme} from "../themes/ThemeProvider";
+
+// IMAGES
+import routeLight from "../assets/images/route_light.svg";
+import routeDark from "../assets/images/route_dark.svg";
 
 const Ticket: React.FC = () => {
     // const { report, checkReportStatus } = useReportState();
     const [showDialog, setShowDialog] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     const {code, setCode} = useTicketState();
     const { user } = useAuthState();
+    const {theme} = useTheme();
 
-    const {routes, loading, fetchRoutes, resetRoutesState} = useRoutesState();
+    const {routes, routesLoading, fetchRoutes, resetRoutesState} = useRoutesState();
     const {
         selectedRoute, setSelectedRoute,
         setSelectedStop,
@@ -33,11 +39,10 @@ const Ticket: React.FC = () => {
         resetTicketState,
         getCount,
         getAllCounts,
-        getStopCounts
     } = useTicketState();
     const { logout } = useAuthState();
-    const [selectedRouteId, setSelectedRouteId] = useState<String | null>(null);
-    const [selectedStopId, setSelectedStopId] = useState<String | null>(null);
+    const [selectedRouteID, setSelectedRouteID] = useState<String | null>(null);
+    const [selectedStopID, setSelectedStopID] = useState<String | null>(null);
 
     // const handleKeyDown = (event: { key: string; }) => {
     //     if (event.key === 'Enter') {
@@ -49,31 +54,29 @@ const Ticket: React.FC = () => {
     // };
 
     const handleSelect = (id: String) => {
-        setSelectedRouteId(id);
-        let r = routes.find((route) => {
-            const routeKey = `${route.departure.toLowerCase()}-${route.destination.toLowerCase()}`;
-            return routeKey === id;
+        setSelectedRouteID(id);
+        let route = routes.find((route) => {
+            return fullRouteName(route) === id;
         });
-        if (!r) {
+        if (!route) {
             return;
         }
 
-        setSelectedRoute(r);
+        setSelectedRoute(route);
 
-        const mainStop = r.stops?.find((stop) => stop.is_main);
+        const mainStop = route.stops?.find((stop) => stop.is_main);
         if (!mainStop) {
             return;
         }
 
         setSelectedStop(mainStop);
-        setSelectedStopId(mainStop.code);
-        // setSelectedTime(r.nextDeparture("normal"));
+        setSelectedStopID(mainStop.code);
+        setSelectedTime(nextDeparture(route, "normal"));
         getAllCounts();
-        getStopCounts();
     };
 
     const handleSelectStop = (id: String) => {
-        setSelectedStopId(id);
+        setSelectedStopID(id);
 
         const mainStop = selectedRoute?.stops.find((stop) => stop.code === id);
         if (!mainStop) {
@@ -81,7 +84,7 @@ const Ticket: React.FC = () => {
         }
 
         setSelectedStop(mainStop);
-        getStopCounts();
+        getAllCounts();
     };
 
     const handleInputCode = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,33 +107,35 @@ const Ticket: React.FC = () => {
         }
 
         setSelectedRoute(route);
-        setSelectedRouteId(`${route.departure.toLowerCase()}-${route.destination.toLowerCase()}`);
+        setSelectedRouteID(fullRouteName(route));
         setSelectedStop(stop);
-        setSelectedStopId(stop.code);
+        setSelectedStopID(stop.code);
         getAllCounts();
-        getStopCounts();
     }
 
     useEffect(() => {
-        if (routes.length > 0) {
-            let stopIndex = routes[0].stops.findIndex((stop) => stop.is_main);
-
-            setSelectedRoute(routes[0]);
-            setSelectedRouteId(`${routes[0].departure.toLowerCase()}-${routes[0].destination.toLowerCase()}`);
-            setSelectedTimetable("normal");
-            setSelectedStop(routes[0].stops[stopIndex]);
-            setSelectedStopId(routes[0].stops[stopIndex].code);
-
-            // setSelectedTime(routes[0].nextDeparture("normal"));
+        if (routesLoading) {
             return;
         }
-        if (!loading) {
+
+        if (routes.length === 0) {
             toast.info("No hay rutas disponibles");
             resetRoutesState();
             resetTicketState();
             logout();
+            return;
         }
-    }, [routes, setSelectedRoute, setSelectedTimetable, setSelectedStop]);
+
+        let stopIndex = routes[0].stops.findIndex((stop) => stop.is_main);
+
+        setSelectedRoute(routes[0]);
+        setSelectedRouteID(fullRouteName(routes[0]));
+        setSelectedTimetable("normal");
+        setSelectedStop(routes[0].stops[stopIndex]);
+        setSelectedStopID(routes[0].stops[stopIndex].code);
+        setSelectedTime(nextDeparture(routes[0], "normal"));
+        getAllCounts();
+    }, [routes, routesLoading]);
 
 
     // useEffect(() => {
@@ -139,6 +144,10 @@ const Ticket: React.FC = () => {
     //     });
     // }, [checkReportStatus]);
 
+    useEffect(() => {
+        console.log("FETCH ROUTES");
+        fetchRoutes();
+    }, []);
 
     // useEffect(() => {
     //     setIsLoading(false);
@@ -150,7 +159,7 @@ const Ticket: React.FC = () => {
     //     setShowDialog(false);
     // }, [report]);
 
-    return isLoading
+    return routesLoading
         ? null
         : showDialog ?
         <NoReport /> :
@@ -191,55 +200,189 @@ const Ticket: React.FC = () => {
                     overflowX: "hidden",
                 }}
             >
-                <List>
+                {/* Enhanced Route Information Box */}
+                {selectedRoute && (
+                    <Box
+                        sx={{
+                            backgroundColor: theme === "light" ? 'rgba(25, 118, 210, 0.08)' : 'rgba(144, 202, 249, 0.08)', 
+                            borderRadius: 0, 
+                            p: 2,
+                            minHeight: '140px',
+                            height: '140px',
+                            border: theme === "light" ? '1px solid rgba(25, 118, 210, 0.2)' : '1px solid rgba(144, 202, 249, 0.2)',
+                            borderLeft: 'none',
+                            borderRight: 'none',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}
+                    >
+                        {/* Route Header */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <RouteIcon color="primary" fontSize="small" />
+                                <Typography variant="body2" color="primary" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+                                    RUTA ACTIVA
+                                </Typography>
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ 
+                                backgroundColor: 'action.hover', 
+                                px: 1, 
+                                py: 0.3,
+                                borderRadius: 1,
+                                fontSize: '0.7rem'
+                            }}>
+                                {selectedRoute.stops.length || 0} PARADAS
+                            </Typography>
+                        </Box>
+
+                        {/* Route Content */}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                            }}
+                        >
+                            {/* Left Side - Route Image */}
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    minWidth: '80px',
+                                    height: '80px',
+                                }}
+                            >
+                                <CardMedia
+                                    component="img"
+                                    image={theme === "light" ? routeLight : routeDark}
+                                    title="route"
+                                    sx={{
+                                        height: 'auto',   
+                                        maxWidth: '70px',
+                                        objectFit: 'contain',
+                                    }}
+                                />
+                            </Box>
+
+                            {/* Right Side - Route Details */}
+                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
+                                {/* Departure */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                    <TripOrigin sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
+                                    <Box>
+                                        <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: "400", fontSize: '0.75rem', lineHeight: 1 }}>
+                                            Salida
+                                        </Typography>
+                                        <Typography variant="h6" sx={{ color: "text.primary", fontWeight: "700", lineHeight: 1 }}>
+                                            {selectedRoute.departure}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                {/* Destination */}
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <LocationOn sx={{ fontSize: 16, color: 'primary.main', mr: 1 }} />
+                                    <Box>
+                                        <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: "400", fontSize: '0.75rem', lineHeight: 1 }}>
+                                            Destino
+                                        </Typography>
+                                        <Typography variant="h6" sx={{ color: "text.primary", fontWeight: "700", lineHeight: 1 }}>
+                                            {selectedRoute.destination}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </Box>
+                    </Box>
+                )}
+
+                <List sx={{ p: 0, mt: 1 }}>
                     {routes.map((route) => {
-                        const routeKey = `${route.departure.toLowerCase()}-${route.destination.toLowerCase()}`;
+                        const routeKey = fullRouteName(route);
                         return (
-                            <ListItem key={routeKey} disablePadding>
+                            <ListItem key={routeKey} disablePadding sx={{ mb: 1 }}>
                                 <ListItemButton
                                     key={routeKey}
-                                    selected={routeKey === selectedRouteId}
+                                    selected={routeKey === selectedRouteID}
                                     onClick={() => handleSelect(routeKey)}
                                     sx={{
                                         cursor: "pointer",
-                                        padding: "16px", // Add spacing for a larger clickable area
-                                        display: "flex", // Ensure proper alignment
+                                        padding: "18px 20px", 
+                                        minHeight: "80px",
+                                        display: "flex",
                                         alignItems: "center",
+                                        borderRadius: 2,
+                                        margin: "0 8px",
+                                        backgroundColor: routeKey === selectedRouteID 
+                                            ? (theme === "light" ? 'rgba(25, 118, 210, 0.12)' : 'rgba(144, 202, 249, 0.12)')
+                                            : 'transparent',
+                                        border: routeKey === selectedRouteID 
+                                            ? (theme === "light" ? '2px solid rgba(25, 118, 210, 0.3)' : '2px solid rgba(144, 202, 249, 0.3)')
+                                            : '2px solid transparent',
+                                        transition: 'all 0.2s ease-in-out',
+                                        '&:hover': {
+                                            backgroundColor: routeKey === selectedRouteID 
+                                                ? (theme === "light" ? 'rgba(25, 118, 210, 0.16)' : 'rgba(144, 202, 249, 0.16)')
+                                                : (theme === "light" ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)'),
+                                            transform: 'translateY(-1px)',
+                                            boxShadow: theme === "light" 
+                                                ? '0 4px 12px rgba(0, 0, 0, 0.1)' 
+                                                : '0 4px 12px rgba(0, 0, 0, 0.3)',
+                                        },
+                                        boxShadow: routeKey === selectedRouteID 
+                                            ? (theme === "light" ? '0 2px 8px rgba(25, 118, 210, 0.2)' : '0 2px 8px rgba(144, 202, 249, 0.2)')
+                                            : 'none',
                                     }}
                                 >
                                     <ListItemAvatar>
                                         <Avatar
+                                            variant="rounded"
                                             src={routeList}
                                             sx={{
-                                                width: 56, // Larger width
-                                                height: 56, // Larger height
+                                                width: 56, 
+                                                height: 56,
+                                                borderRadius: 2,
+                                                border: routeKey === selectedRouteID 
+                                                    ? (theme === "light" ? '2px solid rgba(25, 118, 210, 0.3)' : '2px solid rgba(144, 202, 249, 0.3)')
+                                                    : '2px solid transparent',
                                             }}
                                         />
                                     </ListItemAvatar>
                                     <ListItemText
                                         primary={
-
                                             <Typography
-                                                variant="subtitle1" component={"span"}  sx={{ fontWeight:"600" }}
+                                                variant="subtitle1" 
+                                                component="span"  
+                                                sx={{ 
+                                                    fontWeight: 700,
+                                                    color: routeKey === selectedRouteID 
+                                                        ? 'primary.main' 
+                                                        : 'text.primary',
+                                                    fontSize: '1.1rem',
+                                                }}
                                             >
-                                                {`${route.departure}-${route.destination}`}
+                                                {fullRouteName(route)}
                                             </Typography>
                                         }
-                                        secondary={`Siguiente: ...`}
-                                        // secondary={`Siguiente: ${route.nextDeparture("normal").to12HourString()}`}
+                                        secondary={
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ 
+                                                    color: 'text.secondary',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: 500,
+                                                }}
+                                            >
+                                                🕐 Siguiente: {to12HourFormat(nextDeparture(route, "normal"))}
+                                            </Typography>
+                                        }
                                         sx={{
-                                            "& .MuiTypography-root": {
-                                                fontSize: "1.1rem", // Larger font size for both primary and secondary text
-                                            },
-                                            "& .MuiTypography-body2": {
-                                                fontSize: "1rem", // Customize secondary text size
-                                            },
-                                            marginLeft: 2, // Add spacing between text and avatar
+                                            marginLeft: 2,
                                         }}
                                     />
                                 </ListItemButton>
                             </ListItem>
-
                         );
                     })}
                 </List>
@@ -254,62 +397,240 @@ const Ticket: React.FC = () => {
                     overflowX: "hidden",
                 }}
             >
-                <List>
+                {/* Enhanced Stop Information Card */}
+                {selectedRoute && selectedStopID && (() => {
+                    const selectedStop = selectedRoute.stops.find(stop => stop.code === selectedStopID);
+                    if (!selectedStop) return null;
+                    
+                    return (
+                        <Box
+                            sx={{
+                                backgroundColor: theme === "light" ? 'rgba(76, 175, 80, 0.08)' : 'rgba(129, 199, 132, 0.08)', 
+                                borderRadius: 0, 
+                                p: 2,
+                                minHeight: '140px',
+                                height: '140px',
+                                border: theme === "light" ? '1px solid rgba(76, 175, 80, 0.2)' : '1px solid rgba(129, 199, 132, 0.2)',
+                                borderLeft: 'none',
+                                borderRight: 'none',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                            }}
+                        >
+                            {/* Stop Header */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 4 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <DirectionsBus color="success" fontSize="small" />
+                                    <Typography variant="body2" color="success.main" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+                                        PARADA ACTUAL
+                                    </Typography>
+                                </Box>
+                                
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    {selectedStop.is_main && (
+                                        <Typography variant="body2" color="warning.main" sx={{ 
+                                            backgroundColor: 'rgba(255, 193, 7, 0.1)', 
+                                            px: 1, 
+                                            py: 0.3, 
+                                            borderRadius: 1,
+                                            fontSize: '0.7rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5
+                                        }}>
+                                            <Star sx={{ fontSize: 12 }} />
+                                            PRINCIPAL
+                                        </Typography>
+                                    )}
+                                    
+                                    {(() => {
+                                        const currentIndex = selectedRoute.stops?.findIndex(
+                                            stop => stop.name === selectedStop.name
+                                        );
+                                        const totalStops = selectedRoute.stops?.length || 0;
+                                        
+                                        if (currentIndex !== -1 && totalStops > 0) {
+                                            return (
+                                                <Typography variant="body2" color="text.secondary" sx={{ 
+                                                    backgroundColor: 'action.hover', 
+                                                    px: 1, 
+                                                    py: 0.3, 
+                                                    borderRadius: 1,
+                                                    fontSize: '0.7rem'
+                                                }}>
+                                                    {currentIndex + 1} DE {totalStops}
+                                                </Typography>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
+                                </Box>
+                            </Box>
+
+                            {/* Stop Content */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                {/* Stop Name and Code */}
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="h4" color="text.primary" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+                                        {selectedStop.name}
+                                    </Typography>
+                                    {selectedStop.code && (
+                                        <Typography variant="body2" color="text.secondary" sx={{ 
+                                            fontWeight: 500, 
+                                            mt: 0.5,
+                                            opacity: 0.8
+                                        }}>
+                                            Código: {selectedStop.code}
+                                        </Typography>
+                                    )}
+                                </Box>
+
+                                {/* Fare Preview */}
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    flexDirection: 'column', 
+                                    alignItems: 'flex-end',
+                                    gap: 0.5,
+                                    ml: 2
+                                }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <LocalAtm sx={{ fontSize: 16, color: 'text.secondary' }} />
+                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                                            Tarifas
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <Typography variant="body2" sx={{ 
+                                            color: '#FBC02D', 
+                                            fontWeight: 600,
+                                            fontSize: '0.9rem'
+                                        }}>
+                                            ₡{selectedStop.gold_fare}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ 
+                                            color: 'secondary.main', 
+                                            fontWeight: 600,
+                                            fontSize: '0.9rem'
+                                        }}>
+                                            ₡{selectedStop.fare}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </Box>
+                    );
+                })()}
+
+                <List sx={{ p: 0, mt: 1 }}>
                     {selectedRoute?.stops.map((stop) => {
+                        const isSelected = stop.code === selectedStopID;
+                        const passengerCount = getCount(stop);
+                        
                         return (
-                            <ListItem key={stop.code} disablePadding>
+                            <ListItem key={stop.code} disablePadding sx={{ mb: 1 }}>
                                 <ListItemButton
                                     key={stop.code}
-                                    selected={stop.code === selectedStopId}
+                                    selected={isSelected}
                                     onClick={() => handleSelectStop(stop.code)}
                                     sx={{
                                         cursor: "pointer",
                                         display: "flex",
-                                        justifyContent: "space-between", // Space out content
-                                        alignItems: "center", // Center vertically
-                                        padding: "16px", // Increase padding for more space
+                                        justifyContent: "space-between", 
+                                        alignItems: "center", 
+                                        padding: "18px 20px",
+                                        minHeight: "80px",
+                                        borderRadius: 2,
+                                        margin: "0 8px",
+                                        backgroundColor: isSelected 
+                                            ? (theme === "light" ? 'rgba(76, 175, 80, 0.12)' : 'rgba(129, 199, 132, 0.12)')
+                                            : 'transparent',
+                                        border: isSelected 
+                                            ? (theme === "light" ? '2px solid rgba(76, 175, 80, 0.3)' : '2px solid rgba(129, 199, 132, 0.3)')
+                                            : '2px solid transparent',
+                                        transition: 'all 0.2s ease-in-out',
+                                        '&:hover': {
+                                            backgroundColor: isSelected 
+                                                ? (theme === "light" ? 'rgba(76, 175, 80, 0.16)' : 'rgba(129, 199, 132, 0.16)')
+                                                : (theme === "light" ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)'),
+                                            transform: 'translateY(-1px)',
+                                            boxShadow: theme === "light" 
+                                                ? '0 4px 12px rgba(0, 0, 0, 0.1)' 
+                                                : '0 4px 12px rgba(0, 0, 0, 0.3)',
+                                        },
+                                        boxShadow: isSelected 
+                                            ? (theme === "light" ? '0 2px 8px rgba(76, 175, 80, 0.2)' : '0 2px 8px rgba(129, 199, 132, 0.2)')
+                                            : 'none',
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                                    <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
                                         <ListItemAvatar>
                                             <Avatar
+                                                variant="rounded"
                                                 src={stopList}
                                                 sx={{
-                                                    width: 56, // Larger width
-                                                    height: 56, // Larger height
+                                                    width: 56, 
+                                                    height: 56,
+                                                    borderRadius: 2,
+                                                    border: isSelected 
+                                                        ? (theme === "light" ? '2px solid rgba(76, 175, 80, 0.3)' : '2px solid rgba(129, 199, 132, 0.3)')
+                                                        : '2px solid transparent',
                                                 }}
                                             />
                                         </ListItemAvatar>
                                         <ListItemText
                                             primary={
                                                 <Typography
-                                                    variant="subtitle1" component={"span"}  sx={{ fontWeight:"600" }}
+                                                    variant="subtitle1" 
+                                                    component="span"  
+                                                    sx={{ 
+                                                        fontWeight: 700,
+                                                        color: isSelected 
+                                                            ? 'success.main' 
+                                                            : 'text.primary',
+                                                        fontSize: '1.1rem',
+                                                    }}
                                                 >
                                                     {stop.name}
+                                                    {stop.is_main && (
+                                                        <Typography 
+                                                            component="span" 
+                                                            sx={{ 
+                                                                ml: 1, 
+                                                                color: '#FBC02D', 
+                                                                fontSize: '1rem',
+                                                            }}
+                                                        >
+                                                            ⭐
+                                                        </Typography>
+                                                    )}
                                                 </Typography>
                                             }
                                             secondary={
-                                                <>
-                                                    Código: <Typography variant="body2" component={"span"} sx={{ fontWeight:"600" }}>
-                                                    {stop.code}
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{ 
+                                                        color: 'text.secondary',
+                                                        fontSize: '0.9rem',
+                                                        fontWeight: 500,
+                                                    }}
+                                                >
+                                                    📍 Código: <Typography component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                                                        {stop.code}
+                                                    </Typography>
                                                 </Typography>
-                                                </>
                                             }
                                             sx={{
-                                                "& .MuiTypography-root": {
-                                                    fontSize: "1.1rem", // Larger font size for both primary and secondary text
-                                                },
-                                                "& .MuiTypography-body2": {
-                                                    fontSize: "1rem", // Customize secondary text size
-                                                },
-                                                marginLeft: 2, // Add spacing between text and avatar
+                                                marginLeft: 2, 
                                             }}
                                         />
                                     </Box>
+                                    
+                                    {/* Passenger Count Badge */}
                                     <Badge
                                         showZero
                                         color="secondary"
-                                        badgeContent={getCount(stop.name)}
+                                        badgeContent={passengerCount}
                                         anchorOrigin={{
                                             vertical: 'top',
                                             horizontal: 'right',
@@ -317,18 +638,28 @@ const Ticket: React.FC = () => {
                                         max={99}
                                         sx={{
                                             "& .MuiBadge-badge": {
-                                                color: "#292929",
-                                                minWidth: "25px",
-                                                height: "25px",
+                                                backgroundColor: isSelected ? 'success.main' : 'secondary.main',
+                                                color: "#fff",
+                                                minWidth: "28px",
+                                                height: "28px",
                                                 fontSize: "14px",
+                                                fontWeight: 700,
                                                 borderRadius: "50%",
                                                 lineHeight: "20px",
                                                 padding: "0",
+                                                border: '2px solid white',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
                                             },
                                             mr: 2,
                                         }}
                                     >
-                                        <People fontSize={"large"} color="action"/>
+                                        <People 
+                                            fontSize="large" 
+                                            sx={{ 
+                                                color: isSelected ? 'success.main' : 'action.active',
+                                                fontSize: '2rem'
+                                            }}
+                                        />
                                     </Badge>
                                 </ListItemButton>
                             </ListItem>

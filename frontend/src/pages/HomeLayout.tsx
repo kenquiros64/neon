@@ -87,19 +87,13 @@ const HomeLayout: React.FC = () => {
             >
               <MenuIcon />
             </IconButton>
-            <Typography   component="div">
+            <Typography variant="h5" component="div">
               {pageTitle}
             </Typography>
           </Box>
           {/* Right: username, time, and switch */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            {/* Switch Button */}
-            <ThemeSwitch
-                checked={theme === "dark"}
-                onChange={toggleTheme}
-                inputProps={{ "aria-label": "theme toggle" }}
-            />
-            <Divider orientation="vertical" flexItem />
+           
             {/* Username */}
             <Typography variant="body1">
               <span style={{ fontWeight: 200 }}>Bienvenido(a)</span>{" "}
@@ -108,6 +102,13 @@ const HomeLayout: React.FC = () => {
             <Divider orientation="vertical" flexItem />
             {/* Current Time */}
             <Typography variant="body1">{currentTime}</Typography>
+            <Divider orientation="vertical" flexItem />
+             {/* Switch Button */}
+             <ThemeSwitch
+                checked={theme === "dark"}
+                onChange={toggleTheme}
+                aria-label="theme toggle"
+            />
           </Box>
         </Toolbar>
       </HomeAppBar>

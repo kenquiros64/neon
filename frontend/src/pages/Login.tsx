@@ -12,22 +12,9 @@ import CssBaseline from "@mui/material/CssBaseline";
 import {ArrowForward} from "@mui/icons-material";
 import {useAuthState} from "../states/AuthState";
 import {toast} from "react-toastify";
-import { ErrorResponse } from "../models/ErrorResponse";
 
-import {SyncUsers} from "../../wailsjs/go/services/SyncService";
-
-// import {listen} from "@tauri-apps/api/event";
-// import {invoke} from "@tauri-apps/api/core";
-// import {ErrorResponse} from "../models/ErrorResponse.ts";
-
-// Listen for the sync-finished event
-// listen<ErrorResponse>("sync-finished", (event) => {
-//     if (event.payload === null) {
-//         toast.success("Datos sincronizados correctamente");
-//     } else {
-//         toast.info("Datos no sincronizados");
-//     }
-// });
+import {SyncRoutes, SyncUsers} from "../../wailsjs/go/services/SyncService";
+import { loginErrorMessages } from "../util/ErrorMessages";
 
 const Login: React.FC = () => {
     const [username, setUsername] = useState("");
@@ -41,9 +28,17 @@ const Login: React.FC = () => {
 
     useEffect(() => {
         SyncUsers().then(() => {
-            toast.success("Datos sincronizados correctamente");
+            toast.success("Usuarios sincronizados correctamente");
         }).catch((error) => {
-            toast.error("Error al sincronizar los datos");
+            console.error("Error al sincronizar los usuarios:", error);
+            toast.error("Error al sincronizar los usuarios");
+        });
+
+        SyncRoutes().then(() => {
+            toast.success("Rutas sincronizadas correctamente");
+        }).catch((error) => {
+            console.error("Error al sincronizar las rutas:", error);
+            toast.error("Error al sincronizar las rutas");
         });
     }, []);
 
@@ -60,14 +55,14 @@ const Login: React.FC = () => {
         setLoading(true);
         login(username, password)
             .then(() => {
-                navigate("/home"); // Navigate to HomeLayout
+                navigate("/home");
             })
-            .catch((error: ErrorResponse) => {
-                if (error?.code === "USER_NOT_FOUND") {
-                    setInputError({username: error.message, password: ""});
+            .catch((error) => {
+                if (error === "USER_NOT_FOUND") {
+                    setInputError({username: loginErrorMessages[error], password: ""});
                 }
-                if (error?.code === "USER_INVALID_PASSWORD") {
-                    setInputError({username: "", password: error.message});
+                if (error === "USER_INVALID_PASSWORD") {
+                    setInputError({username: "", password: loginErrorMessages[error]});
                 }
             })
             .finally(() => {

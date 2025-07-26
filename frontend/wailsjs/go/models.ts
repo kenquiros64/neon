@@ -51,7 +51,7 @@ export namespace models {
 	    }
 	}
 	export class Route {
-	    id: string;
+	    id: number[];
 	    departure: string;
 	    destination: string;
 	    stops: Stop[];

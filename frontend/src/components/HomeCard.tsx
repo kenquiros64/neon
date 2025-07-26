@@ -1,6 +1,6 @@
 import React from "react";
 import {Box, Button, Card, CardContent, CardMedia, FormControl, MenuItem, Select, SelectChangeEvent, Typography} from "@mui/material";
-import bus1Icon from "../assets/images/bus1.png";
+import homecard from "../assets/images/homecard.jpg";
 import Divider from "@mui/material/Divider";
 import {
     AirlineSeatLegroomNormal,
@@ -8,6 +8,15 @@ import {
     ArrowDropUp,
     DepartureBoard,
     Elderly,
+    LocationOn,
+    TripOrigin,
+    Route as RouteIcon,
+    DirectionsBus,
+    Star,
+    LocalAtm,
+    People,
+    Add,
+    AccountBalanceWallet,
 } from "@mui/icons-material";
 import IconButton from "@mui/material/IconButton";
 import {useTheme} from "../themes/ThemeProvider";
@@ -15,8 +24,9 @@ import {useTicketState} from "../states/TicketState";
 import {models} from "../../wailsjs/go/models";
 
 // IMAGES
-import routeLight from "../assets/images/route_light.png";
-import routeDark from "../assets/images/route_dark.png";
+import routeLight from "../assets/images/route_light.svg";
+import routeDark from "../assets/images/route_dark.svg";
+import { to12HourFormat, to24HourFormat } from "../util/Helpers";
 
 const HomeCard: React.FC = () => {
     const {theme} = useTheme();
@@ -28,23 +38,31 @@ const HomeCard: React.FC = () => {
         currentCount,
         currentGoldCount,
         incrementCount,
-        getStopCounts,
         getAllCounts,
     } = useTicketState();
 
     const handleChange = (event: SelectChangeEvent<string>) => {
-        const value = event.target.value as string;
-        // const time = models.Time.from12HourString(value)
-
-        // setSelectedTime(time);
-        getAllCounts();
-        getStopCounts();
+        const timeString = event.target.value as string;
+        
+        // Find the corresponding Time object from the timetable
+        const timetable = selectedTimetable === 'normal'
+            ? selectedRoute?.timetable
+            : selectedRoute?.holiday_timetable;
+            
+        const selectedTimeObj = timetable?.find((time: models.Time) => 
+            to24HourFormat(time) === timeString
+        );
+        
+        if (selectedTimeObj) {
+            setSelectedTime(selectedTimeObj);
+            getAllCounts();
+        }
     };
 
     const handleIncrement = () => {
         const times = selectedTimetable === "normal"
-            ? selectedRoute?.timetable
-            : selectedRoute?.holiday_timetable;
+            ? selectedRoute.timetable
+            : selectedRoute.holiday_timetable;
 
         console.log("INCREASING")
         if (!times || times.length === 0) {
@@ -53,7 +71,7 @@ const HomeCard: React.FC = () => {
         }
 
         const currentIndex = times.findIndex((time: models.Time) => {
-            return  time.hour === selectedTime?.hour && time.minute === selectedTime?.minute;
+            return  time.hour === selectedTime.hour && time.minute === selectedTime.minute;
         });
 
         if (currentIndex === -1) {
@@ -64,7 +82,6 @@ const HomeCard: React.FC = () => {
         if (currentIndex < times.length - 1) {
             setSelectedTime(times[currentIndex + 1]);
             getAllCounts();
-            getStopCounts();
         } else {
             console.warn("Cannot increment: already at the last time");
         }
@@ -72,8 +89,8 @@ const HomeCard: React.FC = () => {
 
     const handleDecrement = () => {
         const times = selectedTimetable === "normal"
-            ? selectedRoute?.timetable
-            : selectedRoute?.holiday_timetable;
+            ? selectedRoute.timetable
+            : selectedRoute.holiday_timetable;
 
         if (!times || times.length === 0) {
             console.error("Times not found or empty");
@@ -81,7 +98,7 @@ const HomeCard: React.FC = () => {
         }
     
         const currentIndex = times.findIndex((time: models.Time) => {
-            return time.hour === selectedTime?.hour && time.minute === selectedTime?.minute;
+            return time.hour === selectedTime.hour && time.minute === selectedTime.minute;
         });
     
         if (currentIndex === -1) {
@@ -92,7 +109,6 @@ const HomeCard: React.FC = () => {
         if (currentIndex > 0) {
             setSelectedTime(times[currentIndex - 1]);
             getAllCounts();
-            getStopCounts();
         } else {
             console.warn("Cannot decremment: already at the first time");
         }
@@ -110,190 +126,263 @@ const HomeCard: React.FC = () => {
         <Card sx={{ borderRadius: 0, width: '100%', backgroundColor: theme === "light" ? '#FAFAFA' : 'default' }}>
             <CardMedia
                 component="img"
-                image={bus1Icon}
+                image={homecard}
                 title="bus"
-                sx={{ width: '50%', margin: 'auto', pt: 2 }}
+                sx={{ margin: 'auto', objectFit: 'contain', width: '95%', pt: 2 }}
             />
             <CardContent>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }}
-                >
-                    {/* Left Side - Image */}
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'left',
-                            alignItems: 'center',
-                            height: '100%', // Let the parent container grow dynamically
-                        }}
-                    >
-                        <CardMedia
-                            component="img"
-                            image={theme === "light" ? routeLight : routeDark}
-                            title="bus"
-                            sx={{
-                                height: 'auto', // Dynamically adjusts height
-                                width: '75%',   // Adjusts width based on parent size
-                                maxWidth: '200px', // Prevents it from growing too large
-                                minWidth: '50px',  // Prevents it from shrinking too small
-                                objectFit: 'contain', // Keeps image aspect ratio
-                                mt: 1,
-                                ml: 2,
-                            }}
-                        />
+                {/* Enhanced Schedule Section */}
+                <Box sx={{ 
+                    backgroundColor: theme === "light" ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)', 
+                    borderRadius: 2, 
+                    p: 2, 
+                    mt: 1
+                }}>
+                    {/* Schedule Header */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ 
+                                backgroundColor: 'action.hover', 
+                                px: 1.5, 
+                                py: 0.5, 
+                                borderRadius: 1,
+                                fontSize: '0.75rem'
+                            }}>
+                            {selectedTimetable === 'normal' ? 'HORARIO NORMAL' : 'HORARIO FERIADO'}
+                        </Typography>
+                        <Box>
+                            <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
+                                🕐 Sale en 15 minutos
+                            </Typography>
+                        </Box>
                     </Box>
 
-                    {/* Right Side - Text */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'left', width: '65%' }}>
-                        <Typography variant="h5" sx={{ mb:2, pb:3 , color: "text.secondary", fontWeight: "800" }}>
-                            {selectedRoute?.departure}
-                        </Typography>
-                        <Typography variant="h5" sx={{ color: "text.secondary", fontWeight: "800" }} >
-                            {selectedRoute?.destination}
-                        </Typography>
-                    </Box>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: "center" }}>
-                    <Typography variant="h3" color="primary" sx={{ textAlign:"center" }}>
-                        {selectedStop?.name}
-                    </Typography>
-                </Box>
-                <Divider sx={{ my: 2 }} />
-                <Box sx={{ display: 'flex', justifyContent: "center" }}>
-                    <Typography variant="h5" color="text.secondary" sx={{ textAlign:"center" }}>
-                        Horario Normal
-                    </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems:"center"  }}>
-                    <FormControl
-                        variant="standard"
-                        sx={{
-                            flexGrow: 1,
-                            borderRadius: 1,
-                            padding: "8px 12px",
-                            "&:hover": {
-                                borderColor: "primary.main",
-                                cursor: "pointer",
-                            },
-                            "& .MuiSelect-select": {
-                                display: "flex",
-                                alignItems: "center",
-                            },
-                        }}
-                    >
-                        <Select
-                            // value={
-                            //     selectedTime?.to12HourString()
-                            // }
-                            // key={selectedTime?.toShortString()}
-                            onChange={handleChange}
-                            displayEmpty
-                            renderValue={(time) => {
-                                return (
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <DepartureBoard fontSize="large" sx={{ mr: 1, color: 'gray', pb: 0.5 }} />
-                                        <Box sx={{ fontWeight: 'bold', fontSize: '2.3rem' }}>
-                                            {time}
-                                        </Box>
-                                    </Box>
-                                );
-                            }}
+                    {/* Time Selector */}
+                    <Box sx={{ display: 'flex', alignItems:"center"  }}>
+                        <FormControl
+                            variant="standard"
                             sx={{
-                                fontSize: '2.3rem',
-                                fontWeight: 'bold',
-                                '& .MuiSelect-icon': { display: 'none' }, // Hide default dropdown icon
+                                flexGrow: 1,
+                                borderRadius: 1,
+                                padding: "8px 12px",
+                                "&:hover": {
+                                    borderColor: "primary.main",
+                                    cursor: "pointer",
+                                },
+                                "& .MuiSelect-select": {
+                                    display: "flex",
+                                    alignItems: "center",
+                                },
                             }}
                         >
-                           {/* {(() => {
-                                const timetable =
-                                    selectedTimetable === 'normal'
-                                        ? selectedRoute?.timetable
-                                        : selectedRoute?.holiday_timetable;
+                            <Select
+                                value={to24HourFormat(selectedTime)}
+                                key={to24HourFormat(selectedTime)}
+                                onChange={handleChange}
+                                displayEmpty
+                                renderValue={(timeString: string) => {
+                                    return (
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <DepartureBoard fontSize="large" sx={{ mr: 1, color: "text.secondary", pb: 0.5 }} />
+                                            <Box sx={{ fontWeight: '500', fontSize: '2rem', color: "text.primary" }}>
+                                                {timeString ? to12HourFormat(selectedTime) : ""}
+                                            </Box>
+                                        </Box>
+                                    );
+                                }}
+                                sx={{
+                                    fontSize: '1.8rem',
+                                    '& .MuiSelect-icon': { display: 'none' }, // Hide default dropdown icon
+                                }}
+                            >
+                               {(() => {
+                                    const timetable =
+                                        selectedTimetable === 'normal'
+                                            ? selectedRoute.timetable
+                                            : selectedRoute.holiday_timetable;
 
-                                if (timetable?.length) {
-                                    return timetable.map((time: models.Time) => {
-                                        // const timeString = time.to12HourString();
-                                        // return (
-                                        //     <MenuItem key={time.toShortString()} value={timeString}>
-                                        //         {timeString}
-                                        //     </MenuItem>
-                                        // );
-                                    });
-                                } else {
-                                    return <MenuItem disabled>No times available</MenuItem>;
-                                }
-                            })()} */}
-                        </Select>
-                    </FormControl>
-                    <Box sx={{ display: 'flex', alignItems:"center", flexDirection:"column", ml:1 }}   >
-                        <IconButton onClick={handleDecrement} size="small" sx={{ paddingTop: "2px" }}>
-                            <ArrowDropUp fontSize="large" />
-                        </IconButton>
-                        <IconButton onClick={handleIncrement} size="small" sx={{ paddingBottom: "2px" }}>
-                            <ArrowDropDown fontSize="large" />
-                        </IconButton>
+                                    if (timetable?.length) {
+                                        return timetable.map((time: models.Time) => {
+                                            return (
+                                                <MenuItem key={to24HourFormat(time)} value={to24HourFormat(time)}>
+                                                    {to12HourFormat(time)}
+                                                </MenuItem>
+                                            );
+                                        });
+                                    } else {
+                                        return <MenuItem disabled>No times available</MenuItem>;
+                                    }
+                                })()}
+                            </Select>
+                        </FormControl>
+                        <Box sx={{ display: 'flex', alignItems:"center", flexDirection:"column", ml:1 }}   >
+                            <IconButton onClick={handleDecrement} size="medium" sx={{ padding: "2px", marginBottom: "-8px" }}>
+                                <ArrowDropUp fontSize="large" />
+                            </IconButton>
+                            <IconButton onClick={handleIncrement} size="medium" sx={{ padding: "2px", marginTop: "-8px" }}>
+                                <ArrowDropDown fontSize="large" />
+                            </IconButton>
+                        </Box>
                     </Box>
                 </Box>
             </CardContent>
 
+            {/* Enhanced Passenger Count Section */}
             <Box
                 sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-around',
-                    py: 2,
+                    backgroundColor: theme === "light" ? 'rgba(255, 152, 0, 0.08)' : 'rgba(255, 183, 77, 0.08)',
                     borderTop: '1px solid',
-                    borderColor: 'divider',
-                    backgroundColor: theme === "light" ? '#EEEEEE' : 'default'
+                    borderBottom: '1px solid',
+                    borderColor: theme === "light" ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 183, 77, 0.2)',
+                    py: 2,
+                    px: 2,
                 }}
             >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Elderly sx={{ color: "#FFC107" }} fontSize={"large"} />
-                    <Typography variant="h5" sx={{ fontWeight: '200' }}>{currentGoldCount}</Typography>
+                {/* Count Header */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <People color="warning" fontSize="small" />
+                        <Typography variant="body2" color="warning.main" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+                            CONTEO ACTUAL
+                        </Typography>
+                    </Box>
+                    
+                    <Typography variant="h6" color="text.primary" sx={{ 
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5
+                    }}>
+                        <People fontSize="small" />
+                        {currentCount + currentGoldCount} Total
+                    </Typography>
                 </Box>
-                <Divider orientation="vertical" flexItem />
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <AirlineSeatLegroomNormal color="secondary" fontSize={"large"} />
-                    <Typography variant="h5" sx={{ fontWeight: '200' }}>{currentCount}</Typography>
-                </Box>
-                <Divider orientation="vertical" flexItem />
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="h5" sx={{ fontWeight: '200' }}>Total:</Typography>
-                    <Typography variant="h5" sx={{ fontWeight:"bold" }}>{currentCount+currentGoldCount}</Typography>
+
+                {/* Count Details */}
+                <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gap: 2,
+                    alignItems: 'center'
+                }}>
+                    {/* Gold/Elderly Count */}
+                    <Box sx={{ 
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        borderRadius: 1.5,
+                        p: 1.5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Elderly sx={{ color: "#FFC107" }} fontSize="medium" />
+                            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.8rem' }}>
+                                Adulto Mayor
+                            </Typography>
+                        </Box>
+                        <Typography variant="h4" sx={{ fontWeight: 700, color: "#FFC107" }}>
+                            {currentGoldCount}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                            ₡{selectedStop.gold_fare} c/u
+                        </Typography>
+                    </Box>
+
+                    {/* Normal Count */}
+                    <Box sx={{ 
+                        backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                        borderRadius: 1.5,
+                        p: 1.5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <AirlineSeatLegroomNormal color="secondary" fontSize="medium" />
+                            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.8rem' }}>
+                                Regular
+                            </Typography>
+                        </Box>
+                        <Typography variant="h4" sx={{ fontWeight: 700, color: 'secondary.main' }}>
+                            {currentCount}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                            ₡{selectedStop.fare} c/u
+                        </Typography>
+                    </Box>
                 </Box>
             </Box>
+
+            {/* Enhanced Fare Buttons Section */}
             <Box
                 sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    borderTop: '1px solid',
-                    borderColor: 'divider',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: 0,
                     width: '100%'
                 }}
             >
+                {/* Gold Ticket Button */}
                 <Button
                     fullWidth
-                    size={"large"}
+                    size="large"
                     variant="contained"
-                    sx={{ fontSize: 20, py: 2, borderRadius: 0, backgroundColor: "#FBC02D" }}
+                    sx={{ 
+                        fontSize: 18, 
+                        py: 2.5, 
+                        borderRadius: 0,
+                        backgroundColor: "#FBC02D",
+                        color: '#000',
+                        fontWeight: 700,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.5,
+                        '&:hover': {
+                            backgroundColor: "#F9A825",
+                        }
+                    }}
                     onClick={handleGoldTicket}
                 >
-                    {/* ₡{selectedStop?.goldFare} */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Add fontSize="small" />
+                        <Elderly fontSize="small" />
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: 'inherit' }}>
+                        ₡{selectedStop.gold_fare}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.75rem', opacity: 0.8, color: 'inherit' }}>
+                        Adulto Mayor
+                    </Typography>
                 </Button>
+
+                {/* Normal Ticket Button */}
                 <Button
                     fullWidth
-                    size={"large"}
+                    size="large"
                     variant="contained"
                     color="secondary"
-                    sx={{ fontSize: 20, py: 2, borderRadius: 0 }}
+                    sx={{ 
+                        fontSize: 18, 
+                        py: 2.5, 
+                        borderRadius: 0,
+                        fontWeight: 700,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.5,
+                    }}
                     onClick={handleNormalTicket}
                 >
-                    ₡{selectedStop?.fare}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Add fontSize="small" />
+                        <AirlineSeatLegroomNormal fontSize="small" />
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: 'inherit' }}>
+                        ₡{selectedStop.fare}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.75rem', opacity: 0.8, color: 'inherit' }}>
+                        Tarifa Regular
+                    </Typography>
                 </Button>
             </Box>
         </Card>

@@ -20,11 +20,10 @@ func NewCounterService(localDB *embedded.CloverDB) *CounterService {
 	}
 }
 
-// GetAllCountsByKey returns all counts for a given key
-// If there are no counts, it clears the database and returns an empty slice
-func (c *CounterService) GetAllCountsByKey(key string) ([]models.Count, error) {
+// GetAllCountsFromToday returns all counts from today
+func (c *CounterService) GetAllCountsFromToday() ([]models.Count, error) {
 	repository := local.NewCountRepository(c.localDB)
-	counts, err := repository.FindAllByPrefixKey(key)
+	counts, err := repository.FindByDate(time.Now().Format(constants.DateLayout))
 	if err != nil {
 		return nil, err
 	}
@@ -41,11 +40,11 @@ func (c *CounterService) GetAllCountsByKey(key string) ([]models.Count, error) {
 }
 
 // Increment increments the count for a given key
-func (c *CounterService) Increment(key string) error {
+func (c *CounterService) Increment(key string) (models.Count, error) {
 	repository := local.NewCountRepository(c.localDB)
 	count, err := repository.FindByKey(key)
 	if err != nil {
-		return err
+		return *count, err
 	}
 
 	if count == nil {
@@ -54,9 +53,17 @@ func (c *CounterService) Increment(key string) error {
 			Value:     1,
 			LastReset: time.Now().Format(constants.DateLayout),
 		}
-		return repository.Insert(*count)
+		if err := repository.Insert(*count); err != nil {
+			return *count, err
+		}
+		return *count, nil
 	}
 
 	count.Value++
-	return repository.Update(*count)
+	count.LastReset = time.Now().Format(constants.DateLayout)
+
+	if err := repository.Update(*count); err != nil {
+		return *count, err
+	}
+	return *count, nil
 }

@@ -54,8 +54,7 @@ func (r *RouteRepository) Create(ctx context.Context, route *models.Route) error
 		return fmt.Errorf("route is nil")
 	}
 
-	route.ID = bson.NewObjectID().Hex()
-
+	route.ID = bson.NewObjectID()
 	_, err := r.collection.InsertOne(ctx, route)
 	if err != nil {
 		return fmt.Errorf("failed to create route: %w", err)

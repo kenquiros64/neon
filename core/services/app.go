@@ -40,10 +40,13 @@ func (a *App) Startup() {
 	routeService := NewRouteService(remotedb, cloverdb)
 	counterService := NewCounterService(cloverdb)
 
+	// repository := local.NewCountRepository(cloverdb)
+	// repository.Clear()
+
 	err := wails.Run(&options.App{
 		Title:     "neon",
-		MinWidth:  1024,
-		MinHeight: 768,
+		MinWidth:  1280,
+		MinHeight: 900,
 		AssetServer: &assetserver.Options{
 			Assets: a.assets,
 		},

@@ -1,6 +1,7 @@
 package local
 
 import (
+	"encoding/json"
 	"fmt"
 	"neon/core/constants"
 	"neon/core/database/connections/embedded"
@@ -67,23 +68,17 @@ func (c *CountRepository) FindByKey(key string) (*models.Count, error) {
 		return nil, nil
 	}
 
+	bytes, err := json.Marshal(doc.AsMap())
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal document to JSON: %w", err)
+	}
+
 	var count models.Count
-	if err := doc.Unmarshal(&count); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal count: %w", err)
+	if err := json.Unmarshal(bytes, &count); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal count from JSON: %w", err)
 	}
 
 	return &count, nil
-}
-
-// FindAllByPrefixKey finds all counts for a given prefix key
-func (c *CountRepository) FindAllByPrefixKey(key string) ([]models.Count, error) {
-	query := q.NewQuery(c.collection).Where(q.Field(ColumnKey).Like(fmt.Sprintf("%s%%", key)))
-	docs, err := c.db.GetDB().FindAll(query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find counts: %w", err)
-	}
-
-	return unmarshalDocs(docs)
 }
 
 // FindByDate finds all counts for a given date
@@ -110,9 +105,14 @@ func (c *CountRepository) Clear() error {
 func unmarshalDocs(docs []*document.Document) ([]models.Count, error) {
 	counts := make([]models.Count, len(docs))
 	for i, doc := range docs {
+		bytes, err := json.Marshal(doc.AsMap())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal document to JSON: %w", err)
+		}
+
 		var count models.Count
-		if err := doc.Unmarshal(&count); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal count: %w", err)
+		if err := json.Unmarshal(bytes, &count); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal count from JSON: %w", err)
 		}
 		counts[i] = count
 	}

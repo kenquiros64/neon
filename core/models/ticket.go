@@ -9,6 +9,7 @@ type Ticket struct {
 	Stop        string `json:"stop" db:"stop" goqu:"omitempty"`
 	Time        string `json:"time" db:"time" goqu:"omitempty"`
 	Fare        int    `json:"fare" db:"fare" goqu:"omitempty"`
+	IDNumber    string `json:"id_number" db:"id_number" goqu:"omitempty"`
 	IsGold      bool   `json:"is_gold" db:"is_gold" goqu:"omitempty"`
 	IsNull      bool   `json:"is_null" db:"is_null" goqu:"omitempty"`
 	ReportID    string `json:"report_id" db:"report_id" goqu:"omitempty"`

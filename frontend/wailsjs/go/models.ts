@@ -99,6 +99,7 @@ export namespace models {
 	    stop: string;
 	    time: string;
 	    fare: number;
+	    id_number: string;
 	    is_gold: boolean;
 	    is_null: boolean;
 	    report_id: string;
@@ -118,6 +119,7 @@ export namespace models {
 	        this.stop = source["stop"];
 	        this.time = source["time"];
 	        this.fare = source["fare"];
+	        this.id_number = source["id_number"];
 	        this.is_gold = source["is_gold"];
 	        this.is_null = source["is_null"];
 	        this.report_id = source["report_id"];

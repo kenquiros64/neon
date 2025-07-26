@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 // import { useReportState } from '../states/ReportState';
 import { useRoutesState } from '../states/RoutesState';
 import {useAuthState} from "../states/AuthState";
@@ -26,13 +26,17 @@ import routeDark from "../assets/images/route_dark.svg";
 const Ticket: React.FC = () => {
     // const { report, checkReportStatus } = useReportState();
     const [showDialog, setShowDialog] = useState(false);
-    const {code, setCode} = useTicketState();
+    const {code, setCode, incrementCount} = useTicketState();
     const { user } = useAuthState();
     const {theme} = useTheme();
+    
+    // Add ref for input focus
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const {routes, routesLoading, fetchRoutes, resetRoutesState} = useRoutesState();
     const {
         selectedRoute, setSelectedRoute,
+        selectedTime,
         setSelectedStop,
         setSelectedTimetable,
         setSelectedTime,
@@ -43,15 +47,6 @@ const Ticket: React.FC = () => {
     const { logout } = useAuthState();
     const [selectedRouteID, setSelectedRouteID] = useState<String | null>(null);
     const [selectedStopID, setSelectedStopID] = useState<String | null>(null);
-
-    // const handleKeyDown = (event: { key: string; }) => {
-    //     if (event.key === 'Enter') {
-    //         console.log("Enter")
-    //     }
-    //     if (event.key === 'o') {
-    //         console.log("O")
-    //     }
-    // };
 
     const handleSelect = (id: String) => {
         setSelectedRouteID(id);
@@ -73,6 +68,11 @@ const Ticket: React.FC = () => {
         setSelectedStopID(mainStop.code);
         setSelectedTime(nextDeparture(route, "normal"));
         getAllCounts();
+
+
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 0);
     };
 
     const handleSelectStop = (id: String) => {
@@ -85,6 +85,10 @@ const Ticket: React.FC = () => {
 
         setSelectedStop(mainStop);
         getAllCounts();
+
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 0);
     };
 
     const handleInputCode = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,7 +115,26 @@ const Ticket: React.FC = () => {
         setSelectedStop(stop);
         setSelectedStopID(stop.code);
         getAllCounts();
+        setSelectedTime(nextDeparture(route, "normal"));
+        
+        // Clear the input and maintain focus
+        setCode("");
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 0);
     }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === ' ') {
+            e.preventDefault(); // Prevent space from being typed
+            // Sell regular ticket
+            incrementCount(1, "normal");
+        } else if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent form submission
+            // Sell gold ticket
+            incrementCount(1, "gold");
+        }
+    };
 
     useEffect(() => {
         if (routesLoading) {
@@ -149,6 +172,15 @@ const Ticket: React.FC = () => {
         fetchRoutes();
     }, []);
 
+    // Focus input field when time changes
+    useEffect(() => {
+        if (selectedTime) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 0);
+        }
+    }, [selectedTime]);
+
     // useEffect(() => {
     //     setIsLoading(false);
     //     if (!report) {
@@ -180,11 +212,10 @@ const Ticket: React.FC = () => {
                         placeholder={"Código"}
                         value={code}
                         onChange={handleInputCode}
+                        onKeyDown={handleKeyDown}
+                        inputRef={inputRef}
                         sx={{ pattern: "[0-9]*", inputMode: "numeric" }}
                     />
-                    <IconButton aria-label="faq-code" color="primary">
-                        <QuestionMarkOutlined/>
-                    </IconButton>
                 </Box>
                 <Box sx={{alignItems: "center", display: "flex", height: "100%"}}>
                     <HomeCard/>

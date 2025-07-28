@@ -90,7 +90,7 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
 	if doc == nil {
-		return nil, helpers.ErrUserNotFound
+		return nil, nil
 	}
 
 	var user models.User

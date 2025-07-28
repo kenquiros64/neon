@@ -10,6 +10,7 @@ import (
 	"neon/core/repositories/local"
 	"neon/core/repositories/remote"
 
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -38,13 +39,19 @@ func (a *AuthService) Login(username string, password string) (*models.User, err
 
 	user, err := localRepo.FindByUsername(username)
 	if err != nil {
+		zap.L().Error("failed to find user by username", zap.Error(err))
 		return nil, err
 	}
+	if user == nil {
+		return nil, helpers.ErrUserNotFound
+	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return nil, helpers.ErrUserInvalidPassword
 		}
+		zap.L().Error("failed to compare hash and password", zap.Error(err))
 		return nil, err
 	}
 	return user, nil
@@ -60,6 +67,7 @@ func (a *AuthService) Register(user *models.User) error {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
+		zap.L().Error("failed to generate password hash", zap.Error(err))
 		return err
 	}
 

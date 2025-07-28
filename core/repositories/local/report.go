@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"neon/core/database/connections/embedded"
 	"neon/core/models"
+
+	"github.com/doug-martin/goqu/v9"
 )
 
 // ReportRepository implements ReportRepository
@@ -66,4 +68,84 @@ func (r *ReportRepository) Update(report models.Report) error {
 	}
 
 	return nil
+}
+
+// GetByID gets a report by id
+func (r *ReportRepository) GetByID(reportID int64) (*models.Report, error) {
+	query := dialect.Select(goqu.C("*")).From(TableReports).Where(ColumnID.Eq(reportID))
+
+	sql, args, err := query.Prepared(true).ToSQL()
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare query: %w", err)
+	}
+
+	row := r.db.GetDB().QueryRow(sql, args...)
+
+	var report models.Report
+	if err := row.Scan(
+		&report.ID,
+		&report.Username,
+		&report.PartialTickets,
+		&report.PartialCash,
+		&report.FinalCash,
+		&report.Status,
+		&report.TotalCash,
+		&report.TotalTickets,
+		&report.TotalGold,
+		&report.TotalGoldCash,
+		&report.TotalNull,
+		&report.TotalNullCash,
+		&report.TotalRegular,
+		&report.TotalRegularCash,
+		&report.PartialClosedAt,
+		&report.ClosedAt,
+		&report.CreatedAt,
+	); err != nil {
+		return nil, fmt.Errorf("failed to scan report: %w", err)
+	}
+
+	if err := row.Err(); err != nil {
+		return nil, fmt.Errorf("failed to get report: %w", err)
+	}
+
+	return &report, nil
+}
+
+// GetOpenOrPendingReport gets an open or pending report
+func (r *ReportRepository) GetOpenOrPendingReport() (*models.Report, error) {
+	query := dialect.Select(goqu.C("*")).From(TableReports).Where(
+		ColumnStatus.Eq(true),
+	).Limit(1)
+
+	sql, args, err := query.Prepared(true).ToSQL()
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare query: %w", err)
+	}
+
+	row := r.db.GetDB().QueryRow(sql, args...)
+
+	var report models.Report
+	if err := row.Scan(
+		&report.ID,
+		&report.Username,
+		&report.PartialTickets,
+		&report.PartialCash,
+		&report.FinalCash,
+		&report.Status,
+		&report.TotalCash,
+		&report.TotalTickets,
+		&report.TotalGold,
+		&report.TotalGoldCash,
+		&report.TotalNull,
+		&report.TotalNullCash,
+		&report.TotalRegular,
+		&report.TotalRegularCash,
+		&report.PartialClosedAt,
+		&report.ClosedAt,
+		&report.CreatedAt,
+	); err != nil {
+		return nil, err
+	}
+
+	return &report, nil
 }

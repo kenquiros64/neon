@@ -1,45 +1,57 @@
 import React, { useEffect, useState, useRef } from 'react';
-// import { useReportState } from '../states/ReportState';
-import { useRoutesState } from '../states/RoutesState';
+import {useReportState} from '../states/ReportState';
+import {useRoutesState} from '../states/RoutesState';
+import {useTicketState} from "../states/TicketState";
 import {useAuthState} from "../states/AuthState";
 import NoReport from "../components/NoReport";
-import {useTicketState} from "../states/TicketState";
 import {toast} from "react-toastify";
-import {Avatar, Badge, Box, Grid, ListItemAvatar, TextField, Typography, CardMedia} from "@mui/material";
+import {
+    Avatar, 
+    Badge, 
+    Box, 
+    Grid, 
+    ListItemAvatar, 
+    TextField, 
+    Typography, 
+    CardMedia, 
+    Divider,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText
+} from "@mui/material";
 import {People, QuestionMarkOutlined, TripOrigin, LocationOn, Route as RouteIcon, DirectionsBus, Star, LocalAtm} from "@mui/icons-material";
 import HomeCard from "../components/HomeCard";
-import Divider from "@mui/material/Divider";
 import TicketPurchaseDialog from "../components/TicketPurchaseDialog";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
 import routeList from "../assets/images/map.png";
 import stopList from "../assets/images/stop_list.svg";
-import ListItemText from "@mui/material/ListItemText";
 import { to12HourFormat, nextDeparture, fullRouteName, to24HourFormat } from "../util/Helpers";
 import {useTheme} from "../themes/ThemeProvider";
 import { AddTicket } from "../../wailsjs/go/services/TicketService";
 import { models } from "../../wailsjs/go/models";
+import { useNavigate } from 'react-router-dom';
 
 // IMAGES
 import routeLight from "../assets/images/route_light.svg";
 import routeDark from "../assets/images/route_dark.svg";
 
+
 const Ticket: React.FC = () => {
-    // const { report, checkReportStatus } = useReportState();
+    const { report, checkReportStatus, reportLoading, resetReportState } = useReportState();
     const [showDialog, setShowDialog] = useState(false);
     const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
     const [purchaseTicketType, setPurchaseTicketType] = useState<'normal' | 'gold'>('normal');
-    const {code, setCode, incrementCount} = useTicketState();
     const { user } = useAuthState();
     const {theme} = useTheme();
+    const navigate = useNavigate();
     
     // Add ref for input focus
     const inputRef = useRef<HTMLInputElement>(null);
 
     const {routes, routesLoading, fetchRoutes, resetRoutesState} = useRoutesState();
     const {
-        selectedRoute, setSelectedRoute,
+        selectedRoute, 
+        setSelectedRoute,
         selectedTime,
         setSelectedStop,
         setSelectedTimetable,
@@ -47,6 +59,9 @@ const Ticket: React.FC = () => {
         resetTicketState,
         getCount,
         getAllCounts,
+        code, 
+        setCode, 
+        incrementCount
     } = useTicketState();
     const { logout } = useAuthState();
     const [selectedRouteID, setSelectedRouteID] = useState<String | null>(null);
@@ -143,6 +158,11 @@ const Ticket: React.FC = () => {
     };
 
     const handlePurchaseConfirm = async (quantity: number, idNumber?: string) => {
+        if (report?.username !== user?.username) {
+            toast.warning("No tienes permisos para vender tiquetes para el reporte actual. El reporte actual esta pendiente de cierre. Revisa los reportes pendientes.");
+            return;
+        }
+
         try {
             // Create ticket objects based on quantity
             const ticketsToAdd: models.Ticket[] = [];
@@ -165,7 +185,7 @@ const Ticket: React.FC = () => {
                     id_number: idNumber || "",
                     is_gold: purchaseTicketType === 'gold',
                     is_null: false,
-                    report_id: 1,
+                    report_id: report?.id || 0,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 });
@@ -179,7 +199,7 @@ const Ticket: React.FC = () => {
             incrementCount(quantity, purchaseTicketType);
             
             // Show success message
-            toast.success(`${quantity} ticket${quantity > 1 ? 's' : ''} guardado${quantity > 1 ? 's' : ''} exitosamente`);
+            toast.success(`${quantity} tiquete${quantity > 1 ? 's' : ''} guardado${quantity > 1 ? 's' : ''} exitosamente`);
             
             setShowPurchaseDialog(false);
             
@@ -204,7 +224,6 @@ const Ticket: React.FC = () => {
         setPurchaseTicketType(ticketType);
         setShowPurchaseDialog(true);
     };
-
 
     useEffect(() => {
         if (routesLoading) {
@@ -231,16 +250,35 @@ const Ticket: React.FC = () => {
     }, [routes, routesLoading]);
 
 
-    // useEffect(() => {
-    //     checkReportStatus(user?.username).then().catch((error) => {
-    //         console.error("CHECK REPORT STATUS ERROR", error);
-    //     });
-    // }, [checkReportStatus]);
+    // Check report status when component mounts
+    useEffect(() => {
+        if (!report) {
+            checkReportStatus().catch((error) => {
+                if (error === "ROW_NOT_FOUND") {
+                    console.log("No report found, checking status");
+                    setShowDialog(true);
+                    return;
+                }
+                console.error("Error checking report status", error);
+                logout();
+            });
+            return;
+        }
+        fetchRoutes();
+        setShowDialog(false);
+        console.log("Report found");
+    }, []);
 
     useEffect(() => {
-        console.log("FETCH ROUTES");
-        fetchRoutes();
-    }, []);
+        console.log("Report state changed in Ticket page:", report);
+        if (report) {
+            fetchRoutes();
+            setShowDialog(false);
+            return;
+        }
+        setShowDialog(true);
+
+    }, [report, reportLoading]);
 
     // Focus input field when time changes
     useEffect(() => {
@@ -251,20 +289,22 @@ const Ticket: React.FC = () => {
         }
     }, [selectedTime]);
 
-    // useEffect(() => {
-    //     setIsLoading(false);
-    //     if (!report) {
-    //         setShowDialog(true);
-    //         return;
-    //     }
-    //     fetchRoutes();
-    //     setShowDialog(false);
-    // }, [report]);
 
-    return routesLoading
-        ? null
-        : showDialog ?
-        <NoReport /> :
+    // Show loading while checking report status
+    if (reportLoading) {
+        return null;
+    }
+
+    // Show NoReport dialog if needed
+    if (showDialog) {
+        return <NoReport />;
+    }
+
+    if (routesLoading) {
+        return null;
+    }
+
+    return (
         <Grid container sx={{height: "100%", margin: 0}}>
             <Grid
                 size={{ lg: 5 }}
@@ -779,7 +819,8 @@ const Ticket: React.FC = () => {
                 stop={selectedRoute?.stops.find(stop => stop.code === selectedStopID) || null}
                 selectedTime={selectedTime}
             />
-        </Grid>;
+        </Grid>
+    );
 };
 
 export default Ticket;

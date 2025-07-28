@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {TextField, Box, Typography, Grid, Paper} from "@mui/material";
-import {LoadingButton} from "@mui/lab";
+import { Button } from '@mui/material'
 import {useNavigate} from "react-router";
 
 import backgroundLogo from "../assets/images/background.png";
@@ -243,7 +243,7 @@ const Login: React.FC = () => {
                                 />
 
                                 {/* Login Button */}
-                                <LoadingButton
+                                <Button
                                     fullWidth
                                     loading={loading}
                                     loadingPosition={"end"}
@@ -255,7 +255,7 @@ const Login: React.FC = () => {
                                     endIcon={<ArrowForward/>}
                                 >
                                     Ingresar
-                                </LoadingButton>
+                                </Button>
                             </Box>
                         </Grid>
                     </Grid>

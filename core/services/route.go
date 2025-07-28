@@ -7,6 +7,8 @@ import (
 	"neon/core/models"
 	"neon/core/repositories/local"
 	"neon/core/repositories/remote"
+
+	"go.uber.org/zap"
 )
 
 // RouteService is a service for routes
@@ -32,6 +34,7 @@ func (r *RouteService) GetRoutes() ([]models.Route, error) {
 
 	routes, err := localRepo.All()
 	if err != nil {
+		zap.L().Error("failed to get routes", zap.Error(err))
 		return nil, err
 	}
 
@@ -43,11 +46,13 @@ func (r *RouteService) AddRoute(route *models.Route) error {
 	remoteRepo := remote.NewRouteRepository(r.remoteDB)
 
 	if err := remoteRepo.Create(r.ctx, route); err != nil {
+		zap.L().Error("failed to create route", zap.Error(err))
 		return err
 	}
 
 	syncService := NewSyncService(r.remoteDB, r.localDB)
 	if err := syncService.SyncRoutes(); err != nil {
+		zap.L().Error("failed to sync routes", zap.Error(err))
 		return err
 	}
 
@@ -59,11 +64,13 @@ func (r *RouteService) UpdateRoute(route *models.Route) error {
 	remoteRepo := remote.NewRouteRepository(r.remoteDB)
 
 	if err := remoteRepo.Update(r.ctx, route); err != nil {
+		zap.L().Error("failed to update route", zap.Error(err))
 		return err
 	}
 
 	syncService := NewSyncService(r.remoteDB, r.localDB)
 	if err := syncService.SyncRoutes(); err != nil {
+		zap.L().Error("failed to sync routes", zap.Error(err))
 		return err
 	}
 
@@ -74,11 +81,13 @@ func (r *RouteService) UpdateRoute(route *models.Route) error {
 func (r *RouteService) DeleteRoute(route *models.Route) error {
 	remoteRepo := remote.NewRouteRepository(r.remoteDB)
 	if err := remoteRepo.Delete(r.ctx, route); err != nil {
+		zap.L().Error("failed to delete route", zap.Error(err))
 		return err
 	}
 
 	syncService := NewSyncService(r.remoteDB, r.localDB)
 	if err := syncService.SyncRoutes(); err != nil {
+		zap.L().Error("failed to sync routes", zap.Error(err))
 		return err
 	}
 

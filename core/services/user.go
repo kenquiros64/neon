@@ -6,6 +6,8 @@ import (
 	"neon/core/database/connections/mongodb"
 	"neon/core/models"
 	"neon/core/repositories/remote"
+
+	"go.uber.org/zap"
 )
 
 // UserService is a service for users
@@ -30,11 +32,13 @@ func (u *UserService) AddUser(user *models.User) error {
 	remoteRepo := remote.NewUserRepository(u.remoteDB)
 
 	if err := remoteRepo.Create(u.ctx, user); err != nil {
+		zap.L().Error("failed to create user", zap.Error(err))
 		return err
 	}
 
 	syncService := NewSyncService(u.remoteDB, u.localDB)
 	if err := syncService.SyncUsers(); err != nil {
+		zap.L().Error("failed to sync users", zap.Error(err))
 		return err
 	}
 

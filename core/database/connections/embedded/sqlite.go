@@ -75,6 +75,11 @@ func (d *Database) Connect(ctx context.Context) error {
 		return fmt.Errorf("failed to initialize tables: %w", err)
 	}
 
+	// Initialize triggers
+	if err := d.initTriggers(); err != nil {
+		return fmt.Errorf("failed to initialize triggers: %w", err)
+	}
+
 	return nil
 }
 
@@ -189,24 +194,38 @@ func (d *Database) initTables() error {
 	return d.createTicketsTable()
 }
 
+// initTriggers creates the necessary triggers if they don't exist
+func (d *Database) initTriggers() error {
+	if err := d.createTriggerUpdateReportAfterTicketInsert(); err != nil {
+		return err
+	}
+	if err := d.createTriggerUpdateReportAfterTicketIsUpdatedToNull(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // createReportsTable creates the reports table if it doesn't exist
 func (d *Database) createReportsTable() error {
 	query := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			username TEXT NOT NULL,
-			initial_cash INTEGER NOT NULL,
-			final_cash INTEGER,
+			partial_tickets INTEGER NOT NULL DEFAULT 0,
+			partial_cash INTEGER NOT NULL DEFAULT 0,
+			final_cash INTEGER NOT NULL DEFAULT 0,
 			status BOOLEAN NOT NULL DEFAULT 0,
 			total_cash INTEGER NOT NULL DEFAULT 0,
 			total_tickets INTEGER NOT NULL DEFAULT 0,
 			total_gold INTEGER NOT NULL DEFAULT 0,
+			total_gold_cash INTEGER NOT NULL DEFAULT 0,
 			total_null INTEGER NOT NULL DEFAULT 0,
-			total_fare INTEGER NOT NULL DEFAULT 0,
-			cash_verified BOOLEAN NOT NULL DEFAULT 0,
-			partial_closed_at DATETIME,
-			closed_at DATETIME,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			total_null_cash INTEGER NOT NULL DEFAULT 0,
+			total_regular INTEGER NOT NULL DEFAULT 0,
+			total_regular_cash INTEGER NOT NULL DEFAULT 0,
+			partial_closed_at TEXT,
+			closed_at TEXT,
+			created_at TEXT
 		)
 	`, constants.ReportsTable)
 
@@ -231,9 +250,10 @@ func (d *Database) createTicketsTable() error {
 			fare INTEGER NOT NULL DEFAULT 0,
 			is_gold BOOLEAN NOT NULL DEFAULT 0,
 			is_null BOOLEAN NOT NULL DEFAULT 0,
+			id_number TEXT NOT NULL,
 			report_id INTEGER NOT NULL,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME,
+			created_at TEXT,
+			updated_at TEXT,
 			FOREIGN KEY (report_id) REFERENCES %s(id) ON DELETE CASCADE
 		)
 	`, constants.TicketsTable, constants.ReportsTable)
@@ -241,6 +261,65 @@ func (d *Database) createTicketsTable() error {
 	_, err := d.db.Exec(query)
 	if err != nil {
 		return fmt.Errorf("failed to create tickets table: %w", err)
+	}
+
+	return nil
+}
+
+// createTriggerUpdateReportAfterTicketInsert creates the trigger to update the report after
+// a ticket is inserted
+func (d *Database) createTriggerUpdateReportAfterTicketInsert() error {
+	query := `
+		CREATE TRIGGER IF NOT EXISTS update_report_after_ticket_insert
+		AFTER INSERT ON tickets
+		FOR EACH ROW
+		BEGIN
+			UPDATE reports
+			SET
+				total_cash = total_cash + NEW.fare,
+				total_tickets = total_tickets + 1,
+				total_gold = total_gold + CASE WHEN NEW.is_gold = 1 THEN 1 ELSE 0 END,
+				total_gold_cash = total_gold_cash + CASE WHEN NEW.is_gold = 1 THEN NEW.fare ELSE 0 END,
+				total_regular = total_regular + CASE WHEN NEW.is_gold = 0 AND NEW.is_null = 0 THEN 1 ELSE 0 END,
+				total_regular_cash = total_regular_cash + CASE WHEN NEW.is_gold = 0 AND NEW.is_null = 0 THEN NEW.fare ELSE 0 END,
+				partial_tickets = CASE WHEN partial_closed_at IS NOT NULL THEN partial_tickets + 1 ELSE partial_tickets END,
+				partial_cash = CASE WHEN partial_closed_at IS NOT NULL THEN partial_cash + NEW.fare ELSE partial_cash END
+			WHERE id = NEW.report_id;
+		END
+	`
+
+	_, err := d.db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to create trigger update_report_after_ticket_insert: %w", err)
+	}
+
+	return nil
+}
+
+// createTriggerUpdateReportAfterTicketIsUpdatedToNull creates the trigger to update the report after
+// a ticket is updated to null
+func (d *Database) createTriggerUpdateReportAfterTicketIsUpdatedToNull() error {
+	query := `
+		CREATE TRIGGER IF NOT EXISTS update_report_after_ticket_null
+		AFTER UPDATE OF is_null ON tickets
+		FOR EACH ROW
+		WHEN NEW.is_null = 1 AND OLD.is_null = 0
+		BEGIN
+			UPDATE reports
+			SET
+				total_null = total_null + 1,
+				total_null_cash = total_null_cash + NEW.fare,
+				total_tickets = total_tickets - 1,
+				total_cash = total_cash - NEW.fare,
+				partial_tickets = CASE WHEN partial_closed_at IS NOT NULL THEN partial_tickets - 1 ELSE partial_tickets END,
+				partial_cash = CASE WHEN partial_closed_at IS NOT NULL THEN partial_cash - NEW.fare ELSE partial_cash END
+			WHERE id = NEW.report_id;
+		END
+	`
+
+	_, err := d.db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to create trigger update_report_after_ticket_is_updated_to_null: %w", err)
 	}
 
 	return nil

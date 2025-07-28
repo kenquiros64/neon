@@ -39,6 +39,7 @@ func (a *App) Startup() {
 	ticketService := NewTicketService(sqlitedb)
 	routeService := NewRouteService(remotedb, cloverdb)
 	counterService := NewCounterService(cloverdb)
+	reportService := NewReportService(sqlitedb)
 
 	// repository := local.NewCountRepository(cloverdb)
 	// repository.Clear()
@@ -57,6 +58,7 @@ func (a *App) Startup() {
 			userService.startup(ctx)
 			ticketService.startup(ctx)
 			routeService.startup(ctx)
+			reportService.startup(ctx)
 		},
 		OnShutdown: func(ctx context.Context) {
 			shutdown()
@@ -68,6 +70,7 @@ func (a *App) Startup() {
 			ticketService,
 			routeService,
 			counterService,
+			reportService,
 		},
 	})
 

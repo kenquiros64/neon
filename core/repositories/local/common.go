@@ -18,6 +18,9 @@ var (
 	// ColumnReportID is the column name for the report_id column
 	ColumnReportID = goqu.C("report_id")
 
+	// ColumnStatus is the column name for the status column
+	ColumnStatus = goqu.C("status")
+
 	// ColumnLastReset is the column name for the last_reset column
 	ColumnLastReset = "last_reset"
 

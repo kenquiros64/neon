@@ -10,6 +10,10 @@ export function DeleteTickets(arg1) {
   return window['go']['services']['TicketService']['DeleteTickets'](arg1);
 }
 
+export function NullifyTicket(arg1, arg2) {
+  return window['go']['services']['TicketService']['NullifyTicket'](arg1, arg2);
+}
+
 export function UpdateTickets(arg1) {
   return window['go']['services']['TicketService']['UpdateTickets'](arg1);
 }

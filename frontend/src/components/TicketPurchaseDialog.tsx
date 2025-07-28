@@ -84,7 +84,9 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
         // Allow numbers to directly set quantity only if NOT typing in ID field
         if (e.key >= '1' && e.key <= '9' && !isIDInputFocused) {
             const num = parseInt(e.key);
-            setQuantity(num);
+            if (ticketType === 'normal') {
+                setQuantity(num);
+            }
         } else if (e.key === 'Enter') {
             e.preventDefault();
             // If ID input is focused, remove focus first (allows user to press Enter again to confirm)
@@ -140,18 +142,20 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
             maxWidth="sm"
             fullWidth
             onKeyDown={handleKeyDown}
-            PaperProps={{
-                sx: {
-                    borderRadius: 3,
-                    boxShadow: theme === 'light' 
-                        ? '0 24px 48px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1)'
-                        : '0 24px 48px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2)',
-                    minHeight: '400px'
-                }
-            }}
-            BackdropProps={{
-                sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.7)'
+            slotProps={{
+                paper: {
+                    sx: {
+                        borderRadius: 3,
+                        boxShadow: theme === 'light' 
+                            ? '0 24px 48px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1)'
+                            : '0 24px 48px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2)',
+                        minHeight: '400px'
+                    }
+                },
+                backdrop: {
+                    sx: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                    }
                 }
             }}
         >
@@ -276,51 +280,59 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
                             inputRef={idRef}
                             required
                             sx={{ mb: 2 }}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Person />
-                                    </InputAdornment>
-                                ),
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Person />
+                                        </InputAdornment>
+                                    ),
+                                }
                             }}
                             helperText="Requerido para boletos oro"
                         />
                     )}
 
                     {/* Quantity Selector */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <Typography variant="body1" sx={{ fontWeight: 600, minWidth: 'fit-content' }}>
-                            Cantidad:
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <IconButton 
-                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                size="small"
-                                disabled={quantity <= 1}
-                            >
-                                <Remove />
-                            </IconButton>
-                            <TextField
-                                value={quantity}
-                                onChange={(e) => handleQuantityChange(e.target.value)}
-                                inputRef={quantityRef}
-                                sx={{ width: '80px' }}
-                                inputProps={{
-                                    style: { textAlign: 'center', fontWeight: 600, fontSize: '1.1rem' },
-                                    min: 1,
-                                    max: 99
-                                }}
-                                type="number"
-                            />
-                            <IconButton 
-                                onClick={() => setQuantity(Math.min(99, quantity + 1))}
-                                size="small"
-                                disabled={quantity >= 99}
-                            >
-                                <Add />
-                            </IconButton>
+                    {ticketType === 'normal' && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                            <Typography variant="body1" sx={{ fontWeight: 600, minWidth: 'fit-content' }}>
+                                Cantidad:
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <IconButton 
+                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                    size="small"
+                                    disabled={quantity <= 1}
+                                >
+                                    <Remove />
+                                </IconButton>
+                                <TextField
+                                    value={quantity}
+                                    onChange={(e) => handleQuantityChange(e.target.value)}
+                                    inputRef={quantityRef}
+                                    sx={{ width: '80px' }}
+                                    slotProps={{
+                                        input: {
+                                            style: { textAlign: 'center', fontWeight: 600, fontSize: '1.1rem' },
+                                            inputProps: {
+                                                min: 1,
+                                                max: 99
+                                            }
+                                        }
+                                    }}
+                                    type="number"
+                                />
+                                <IconButton 
+                                    onClick={() => setQuantity(Math.min(99, quantity + 1))}
+                                    size="small"
+                                    disabled={quantity >= 99}
+                                >
+                                    <Add />
+                                </IconButton>
+                            </Box>
                         </Box>
-                    </Box>
+                    )}
 
                     <Divider sx={{ my: 2 }} />
 

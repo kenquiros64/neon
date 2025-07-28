@@ -1,39 +1,74 @@
 import { create } from 'zustand';
 import {models} from "../../wailsjs/go/models";
+import { CheckIfThereIsAnOpenOrPendingReport, StartReport, PartialCloseReport, TotalCloseReport } from "../../wailsjs/go/services/ReportService";
 
 interface ReportState {
-    // report : models.Report | null;
-    startReport: (arg0: string | undefined) => Promise<void>;
-    // checkReportStatus: (arg0: string | undefined) => Promise<Report>;
-    // closedReport: (type: "partial" | "close") => void;
+    report: models.Report | null;
+    reportLoading: boolean;
+    startReport: (username: string) => Promise<models.Report>;
+    checkReportStatus: () => Promise<models.Report | null>;
+    partialCloseReport: (reportID: number, finalCash: number) => Promise<models.Report>;
+    totalCloseReport: (reportID: number, finalCash: number) => Promise<models.Report>;
+    resetReportState: () => void;
 }
 
-// export const useReportState = create<ReportState>((set) => ({
-//     report: null,
-//     startReport: (username: string | undefined) => {
-//         return new Promise(async (resolve, reject) => {
-//             try {
-//                 // const data = await invoke("start_new_report", { "username": username});
-//                 // let report: Report = Report.fromJSON(data);
-//                 // console.log("Report TEST", report);
-//                 // set({ report: report });
-//                 resolve();
-//             } catch (error) {
-//                 set({ report: null });
-//                 reject(error as Error);
-//             }
-//         });
-//     },
-//     checkReportStatus: (username: string | undefined) => {
-//         return new Promise<Report>(async (resolve, reject) => {
-//             try {
-//                 // const report = await invoke<Report>("get_active_report", { "username": username});
-//                 // set({ report: report });
-//                 // resolve(report);
-//             } catch (error) {
-//                 set({ report: null });
-//                 reject(error as Error);
-//             }
-//         });
-//     },
-// }));
+export const useReportState = create<ReportState>((set, get) => ({
+    report: null,
+    reportLoading: false,
+
+    startReport: async (username: string) => {
+        set({ reportLoading: true });
+        try {
+            const output = await StartReport(username);
+            set({ report: output, reportLoading: false });
+            return output;
+        } catch (error) {
+            console.error("Error starting report", error);
+            set({ report: null, reportLoading: false });
+            throw error;
+        }
+    },
+
+    checkReportStatus: async () => {
+        set({ reportLoading: true });
+        try {
+            const output = await CheckIfThereIsAnOpenOrPendingReport();
+            set({ report: output, reportLoading: false });
+            return output;
+        } catch (error) {
+            console.error("Error checking report status", error);
+            // If no report found, this is not an error state
+            set({ report: null, reportLoading: false });
+            throw error;
+        }
+    },
+
+    partialCloseReport: async (reportID: number, finalCash: number) => {
+        set({ reportLoading: true });
+        try {
+            const output = await PartialCloseReport(reportID, finalCash);
+            set({ report: output, reportLoading: false });
+            return output;
+        } catch (error) {
+            console.error("Error partial closing report", error);
+            set({ report: null, reportLoading: false });
+            throw error;
+        }
+    },
+
+    totalCloseReport: async (reportID: number, finalCash: number) => {
+        set({ reportLoading: true });
+        try {
+            const output = await TotalCloseReport(reportID, finalCash);
+            set({ report: output, reportLoading: false });
+            return output;
+        } catch (error) {
+            console.error("Error total closing report", error);
+            set({ report: null, reportLoading: false });
+            throw error;
+        }
+    },
+
+
+    resetReportState: () => set({ report: null, reportLoading: false })
+}));

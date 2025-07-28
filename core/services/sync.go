@@ -37,14 +37,17 @@ func (s *SyncService) SyncRoutes() error {
 
 	routes, err := remoteRepo.All(s.ctx)
 	if err != nil {
+		zap.L().Error("failed to get routes from remote repository", zap.Error(err))
 		return fmt.Errorf("failed to get routes from remote repository: %w", err)
 	}
 
 	if err := localRepo.Clear(); err != nil {
+		zap.L().Error("failed to clear local routes before sync", zap.Error(err))
 		return fmt.Errorf("failed to clear local routes before sync: %w", err)
 	}
 
 	if err := localRepo.BulkCreate(routes); err != nil {
+		zap.L().Error("failed to bulk create routes", zap.Error(err))
 		return err
 	}
 

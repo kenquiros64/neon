@@ -6,4 +6,6 @@ export function AddTicket(arg1:Array<models.Ticket>):Promise<Array<models.Ticket
 
 export function DeleteTickets(arg1:Array<models.Ticket>):Promise<void>;
 
+export function NullifyTicket(arg1:number,arg2:number):Promise<void>;
+
 export function UpdateTickets(arg1:Array<models.Ticket>):Promise<void>;

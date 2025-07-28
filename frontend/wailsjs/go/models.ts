@@ -16,6 +16,50 @@ export namespace models {
 	        this.last_reset = source["last_reset"];
 	    }
 	}
+	export class Report {
+	    id: number;
+	    username: string;
+	    partial_tickets: number;
+	    partial_cash: number;
+	    final_cash: number;
+	    status: boolean;
+	    total_cash: number;
+	    total_tickets: number;
+	    total_gold: number;
+	    total_gold_cash: number;
+	    total_null: number;
+	    total_null_cash: number;
+	    total_regular: number;
+	    total_regular_cash: number;
+	    partial_closed_at?: string;
+	    closed_at?: string;
+	    created_at?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Report(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.username = source["username"];
+	        this.partial_tickets = source["partial_tickets"];
+	        this.partial_cash = source["partial_cash"];
+	        this.final_cash = source["final_cash"];
+	        this.status = source["status"];
+	        this.total_cash = source["total_cash"];
+	        this.total_tickets = source["total_tickets"];
+	        this.total_gold = source["total_gold"];
+	        this.total_gold_cash = source["total_gold_cash"];
+	        this.total_null = source["total_null"];
+	        this.total_null_cash = source["total_null_cash"];
+	        this.total_regular = source["total_regular"];
+	        this.total_regular_cash = source["total_regular_cash"];
+	        this.partial_closed_at = source["partial_closed_at"];
+	        this.closed_at = source["closed_at"];
+	        this.created_at = source["created_at"];
+	    }
+	}
 	export class Time {
 	    hour: number;
 	    minute: number;
@@ -99,9 +143,9 @@ export namespace models {
 	    stop: string;
 	    time: string;
 	    fare: number;
-	    id_number: string;
 	    is_gold: boolean;
 	    is_null: boolean;
+	    id_number: string;
 	    report_id: number;
 	    created_at: string;
 	    updated_at: string;
@@ -119,9 +163,9 @@ export namespace models {
 	        this.stop = source["stop"];
 	        this.time = source["time"];
 	        this.fare = source["fare"];
-	        this.id_number = source["id_number"];
 	        this.is_gold = source["is_gold"];
 	        this.is_null = source["is_null"];
+	        this.id_number = source["id_number"];
 	        this.report_id = source["report_id"];
 	        this.created_at = source["created_at"];
 	        this.updated_at = source["updated_at"];

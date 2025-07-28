@@ -24,8 +24,8 @@ func NewTicketRepository(ctx context.Context, db *embedded.Database) *TicketRepo
 	}
 }
 
-// BulkAdd adds a bulk of tickets to the database and returns them with generated IDs
-func (r *TicketRepository) BulkAdd(tickets []models.Ticket) ([]models.Ticket, error) {
+// BulkCreate creates a bulk of tickets to the database and returns them with generated IDs
+func (r *TicketRepository) BulkCreate(tickets []models.Ticket) ([]models.Ticket, error) {
 	if len(tickets) == 0 {
 		return tickets, nil
 	}
@@ -172,17 +172,13 @@ func (r *TicketRepository) BulkDelete(tickets []models.Ticket) error {
 	return nil
 }
 
-// GetByUsernameAndCreatedAtAndReportID gets a ticket by username and created at and report id
-func (r *TicketRepository) GetByUsernameAndCreatedAtAndReportID(
-	username string,
-	createdAt string,
+// GetByReportID gets a ticket by report id
+func (r *TicketRepository) GetByReportID(
 	reportID int64,
 ) ([]models.Ticket, error) {
-	query := dialect.Select(goqu.C("*")).
+	query := dialect.Select().
 		From(TableTickets).
 		Where(
-			goqu.I("username").Eq(username),
-			goqu.I("created_at").Eq(createdAt),
 			goqu.I("report_id").Eq(reportID),
 		)
 
@@ -199,7 +195,7 @@ func (r *TicketRepository) GetByUsernameAndCreatedAtAndReportID(
 	defer rows.Close()
 
 	var tickets []models.Ticket
-	if rows.Next() {
+	for rows.Next() {
 		var ticket models.Ticket
 		err = rows.Scan(
 			&ticket.ID,
@@ -211,6 +207,7 @@ func (r *TicketRepository) GetByUsernameAndCreatedAtAndReportID(
 			&ticket.Fare,
 			&ticket.IsGold,
 			&ticket.IsNull,
+			&ticket.IDNumber,
 			&ticket.ReportID,
 			&ticket.CreatedAt,
 			&ticket.UpdatedAt,
@@ -237,36 +234,29 @@ func (r *TicketRepository) GetByID(id int64) (*models.Ticket, error) {
 		return nil, fmt.Errorf("failed to prepare query: %w", err)
 	}
 
-	rows, err := r.db.GetDB().Query(sql, args...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get ticket: %w", err)
-	}
-
-	defer rows.Close()
+	row := r.db.GetDB().QueryRow(sql, args...)
 
 	var ticket models.Ticket
-	if rows.Next() {
-		err = rows.Scan(
-			&ticket.ID,
-			&ticket.Departure,
-			&ticket.Destination,
-			&ticket.Username,
-			&ticket.Stop,
-			&ticket.Time,
-			&ticket.Fare,
-			&ticket.IsGold,
-			&ticket.IsNull,
-			&ticket.ReportID,
-			&ticket.CreatedAt,
-			&ticket.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan ticket: %w", err)
-		}
-		return &ticket, nil
+	err = row.Scan(
+		&ticket.ID,
+		&ticket.Departure,
+		&ticket.Destination,
+		&ticket.Username,
+		&ticket.Stop,
+		&ticket.Time,
+		&ticket.Fare,
+		&ticket.IsGold,
+		&ticket.IsNull,
+		&ticket.IDNumber,
+		&ticket.ReportID,
+		&ticket.CreatedAt,
+		&ticket.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan ticket: %w", err)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err := row.Err(); err != nil {
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}
 

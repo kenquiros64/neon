@@ -7,7 +7,7 @@ type Report struct {
 	PartialTickets   int     `json:"partial_tickets" db:"partial_tickets" goqu:"omitempty"`
 	PartialCash      int     `json:"partial_cash" db:"partial_cash" goqu:"omitempty"`
 	FinalCash        int     `json:"final_cash" db:"final_cash" goqu:"omitempty"`
-	Status           bool    `json:"status" db:"status" goqu:"omitempty"`
+	Status           bool    `json:"status" db:"status"`
 	TotalCash        int     `json:"total_cash" db:"total_cash" goqu:"omitempty"`
 	TotalTickets     int     `json:"total_tickets" db:"total_tickets" goqu:"omitempty"`
 	TotalGold        int     `json:"total_gold" db:"total_gold" goqu:"omitempty"`

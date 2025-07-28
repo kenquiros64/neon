@@ -118,6 +118,10 @@ const Reports: React.FC = () => {
             toast.success(`Tiquete ${ticketID} marcado como devuelto`);
             setTicketIDToNull('');
         } catch (error) {
+            if (error === "TICKET_NOT_BELONG_TO_REPORT") {
+                toast.error('El tiquete no pertenece al reporte actual');
+                return;
+            }
             if (error === "TICKET_ALREADY_NULLIFIED") {
                 toast.error('El tiquete ya ha sido anulado previamente');
                 return;

@@ -25,3 +25,6 @@ var ErrTicketAlreadyClosed = errors.New("TICKET_ALREADY_CLOSED")
 
 // ErrTicketAlreadyNullified is the error returned when a ticket is already nullified
 var ErrTicketAlreadyNullified = errors.New("TICKET_ALREADY_NULLIFIED")
+
+// ErrTicketNotBelongToReport is the error returned when a ticket is not belong to a report
+var ErrTicketNotBelongToReport = errors.New("TICKET_NOT_BELONG_TO_REPORT")

@@ -18,7 +18,8 @@ import {
     List,
     ListItem,
     ListItemButton,
-    ListItemText
+    ListItemText,
+    CircularProgress
 } from "@mui/material";
 import {People, QuestionMarkOutlined, TripOrigin, LocationOn, Route as RouteIcon, DirectionsBus, Star, LocalAtm} from "@mui/icons-material";
 import HomeCard from "../components/HomeCard";
@@ -66,6 +67,7 @@ const Ticket: React.FC = () => {
     const { logout } = useAuthState();
     const [selectedRouteID, setSelectedRouteID] = useState<String | null>(null);
     const [selectedStopID, setSelectedStopID] = useState<String | null>(null);
+    const [reportStatusChecked, setReportStatusChecked] = useState(false);
 
     const handleSelect = (id: String) => {
         setSelectedRouteID(id);
@@ -256,17 +258,19 @@ const Ticket: React.FC = () => {
             checkReportStatus().catch((error) => {
                 if (error === "ROW_NOT_FOUND") {
                     console.log("No report found, checking status");
+                    setReportStatusChecked(true);   
                     setShowDialog(true);
                     return;
                 }
                 console.error("Error checking report status", error);
+                setReportStatusChecked(true);
                 logout();
             });
             return;
         }
         fetchRoutes();
+        setReportStatusChecked(true);
         setShowDialog(false);
-        console.log("Report found");
     }, []);
 
     useEffect(() => {
@@ -289,10 +293,12 @@ const Ticket: React.FC = () => {
         }
     }, [selectedTime]);
 
-
-    // Show loading while checking report status
-    if (reportLoading) {
-        return null;
+    if (!reportStatusChecked || reportLoading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     // Show NoReport dialog if needed

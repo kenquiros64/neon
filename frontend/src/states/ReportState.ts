@@ -60,7 +60,7 @@ export const useReportState = create<ReportState>((set, get) => ({
         set({ reportLoading: true });
         try {
             const output = await TotalCloseReport(reportID, finalCash);
-            set({ report: output, reportLoading: false });
+            set({ report: null, reportLoading: false });
             return output;
         } catch (error) {
             console.error("Error total closing report", error);

@@ -85,6 +85,7 @@ func (r *ReportRepository) GetByID(reportID int64) (*models.Report, error) {
 	if err := row.Scan(
 		&report.ID,
 		&report.Username,
+		&report.Timetable,
 		&report.PartialTickets,
 		&report.PartialCash,
 		&report.FinalCash,
@@ -128,6 +129,7 @@ func (r *ReportRepository) GetOpenOrPendingReport() (*models.Report, error) {
 	if err := row.Scan(
 		&report.ID,
 		&report.Username,
+		&report.Timetable,
 		&report.PartialTickets,
 		&report.PartialCash,
 		&report.FinalCash,

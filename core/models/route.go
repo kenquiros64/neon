@@ -11,5 +11,5 @@ type Route struct {
 	Destination      string        `json:"destination" bson:"destination" clover:"destination"`
 	Stops            []Stop        `json:"stops" bson:"stops" clover:"stops"`
 	Timetable        []Time        `json:"timetable" bson:"timetable" clover:"timetable"`
-	HolidayTimetable []Time        `json:"holiday_timetable" bson:"holiday_timetable" clover:"holiday_timetable"`
+	HolidayTimetable []Time        `json:"holiday_timetable" bson:"holiday_timetable" clover:"holiday"`
 }

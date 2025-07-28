@@ -35,7 +35,7 @@ interface TicketPurchaseDialogProps {
     open: boolean;
     onClose: () => void;
     onConfirm: (quantity: number, idNumber?: string) => void;
-    ticketType: 'normal' | 'gold';
+    ticketType: 'regular' | 'gold';
     route: models.Route | null;
     stop: models.Stop | null;
     selectedTime: models.Time;
@@ -84,7 +84,7 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
         // Allow numbers to directly set quantity only if NOT typing in ID field
         if (e.key >= '1' && e.key <= '9' && !isIDInputFocused) {
             const num = parseInt(e.key);
-            if (ticketType === 'normal') {
+            if (ticketType === 'regular') {
                 setQuantity(num);
             }
         } else if (e.key === 'Enter') {
@@ -294,7 +294,7 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
                     )}
 
                     {/* Quantity Selector */}
-                    {ticketType === 'normal' && (
+                    {ticketType === 'regular' && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                             <Typography variant="body1" sx={{ fontWeight: 600, minWidth: 'fit-content' }}>
                                 Cantidad:

@@ -5,7 +5,7 @@ import { CheckIfThereIsAnOpenOrPendingReport, StartReport, PartialCloseReport, T
 interface ReportState {
     report: models.Report | null;
     reportLoading: boolean;
-    startReport: (username: string) => Promise<models.Report>;
+    startReport: (username: string, timetable: string) => Promise<models.Report>;
     checkReportStatus: () => Promise<models.Report | null>;
     partialCloseReport: (reportID: number, finalCash: number) => Promise<models.Report>;
     totalCloseReport: (reportID: number, finalCash: number) => Promise<models.Report>;
@@ -16,10 +16,10 @@ export const useReportState = create<ReportState>((set, get) => ({
     report: null,
     reportLoading: false,
 
-    startReport: async (username: string) => {
+    startReport: async (username: string, timetable: string) => {
         set({ reportLoading: true });
         try {
-            const output = await StartReport(username);
+            const output = await StartReport(username, timetable);
             set({ report: output, reportLoading: false });
             return output;
         } catch (error) {

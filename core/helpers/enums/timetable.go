@@ -5,8 +5,8 @@ package enums
 type Timetable string
 
 const (
-	// Normal is the normal timetable
-	Normal Timetable = "normal"
+	// Regular is the regular timetable
+	Regular Timetable = "regular"
 	// Holiday is the holiday timetable
 	Holiday Timetable = "holiday"
 )
@@ -16,6 +16,6 @@ var AllTimetables = []struct {
 	Value  Timetable
 	TSName string
 }{
-	{Normal, "NORMAL"},
+	{Regular, "REGULAR"},
 	{Holiday, "HOLIDAY"},
 }

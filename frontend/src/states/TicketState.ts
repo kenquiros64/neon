@@ -13,7 +13,6 @@ type TicketState = {
     // SELECTED
     selectedRoute: models.Route;
     selectedStop: models.Stop;
-    selectedTimetable: 'normal' | 'holiday';
     selectedTime: models.Time;
 
     // VALUES
@@ -28,10 +27,9 @@ type Actions = {
     setSelectedRoute: (route: models.Route) => void;
     setSelectedStop: (stop: models.Stop) => void;
     setSelectedTime: (time: models.Time) => void;
-    setSelectedTimetable: (timetable: 'normal' | 'holiday') => void;
     setCode: (code: string) => void;
 
-    incrementCount: (qty: number, type: "normal" | "gold") => void;
+    incrementCount: (qty: number, type: "regular" | "gold") => void;
     getAllCounts: () => void;
     resetTicketState: () => void;
     getCount: (stop: models.Stop) => number;
@@ -55,7 +53,6 @@ const initialState: TicketState = {
         gold_fare: 0,
     },
     selectedTime: { hour: 0, minute: 0 },
-    selectedTimetable: 'normal',
 
     code: "",
     routeTimeCounts: {},
@@ -75,13 +72,10 @@ export const useTicketState = create<TicketState & Actions>()((set, get) => ({
     setSelectedTime: (time: models.Time) => {
         set({ selectedTime: time })
     },
-    setSelectedTimetable: (timetable: 'normal' | 'holiday') => {
-        set({ selectedTimetable: timetable })
-    },
     setCode: (code: string) => {
         set({ code: code })
     },
-    incrementCount: (qty: number, type: "normal" | "gold") => {
+    incrementCount: (qty: number, type: "regular" | "gold") => {
         const stop = get().selectedStop;
         const time = get().selectedTime;
         const route = get().selectedRoute;

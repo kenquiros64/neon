@@ -211,6 +211,7 @@ func (d *Database) createReportsTable() error {
 		CREATE TABLE IF NOT EXISTS %s (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			username TEXT NOT NULL,
+			timetable TEXT NOT NULL DEFAULT 'regular',
 			partial_tickets INTEGER NOT NULL DEFAULT 0,
 			partial_cash INTEGER NOT NULL DEFAULT 0,
 			final_cash INTEGER NOT NULL DEFAULT 0,

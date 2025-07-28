@@ -1,22 +1,14 @@
 import React from "react";
 import {Box, Button, Card, CardContent, CardMedia, FormControl, MenuItem, Select, SelectChangeEvent, Typography} from "@mui/material";
 import homecard from "../assets/images/homecard.jpg";
-import Divider from "@mui/material/Divider";
 import {
     AirlineSeatLegroomNormal,
     ArrowDropDown,
     ArrowDropUp,
     DepartureBoard,
     Elderly,
-    LocationOn,
-    TripOrigin,
-    Route as RouteIcon,
-    DirectionsBus,
-    Star,
-    LocalAtm,
     People,
     Add,
-    AccountBalanceWallet,
 } from "@mui/icons-material";
 import IconButton from "@mui/material/IconButton";
 import {useTheme} from "../themes/ThemeProvider";
@@ -24,12 +16,11 @@ import {useTicketState} from "../states/TicketState";
 import {models} from "../../wailsjs/go/models";
 
 // IMAGES
-import routeLight from "../assets/images/route_light.svg";
-import routeDark from "../assets/images/route_dark.svg";
 import { to12HourFormat, to24HourFormat, calculateRemainingTime } from "../util/Helpers";
+import { useReportState } from "../states/ReportState";
 
 interface HomeCardProps {
-    onShowDialog?: (ticketType: 'normal' | 'gold') => void;
+    onShowDialog?: (ticketType: 'regular' | 'gold') => void;
 }
 
 const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
@@ -38,12 +29,12 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
         selectedTime, setSelectedTime,
         selectedRoute,
         selectedStop,
-        selectedTimetable,
         currentCount,
         currentGoldCount,
-        incrementCount,
         getAllCounts,
     } = useTicketState();
+
+    const { report } = useReportState();
 
     // State for dynamic time updates
     const [remainingTimeText, setRemainingTimeText] = React.useState<string>('');
@@ -69,7 +60,7 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
         const timeString = event.target.value as string;
         
         // Find the corresponding Time object from the timetable
-        const timetable = selectedTimetable === 'normal'
+        const timetable = report?.timetable === 'regular'
             ? selectedRoute?.timetable
             : selectedRoute?.holiday_timetable;
             
@@ -84,7 +75,7 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
     };
 
     const handleIncrement = () => {
-        const times = selectedTimetable === "normal"
+        const times = report?.timetable === "regular"
             ? selectedRoute.timetable
             : selectedRoute.holiday_timetable;
 
@@ -112,7 +103,7 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
     };
 
     const handleDecrement = () => {
-        const times = selectedTimetable === "normal"
+        const times = report?.timetable === "regular"
             ? selectedRoute.timetable
             : selectedRoute.holiday_timetable;
 
@@ -141,17 +132,13 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
     const handleGoldTicket = () => {
         if (onShowDialog) {
             onShowDialog('gold');
-        } else {
-            incrementCount(1, "gold");
         }
     }
 
-    const handleNormalTicket = () => {
+    const handleRegularTicket = () => {
         if (onShowDialog) {
-            onShowDialog('normal');
-        } else {
-            incrementCount(1, "normal");
-        }
+            onShowDialog('regular');
+        } 
     }
 
     return (
@@ -179,7 +166,7 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
                                 borderRadius: 1,
                                 fontSize: '0.75rem'
                             }}>
-                            {selectedTimetable === 'normal' ? 'HORARIO NORMAL' : 'HORARIO FERIADO'}
+                            {report?.timetable === 'regular' ? 'HORARIO REGULAR' : 'HORARIO FERIADO'}
                         </Typography>
                         <Box>
                             <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
@@ -228,7 +215,7 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
                             >
                                {(() => {
                                     const timetable =
-                                        selectedTimetable === 'normal'
+                                        report?.timetable === 'regular'
                                             ? selectedRoute.timetable
                                             : selectedRoute.holiday_timetable;
 
@@ -403,7 +390,7 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
                         flexDirection: 'column',
                         gap: 0.5,
                     }}
-                    onClick={handleNormalTicket}
+                    onClick={handleRegularTicket}
                 >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Add fontSize="small" />

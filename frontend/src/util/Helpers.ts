@@ -30,8 +30,8 @@ export const generateCounterPrefixesKeys = (route: models.Route, time: models.Ti
     return route.stops.map((stop) => generateCounterKey(route, stop, time, false));
 };
 
-export const nextDeparture = (route: models.Route, timetable: "normal" | "holiday") => {
-    const times = timetable === "holiday" ? route.holiday_timetable : route.timetable;
+export const nextDeparture = (route: models.Route, timetable: "regular" | "holiday") => {
+    const times = timetable === "regular" ? route.timetable : route.holiday_timetable;
 
     const now = new Date();
     const currentTime = new models.Time({

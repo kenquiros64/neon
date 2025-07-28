@@ -23,6 +23,7 @@ export const useRoutesState = create<RoutesState & Actions>()((set) => ({
     fetchRoutes: () => {
         set({ routesLoading: true });
         GetRoutes().then((routes: models.Route[]) => {
+            console.log("routes", routes);
             set({ routes, routesLoading: false });
         }).catch((error) => {
             set({ routesLoading: false });

@@ -3,7 +3,7 @@ import {useReportState} from '../states/ReportState';
 import {useRoutesState} from '../states/RoutesState';
 import {useTicketState} from "../states/TicketState";
 import {useAuthState} from "../states/AuthState";
-import NoReport from "../components/StartReport";
+import StartReport from "../components/StartReport";
 import {toast} from "react-toastify";
 import {
     Avatar, 
@@ -21,7 +21,7 @@ import {
     ListItemText,
     CircularProgress
 } from "@mui/material";
-import {People, QuestionMarkOutlined, TripOrigin, LocationOn, Route as RouteIcon, DirectionsBus, Star, LocalAtm} from "@mui/icons-material";
+import {People, TripOrigin, LocationOn, Route as RouteIcon, DirectionsBus, Star, LocalAtm} from "@mui/icons-material";
 import HomeCard from "../components/HomeCard";
 import TicketPurchaseDialog from "../components/TicketPurchaseDialog";
 import routeList from "../assets/images/map.png";
@@ -41,7 +41,7 @@ const Ticket: React.FC = () => {
     const { report, checkReportStatus, reportLoading, resetReportState } = useReportState();
     const [showDialog, setShowDialog] = useState(false);
     const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
-    const [purchaseTicketType, setPurchaseTicketType] = useState<'normal' | 'gold'>('normal');
+    const [purchaseTicketType, setPurchaseTicketType] = useState<'regular' | 'gold'>('regular');
     const { user } = useAuthState();
     const {theme} = useTheme();
     const navigate = useNavigate();
@@ -55,7 +55,6 @@ const Ticket: React.FC = () => {
         setSelectedRoute,
         selectedTime,
         setSelectedStop,
-        setSelectedTimetable,
         setSelectedTime,
         resetTicketState,
         getCount,
@@ -87,7 +86,7 @@ const Ticket: React.FC = () => {
 
         setSelectedStop(mainStop);
         setSelectedStopID(mainStop.code);
-        setSelectedTime(nextDeparture(route, "normal"));
+        setSelectedTime(nextDeparture(route, (report?.timetable as 'regular' | 'holiday') || "regular"));
         getAllCounts();
 
 
@@ -136,7 +135,7 @@ const Ticket: React.FC = () => {
         setSelectedStop(stop);
         setSelectedStopID(stop.code);
         getAllCounts();
-        setSelectedTime(nextDeparture(route, "normal"));
+        setSelectedTime(nextDeparture(route, (report?.timetable as 'regular' | 'holiday') || "regular"));
         
         // Clear the input and maintain focus
         setCode("");
@@ -149,7 +148,7 @@ const Ticket: React.FC = () => {
         if (e.key === ' ') {
             e.preventDefault(); // Prevent space from being typed
             // Show dialog for regular ticket
-            setPurchaseTicketType('normal');
+            setPurchaseTicketType('regular');
             setShowPurchaseDialog(true);
         } else if (e.key === 'Enter') {
             e.preventDefault(); // Prevent form submission
@@ -222,7 +221,7 @@ const Ticket: React.FC = () => {
         }, 100);
     };
 
-    const handleShowDialogFromHomeCard = (ticketType: 'normal' | 'gold') => {
+    const handleShowDialogFromHomeCard = (ticketType: 'regular' | 'gold') => {
         setPurchaseTicketType(ticketType);
         setShowPurchaseDialog(true);
     };
@@ -244,12 +243,11 @@ const Ticket: React.FC = () => {
 
         setSelectedRoute(routes[0]);
         setSelectedRouteID(fullRouteName(routes[0]));
-        setSelectedTimetable("normal");
         setSelectedStop(routes[0].stops[stopIndex]);
         setSelectedStopID(routes[0].stops[stopIndex].code);
-        setSelectedTime(nextDeparture(routes[0], "normal"));
+        setSelectedTime(nextDeparture(routes[0], (report?.timetable as 'regular' | 'holiday') || "regular"));
         getAllCounts();
-    }, [routes, routesLoading]);
+    }, [routes, routesLoading, report]);
 
 
     // Check report status when component mounts
@@ -301,9 +299,9 @@ const Ticket: React.FC = () => {
         );
     }
 
-    // Show NoReport dialog if needed
+    // Show StartReport dialog if needed
     if (showDialog) {
-        return <NoReport />;
+        return <StartReport />;
     }
 
     if (routesLoading) {
@@ -521,7 +519,7 @@ const Ticket: React.FC = () => {
                                                     fontWeight: 500,
                                                 }}
                                             >
-                                                🕐 Siguiente: {to12HourFormat(nextDeparture(route, "normal"))}
+                                                🕐 Siguiente: {to12HourFormat(nextDeparture(route, (report?.timetable as 'regular' | 'holiday') || "regular"))}
                                             </Typography>
                                         }
                                         sx={{

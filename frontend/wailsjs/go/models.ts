@@ -19,6 +19,7 @@ export namespace models {
 	export class Report {
 	    id: number;
 	    username: string;
+	    timetable: string;
 	    partial_tickets: number;
 	    partial_cash: number;
 	    final_cash: number;
@@ -43,6 +44,7 @@ export namespace models {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
 	        this.username = source["username"];
+	        this.timetable = source["timetable"];
 	        this.partial_tickets = source["partial_tickets"];
 	        this.partial_cash = source["partial_cash"];
 	        this.final_cash = source["final_cash"];

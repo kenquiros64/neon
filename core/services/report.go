@@ -6,6 +6,7 @@ import (
 	"errors"
 	"neon/core/database/connections/embedded"
 	"neon/core/helpers"
+	"neon/core/helpers/enums"
 	"neon/core/models"
 	"neon/core/repositories/local"
 	"time"
@@ -30,12 +31,13 @@ func (r *ReportService) startup(ctx context.Context) {
 }
 
 // StartReport starts a new report
-func (r *ReportService) StartReport(username string) (*models.Report, error) {
+func (r *ReportService) StartReport(username string, timetable string) (*models.Report, error) {
 	repository := local.NewReportRepository(r.ctx, r.localDB)
 
 	now := time.Now().Format(time.RFC3339)
 	report := models.Report{
 		Username:  username,
+		Timetable: enums.Timetable(timetable),
 		Status:    true,
 		CreatedAt: &now,
 	}

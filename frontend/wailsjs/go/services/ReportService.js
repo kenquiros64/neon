@@ -10,8 +10,8 @@ export function PartialCloseReport(arg1, arg2) {
   return window['go']['services']['ReportService']['PartialCloseReport'](arg1, arg2);
 }
 
-export function StartReport(arg1) {
-  return window['go']['services']['ReportService']['StartReport'](arg1);
+export function StartReport(arg1, arg2) {
+  return window['go']['services']['ReportService']['StartReport'](arg1, arg2);
 }
 
 export function TotalCloseReport(arg1, arg2) {

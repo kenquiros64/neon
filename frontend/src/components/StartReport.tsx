@@ -10,17 +10,27 @@ import {
     TextField,
     Alert,
     CircularProgress,
-    InputAdornment
+    InputAdornment,
+    FormControl,
+    FormLabel,
+    RadioGroup,
+    FormControlLabel,
+    Radio
 } from '@mui/material';
 import { useAuthState } from "../states/AuthState";
-import { LocalAtm, Receipt, TrendingUp } from '@mui/icons-material';
+import { Receipt, TrendingUp, Schedule, Celebration } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useTheme } from '../themes/ThemeProvider';
 
-const NoReport: React.FC = () => {
-    const { report, startReport, reportLoading } = useReportState();
+const StartReport: React.FC = () => {
+    const { startReport, reportLoading } = useReportState();
     const { user } = useAuthState();
     const { theme } = useTheme();
+    const [selectedTimetable, setSelectedTimetable] = useState<'regular' | 'holiday'>('regular');
+
+    const handleTimetableChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSelectedTimetable(event.target.value as 'regular' | 'holiday');
+    };
 
     const handleStartReport = async () => {
 
@@ -30,7 +40,7 @@ const NoReport: React.FC = () => {
         }
 
         try {
-            const newReport = await startReport(user.username);
+            const newReport = await startReport(user.username, selectedTimetable);
             console.log('Report started successfully:', newReport);
             toast.success('Reporte iniciado exitosamente');
         } catch (error) {
@@ -101,37 +111,51 @@ const NoReport: React.FC = () => {
                         </Typography>
                     </Box>
 
-                    {/* Cash Input Section
-                    <Box sx={{ mb: 3 }}>
-                        <Typography variant="body2" sx={{ mb: 2, fontWeight: 600, fontSize: '0.85rem', color: 'text.primary' }}>
-                            Efectivo Inicial
+                    {/* Timetable Selection */}
+                    <Box sx={{ 
+                        p: 2, 
+                        backgroundColor: theme === "light" ? 'rgba(76, 175, 80, 0.08)' : 'rgba(129, 199, 132, 0.08)',
+                        borderRadius: 1,
+                        border: theme === "light" ? '1px solid rgba(76, 175, 80, 0.2)' : '1px solid rgba(129, 199, 132, 0.2)',
+                        mb: 3
+                    }}>
+                        <Typography variant="body2" color="success.main" sx={{ fontWeight: 600, fontSize: '0.75rem', mb: 2 }}>
+                            TIPO DE HORARIO
                         </Typography>
-                        <TextField
-                            fullWidth
-                            placeholder="0.00"
-                            value={initialCash}
-                            onChange={handleCashInputChange}
-                            error={!!validationError}
-                            helperText={validationError || "Ingrese el dinero en efectivo con el que inicia"}
-                            slotProps={{
-                                input: {
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <LocalAtm color="primary" sx={{ fontSize: 20 }} />
-                                        </InputAdornment>
-                                    ),
-                                }
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    backgroundColor: theme === "light" ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.05)',
-                                    '&:hover': {
-                                        backgroundColor: theme === "light" ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.08)',
+                        <FormControl>
+                            <RadioGroup
+                                row
+                                value={selectedTimetable}
+                                onChange={handleTimetableChange}
+                                sx={{ gap: 2 }}
+                            >
+                                <FormControlLabel 
+                                    value="regular" 
+                                    control={<Radio size="small" />} 
+                                    label={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Schedule sx={{ fontSize: 16, color: 'primary.main' }} />
+                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                Regular
+                                            </Typography>
+                                        </Box>
                                     }
-                                }
-                            }}
-                        />
-                    </Box> */}
+                                />
+                                <FormControlLabel 
+                                    value="holiday" 
+                                    control={<Radio size="small" />} 
+                                    label={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Celebration sx={{ fontSize: 16, color: 'secondary.main' }} />
+                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                Feriado
+                                            </Typography>
+                                        </Box>
+                                    }
+                                />
+                            </RadioGroup>
+                        </FormControl>
+                    </Box>
 
                     {/* Info Section */}
                     <Box sx={{ 
@@ -186,4 +210,4 @@ const NoReport: React.FC = () => {
     );
 };
 
-export default NoReport;
+export default StartReport;

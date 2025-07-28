@@ -3,7 +3,7 @@ import {useReportState} from '../states/ReportState';
 import {useRoutesState} from '../states/RoutesState';
 import {useTicketState} from "../states/TicketState";
 import {useAuthState} from "../states/AuthState";
-import NoReport from "../components/NoReport";
+import NoReport from "../components/StartReport";
 import {toast} from "react-toastify";
 import {
     Avatar, 

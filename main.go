@@ -27,8 +27,9 @@ func main() {
 		zap.L().Fatal("Failed to get user config directory", zap.Error(err))
 	}
 
+	// Load .env file if it exists (development), but don't fail if it doesn't (production)
 	if err := godotenv.Load(); err != nil {
-		zap.L().Fatal("Failed to load .env file", zap.Error(err))
+		zap.L().Debug("No .env file found, using system environment variables", zap.Error(err))
 	}
 
 	dataDir := filepath.Join(dir, constants.AppName, constants.DataDir)

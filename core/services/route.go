@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"neon/core/config"
 	"neon/core/database/connections/embedded"
 	"neon/core/database/connections/mongodb"
 	"neon/core/models"
@@ -13,14 +14,13 @@ import (
 
 // RouteService is a service for routes
 type RouteService struct {
-	ctx      context.Context
-	remoteDB *mongodb.MongoDB
-	localDB  *embedded.CloverDB
+	ctx     context.Context
+	localDB *embedded.CloverDB
 }
 
 // NewRouteService creates a new route service
-func NewRouteService(remoteDB *mongodb.MongoDB, localDB *embedded.CloverDB) *RouteService {
-	return &RouteService{remoteDB: remoteDB, localDB: localDB}
+func NewRouteService(localDB *embedded.CloverDB) *RouteService {
+	return &RouteService{localDB: localDB}
 }
 
 // startup starts the route service
@@ -43,16 +43,16 @@ func (r *RouteService) GetRoutes() ([]models.Route, error) {
 
 // AddRoute adds a route
 func (r *RouteService) AddRoute(route *models.Route) error {
-	remoteRepo := remote.NewRouteRepository(r.remoteDB)
+	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	if err := remotedb.Connect(r.ctx); err != nil {
+		zap.L().Error("failed to connect to remote database", zap.Error(err))
+		return err
+	}
+	defer remotedb.Close()
+	remoteRepo := remote.NewRouteRepository(remotedb)
 
 	if err := remoteRepo.Create(r.ctx, route); err != nil {
 		zap.L().Error("failed to create route", zap.Error(err))
-		return err
-	}
-
-	syncService := NewSyncService(r.remoteDB, r.localDB)
-	if err := syncService.SyncRoutes(); err != nil {
-		zap.L().Error("failed to sync routes", zap.Error(err))
 		return err
 	}
 
@@ -61,16 +61,16 @@ func (r *RouteService) AddRoute(route *models.Route) error {
 
 // UpdateRoute updates a route
 func (r *RouteService) UpdateRoute(route *models.Route) error {
-	remoteRepo := remote.NewRouteRepository(r.remoteDB)
+	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	if err := remotedb.Connect(r.ctx); err != nil {
+		zap.L().Error("failed to connect to remote database", zap.Error(err))
+		return err
+	}
+	defer remotedb.Close()
+	remoteRepo := remote.NewRouteRepository(remotedb)
 
 	if err := remoteRepo.Update(r.ctx, route); err != nil {
 		zap.L().Error("failed to update route", zap.Error(err))
-		return err
-	}
-
-	syncService := NewSyncService(r.remoteDB, r.localDB)
-	if err := syncService.SyncRoutes(); err != nil {
-		zap.L().Error("failed to sync routes", zap.Error(err))
 		return err
 	}
 
@@ -79,15 +79,16 @@ func (r *RouteService) UpdateRoute(route *models.Route) error {
 
 // DeleteRoute deletes a route
 func (r *RouteService) DeleteRoute(route *models.Route) error {
-	remoteRepo := remote.NewRouteRepository(r.remoteDB)
-	if err := remoteRepo.Delete(r.ctx, route); err != nil {
-		zap.L().Error("failed to delete route", zap.Error(err))
+	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	if err := remotedb.Connect(r.ctx); err != nil {
+		zap.L().Error("failed to connect to remote database", zap.Error(err))
 		return err
 	}
+	defer remotedb.Close()
+	remoteRepo := remote.NewRouteRepository(remotedb)
 
-	syncService := NewSyncService(r.remoteDB, r.localDB)
-	if err := syncService.SyncRoutes(); err != nil {
-		zap.L().Error("failed to sync routes", zap.Error(err))
+	if err := remoteRepo.Delete(r.ctx, route); err != nil {
+		zap.L().Error("failed to delete route", zap.Error(err))
 		return err
 	}
 

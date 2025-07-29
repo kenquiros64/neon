@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"neon/core/config"
 	"neon/core/database/connections/embedded"
 	"neon/core/database/connections/mongodb"
 	"neon/core/helpers"
@@ -15,16 +16,14 @@ import (
 
 // SyncService provides synchronization services
 type SyncService struct {
-	ctx      context.Context
-	remoteDB *mongodb.MongoDB
-	localDB  *embedded.CloverDB
+	ctx     context.Context
+	localDB *embedded.CloverDB
 }
 
 // NewSyncService creates a new SyncService
-func NewSyncService(remoteDB *mongodb.MongoDB, localDB *embedded.CloverDB) *SyncService {
+func NewSyncService(localDB *embedded.CloverDB) *SyncService {
 	return &SyncService{
-		remoteDB: remoteDB,
-		localDB:  localDB,
+		localDB: localDB,
 	}
 }
 
@@ -40,7 +39,14 @@ func (s *SyncService) SyncRoutes() error {
 		return err
 	}
 
-	remoteRepo := remote.NewRouteRepository(s.remoteDB)
+	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	if err := remotedb.Connect(s.ctx); err != nil {
+		zap.L().Error("failed to connect to remote database", zap.Error(err))
+		return err
+	}
+	defer remotedb.Close()
+
+	remoteRepo := remote.NewRouteRepository(remotedb)
 	localRepo := local.NewRouteRepository(s.localDB)
 
 	routes, err := remoteRepo.All(s.ctx)
@@ -73,7 +79,13 @@ func (s *SyncService) SyncUsers() error {
 		return err
 	}
 
-	remoteRepo := remote.NewUserRepository(s.remoteDB)
+	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	if err := remotedb.Connect(s.ctx); err != nil {
+		zap.L().Error("failed to connect to remote database", zap.Error(err))
+		return err
+	}
+	defer remotedb.Close()
+	remoteRepo := remote.NewUserRepository(remotedb)
 	localRepo := local.NewUserRepository(s.localDB)
 
 	users, err := remoteRepo.All(s.ctx)

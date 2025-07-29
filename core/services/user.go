@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"neon/core/config"
 	"neon/core/database/connections/embedded"
 	"neon/core/database/connections/mongodb"
 	"neon/core/models"
@@ -12,14 +13,13 @@ import (
 
 // UserService is a service for users
 type UserService struct {
-	ctx      context.Context
-	localDB  *embedded.CloverDB
-	remoteDB *mongodb.MongoDB
+	ctx     context.Context
+	localDB *embedded.CloverDB
 }
 
 // NewUserService creates a new user service
-func NewUserService(localDB *embedded.CloverDB, remoteDB *mongodb.MongoDB) *UserService {
-	return &UserService{localDB: localDB, remoteDB: remoteDB}
+func NewUserService(localDB *embedded.CloverDB) *UserService {
+	return &UserService{localDB: localDB}
 }
 
 // startup starts the user service
@@ -29,16 +29,16 @@ func (u *UserService) startup(ctx context.Context) {
 
 // AddUser adds a user
 func (u *UserService) AddUser(user *models.User) error {
-	remoteRepo := remote.NewUserRepository(u.remoteDB)
+	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	if err := remotedb.Connect(u.ctx); err != nil {
+		zap.L().Error("failed to connect to remote database", zap.Error(err))
+		return err
+	}
+	defer remotedb.Close()
+	remoteRepo := remote.NewUserRepository(remotedb)
 
 	if err := remoteRepo.Create(u.ctx, user); err != nil {
 		zap.L().Error("failed to create user", zap.Error(err))
-		return err
-	}
-
-	syncService := NewSyncService(u.remoteDB, u.localDB)
-	if err := syncService.SyncUsers(); err != nil {
-		zap.L().Error("failed to sync users", zap.Error(err))
 		return err
 	}
 

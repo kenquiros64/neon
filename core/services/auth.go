@@ -3,6 +3,7 @@ package services
 
 import (
 	"context"
+	"neon/core/config"
 	"neon/core/database/connections/embedded"
 	"neon/core/database/connections/mongodb"
 	"neon/core/helpers"
@@ -16,16 +17,14 @@ import (
 
 // AuthService provides authentication services for the neon application
 type AuthService struct {
-	ctx      context.Context
-	remoteDB *mongodb.MongoDB
-	localDB  *embedded.CloverDB
+	ctx     context.Context
+	localDB *embedded.CloverDB
 }
 
 // NewAuthService creates a new AuthService
-func NewAuthService(remoteDB *mongodb.MongoDB, localDB *embedded.CloverDB) *AuthService {
+func NewAuthService(localDB *embedded.CloverDB) *AuthService {
 	return &AuthService{
-		remoteDB: remoteDB,
-		localDB:  localDB,
+		localDB: localDB,
 	}
 }
 
@@ -63,7 +62,14 @@ func (a *AuthService) Register(user *models.User) error {
 		return helpers.ErrInvalidRequest
 	}
 
-	remoteRepo := remote.NewUserRepository(a.remoteDB)
+	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	if err := remotedb.Connect(a.ctx); err != nil {
+		zap.L().Error("failed to connect to remote database", zap.Error(err))
+		return err
+	}
+	defer remotedb.Close()
+
+	remoteRepo := remote.NewUserRepository(remotedb)
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {

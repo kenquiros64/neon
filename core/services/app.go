@@ -5,7 +5,6 @@ import (
 	"embed"
 	"neon/core/config"
 	"neon/core/database/connections/embedded"
-	"neon/core/database/connections/mongodb"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -19,7 +18,6 @@ type App struct {
 }
 
 var (
-	remotedb *mongodb.MongoDB
 	cloverdb *embedded.CloverDB
 	sqlitedb *embedded.Database
 )
@@ -33,11 +31,11 @@ func NewApp(assets embed.FS) *App {
 func (a *App) Startup() {
 
 	initialize(context.Background())
-	syncService := NewSyncService(remotedb, cloverdb)
-	authService := NewAuthService(remotedb, cloverdb)
-	userService := NewUserService(cloverdb, remotedb)
+	syncService := NewSyncService(cloverdb)
+	authService := NewAuthService(cloverdb)
+	userService := NewUserService(cloverdb)
 	ticketService := NewTicketService(sqlitedb)
-	routeService := NewRouteService(remotedb, cloverdb)
+	routeService := NewRouteService(cloverdb)
 	counterService := NewCounterService(cloverdb)
 	reportService := NewReportService(sqlitedb)
 
@@ -83,11 +81,6 @@ func (a *App) Startup() {
 }
 
 func initialize(ctx context.Context) {
-	remotedb = mongodb.NewMongoDB(config.DefaultMongoDBConfig())
-	if err := remotedb.Connect(ctx); err != nil {
-		zap.L().Fatal("Error connecting to remote database", zap.Error(err))
-	}
-
 	cloverdb = embedded.NewCloverDB(config.DefaultCloverDBConfig())
 	if err := cloverdb.Connect(ctx); err != nil {
 		zap.L().Fatal("Error connecting to local database", zap.Error(err))
@@ -100,9 +93,6 @@ func initialize(ctx context.Context) {
 }
 
 func shutdown() {
-	if err := remotedb.Close(); err != nil {
-		zap.L().Debug("Error closing remote database", zap.Error(err))
-	}
 	if err := cloverdb.Close(); err != nil {
 		zap.L().Debug("Error closing clover database", zap.Error(err))
 	}

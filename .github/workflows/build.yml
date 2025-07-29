@@ -1,8 +1,8 @@
-name: Neon build
+name: Neon Build
 
 on:
   push:
-    tags:
+    branches:
       - main
 
 env:

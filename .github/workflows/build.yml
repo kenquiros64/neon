@@ -23,7 +23,7 @@ jobs:
             platform:  'windows/amd64'
             os: 'windows-latest'
           - name: 'Neon'
-            platform:  'darwin/arm64'
+            platform:  'darwin/universal'
             os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}

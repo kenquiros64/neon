@@ -19,6 +19,7 @@ import { loginErrorMessages } from "../util/ErrorMessages";
 const Login: React.FC = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [isReady, setIsReady] = useState(true);
     const [inputError, setInputError] = useState({username: "", password: ""});
     const [loading, setLoading] = useState(false);
     const {login} = useAuthState();
@@ -37,6 +38,11 @@ const Login: React.FC = () => {
         SyncRoutes().then(() => {
             toast.success("Rutas sincronizadas correctamente");
         }).catch((error) => {
+            if (error === "ROUTE_IS_EMPTY") {
+                toast.error("Una ruta tiene datos faltantes. Por favor, contacta al administrador.");
+                setIsReady(false);
+                return;
+            }
             console.error("Error al sincronizar las rutas:", error);
             toast.error("Error al sincronizar las rutas");
         });
@@ -247,6 +253,7 @@ const Login: React.FC = () => {
                                     fullWidth
                                     loading={loading}
                                     loadingPosition={"end"}
+                                    disabled={!isReady}
                                     size={"large"}
                                     variant="contained"
                                     color="secondary"

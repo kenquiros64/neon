@@ -275,6 +275,7 @@ const Ticket: React.FC = () => {
         console.log("Report state changed in Ticket page:", report);
         if (report) {
             fetchRoutes();
+            setReportStatusChecked(true);
             setShowDialog(false);
             return;
         }

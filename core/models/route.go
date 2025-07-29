@@ -13,3 +13,12 @@ type Route struct {
 	Timetable        []Time        `json:"timetable" bson:"timetable" clover:"timetable"`
 	HolidayTimetable []Time        `json:"holiday_timetable" bson:"holiday_timetable" clover:"holiday"`
 }
+
+// IsEmpty checks if the route is empty
+func (r *Route) IsEmpty() bool {
+	return r.Departure == "" ||
+		r.Destination == "" ||
+		len(r.Stops) == 0 ||
+		len(r.Timetable) == 0 ||
+		len(r.HolidayTimetable) == 0
+}

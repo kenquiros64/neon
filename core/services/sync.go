@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"neon/core/database/connections/embedded"
 	"neon/core/database/connections/mongodb"
+	"neon/core/helpers"
 	"neon/core/repositories/local"
 	"neon/core/repositories/remote"
 
@@ -37,6 +39,9 @@ func (s *SyncService) SyncRoutes() error {
 
 	routes, err := remoteRepo.All(s.ctx)
 	if err != nil {
+		if errors.Is(err, helpers.ErrRouteIsEmpty) {
+			return err
+		}
 		zap.L().Error("failed to get routes from remote repository", zap.Error(err))
 		return fmt.Errorf("failed to get routes from remote repository: %w", err)
 	}

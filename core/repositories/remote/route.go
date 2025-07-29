@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"neon/core/constants"
 	"neon/core/database/connections/mongodb"
+	"neon/core/helpers"
 	"neon/core/models"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -38,6 +39,11 @@ func (r *RouteRepository) All(ctx context.Context) ([]models.Route, error) {
 		if err := cursor.Decode(&route); err != nil {
 			return nil, fmt.Errorf("failed to decode route: %w", err)
 		}
+
+		if route.IsEmpty() {
+			return nil, helpers.ErrRouteIsEmpty
+		}
+
 		routes = append(routes, route)
 	}
 

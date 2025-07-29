@@ -28,3 +28,6 @@ var ErrTicketAlreadyNullified = errors.New("TICKET_ALREADY_NULLIFIED")
 
 // ErrTicketNotBelongToReport is the error returned when a ticket is not belong to a report
 var ErrTicketNotBelongToReport = errors.New("TICKET_NOT_BELONG_TO_REPORT")
+
+// ErrRouteIsEmpty is the error returned when a route is empty
+var ErrRouteIsEmpty = errors.New("ROUTE_IS_EMPTY")

@@ -219,7 +219,7 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
                                             ? selectedRoute.timetable
                                             : selectedRoute.holiday_timetable;
 
-                                    if (timetable?.length) {
+                                    if (timetable.length > 0) {
                                         return timetable.map((time: models.Time) => {
                                             return (
                                                 <MenuItem key={to24HourFormat(time)} value={to24HourFormat(time)}>

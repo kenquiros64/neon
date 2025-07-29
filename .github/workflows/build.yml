@@ -6,29 +6,28 @@ on:
       - main
 
 env:
-  # Necessary for most environments as build failure can occur due to OOM issues
   NODE_OPTIONS: "--max-old-space-size=4096"
 
 jobs:
   build:
     strategy:
-    # Failure in one platform build won't impact the others
       fail-fast: false
       matrix:
         build:
           - name: 'Neon'
-            platform:  'linux/amd64'
+            platform: 'linux/amd64'
             os: 'ubuntu-latest'
           - name: 'Neon'
-            platform:  'windows/amd64'
+            platform: 'windows/amd64'
             os: 'windows-latest'
           - name: 'Neon'
-            platform:  'darwin/universal'
+            platform: 'darwin/universal'
             os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v2
         with:
           submodules: recursive
@@ -36,8 +35,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-        
+          node-version: '18'  # Match your local Node version
+
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install Node dependencies
         run: npm install
 

@@ -19,7 +19,9 @@ import {
     ListItem,
     ListItemButton,
     ListItemText,
-    CircularProgress
+    CircularProgress,
+    Alert,
+    AlertTitle
 } from "@mui/material";
 import {People, TripOrigin, LocationOn, Route as RouteIcon, DirectionsBus, Star, LocalAtm} from "@mui/icons-material";
 import HomeCard from "../components/HomeCard";
@@ -68,6 +70,9 @@ const Ticket: React.FC = () => {
     const [selectedStopID, setSelectedStopID] = useState<String | null>(null);
     const [reportStatusChecked, setReportStatusChecked] = useState(false);
 
+    // Check if there's a pending report from another user
+    const hasPendingReportFromOtherUser = report && report.username !== user?.username;
+
     const handleSelect = (id: String) => {
         setSelectedRouteID(id);
         let route = routes.find((route) => {
@@ -90,9 +95,11 @@ const Ticket: React.FC = () => {
         getAllCounts();
 
 
-        setTimeout(() => {
-            inputRef.current?.focus();
-        }, 0);
+        if (!hasPendingReportFromOtherUser) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 0);
+        }
     };
 
     const handleSelectStop = (id: String) => {
@@ -106,9 +113,11 @@ const Ticket: React.FC = () => {
         setSelectedStop(mainStop);
         getAllCounts();
 
-        setTimeout(() => {
-            inputRef.current?.focus();
-        }, 0);
+        if (!hasPendingReportFromOtherUser) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 0);
+        }
     };
 
     const handleInputCode = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,31 +148,14 @@ const Ticket: React.FC = () => {
         
         // Clear the input and maintain focus
         setCode("");
-        setTimeout(() => {
-            inputRef.current?.focus();
-        }, 0);
+        if (!hasPendingReportFromOtherUser) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 0);
+        }
     }
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === ' ') {
-            e.preventDefault(); // Prevent space from being typed
-            // Show dialog for regular ticket
-            setPurchaseTicketType('regular');
-            setShowPurchaseDialog(true);
-        } else if (e.key === 'Enter') {
-            e.preventDefault(); // Prevent form submission
-            // Show dialog for gold ticket
-            setPurchaseTicketType('gold');
-            setShowPurchaseDialog(true);
-        }
-    };
-
     const handlePurchaseConfirm = async (quantity: number, idNumber?: string) => {
-        if (report?.username !== user?.username) {
-            toast.warning("No tienes permisos para vender tiquetes para el reporte actual. El reporte actual esta pendiente de cierre. Revisa los reportes pendientes.");
-            return;
-        }
-
         try {
             // Create ticket objects based on quantity
             const ticketsToAdd: models.Ticket[] = [];
@@ -216,9 +208,11 @@ const Ticket: React.FC = () => {
     const handlePurchaseCancel = () => {
         setShowPurchaseDialog(false);
         // Refocus the input after dialog closes
-        setTimeout(() => {
-            inputRef.current?.focus();
-        }, 100);
+        if (!hasPendingReportFromOtherUser) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+        }
     };
 
     const handleShowDialogFromHomeCard = (ticketType: 'regular' | 'gold') => {
@@ -285,19 +279,57 @@ const Ticket: React.FC = () => {
 
     // Focus input field when time changes
     useEffect(() => {
-        if (selectedTime) {
+        if (selectedTime && !hasPendingReportFromOtherUser) {
             setTimeout(() => {
                 inputRef.current?.focus();
             }, 0);
         }
-    }, [selectedTime]);
+    }, [selectedTime, hasPendingReportFromOtherUser]);
 
     // Focus input field when component mounts
     useEffect(() => {
-        setTimeout(() => {
-            inputRef.current?.focus();
-        }, 100);
-    }, []);
+        if (!hasPendingReportFromOtherUser) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+        }
+    }, [hasPendingReportFromOtherUser]);
+
+    // Global keydown handler for Enter and Space
+    useEffect(() => {
+        const handleGlobalKeyDown = (e: KeyboardEvent) => {
+            // Don't trigger if there's a pending report from another user
+            if (hasPendingReportFromOtherUser) return;
+            
+            // Don't trigger if a dialog is open
+            if (showPurchaseDialog) return;
+            
+            // Don't trigger if user is typing in an input field (except our code input)
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' && target !== inputRef.current) return;
+            if (target.tagName === 'TEXTAREA') return;
+            
+            if (e.key === ' ') {
+                e.preventDefault(); // Prevent space from scrolling the page
+                // Show dialog for regular ticket
+                setPurchaseTicketType('regular');
+                setShowPurchaseDialog(true);
+            } else if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent any default behavior
+                // Show dialog for gold ticket
+                setPurchaseTicketType('gold');
+                setShowPurchaseDialog(true);
+            }
+        };
+
+        // Add event listener
+        document.addEventListener('keydown', handleGlobalKeyDown);
+
+        // Cleanup
+        return () => {
+            document.removeEventListener('keydown', handleGlobalKeyDown);
+        };
+    }, [hasPendingReportFromOtherUser, showPurchaseDialog, inputRef]);
 
     if (!reportStatusChecked || reportLoading) {
         return (
@@ -328,20 +360,47 @@ const Ticket: React.FC = () => {
                     gap: 2,
                 }}
             >
-                <Box sx={{display: "flex", alignItems: "center"}}>
-                    <TextField
-                        fullWidth
-                        placeholder={"Código"}
-                        value={code}
-                        onChange={handleInputCode}
-                        onKeyDown={handleKeyDown}
-                        inputRef={inputRef}
-                        sx={{ pattern: "[0-9]*", inputMode: "numeric" }}
-                    />
-                </Box>
-                <Box sx={{alignItems: "center", display: "flex", height: "100%"}}>
-                    <HomeCard onShowDialog={handleShowDialogFromHomeCard}/>
-                </Box>
+                {hasPendingReportFromOtherUser ? (
+                    // Show alert when there's a pending report from another user
+                    <Alert 
+                        severity="warning" 
+                        sx={{ 
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            textAlign: "center"
+                        }}
+                    >
+                        <AlertTitle sx={{ fontSize: "1.2rem", fontWeight: 700 }}>
+                            Reporte Pendiente de Otro Usuario
+                        </AlertTitle>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                            Hay un reporte pendiente abierto por <strong>{report?.username}</strong>.
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Para poder vender tiquetes, es necesario cerrar el reporte pendiente desde la sección de Reportes.
+                        </Typography>
+                    </Alert>
+                ) : (
+                    // Show normal selling UI when user can sell tickets
+                    <>
+                        <Box sx={{display: "flex", alignItems: "center"}}>
+                            <TextField
+                                fullWidth
+                                placeholder={"Código"}
+                                value={code}
+                                onChange={handleInputCode}
+                                inputRef={inputRef}
+                                sx={{ pattern: "[0-9]*", inputMode: "numeric" }}
+                            />
+                        </Box>
+                        <Box sx={{alignItems: "center", display: "flex", height: "100%"}}>
+                            <HomeCard onShowDialog={handleShowDialogFromHomeCard}/>
+                        </Box>
+                    </>
+                )}
             </Grid>
             <Divider sx={{height: "100%"}} orientation={"vertical"} flexItem/>
             <Grid

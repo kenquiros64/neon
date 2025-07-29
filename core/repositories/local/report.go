@@ -159,7 +159,7 @@ func (r *ReportRepository) GetLatestReportsByUsername(username string) ([]*model
 			goqu.C("username").Eq(username),
 			goqu.C("status").Eq(false), // Only closed reports
 		),
-	).Order(goqu.C("created_at").Desc()).Limit(2)
+	).Order(goqu.C("created_at").Desc()).Limit(5)
 
 	sql, args, err := query.Prepared(true).ToSQL()
 	if err != nil {

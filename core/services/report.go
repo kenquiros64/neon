@@ -126,7 +126,7 @@ func (r *ReportService) TotalCloseReport(
 	return report, nil
 }
 
-// GetLatestReportsByUsername gets the latest 2 closed reports for a specific user
+// GetLatestReportsByUsername gets the latest 5 closed reports for a specific user
 func (r *ReportService) GetLatestReportsByUsername(username string) ([]*models.Report, error) {
 	repository := local.NewReportRepository(r.ctx, r.localDB)
 

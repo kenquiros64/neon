@@ -31,6 +31,10 @@ const Login: React.FC = () => {
         SyncUsers().then(() => {
             toast.success("Usuarios sincronizados correctamente");
         }).catch((error) => {
+            if (error === "NO_INTERNET_CONNECTION") {
+                toast.warning("No es posible sincronizar las rutas sin conexión a internet");
+                return;
+            }
             console.error("Error al sincronizar los usuarios:", error);
             toast.error("Error al sincronizar los usuarios");
         });
@@ -41,6 +45,10 @@ const Login: React.FC = () => {
             if (error === "ROUTE_IS_EMPTY") {
                 toast.error("Una ruta tiene datos faltantes. Por favor, contacta al administrador.");
                 setIsReady(false);
+                return;
+            }
+            if (error === "NO_INTERNET_CONNECTION") {
+                toast.warning("No es posible sincronizar las rutas sin conexión a internet");
                 return;
             }
             console.error("Error al sincronizar las rutas:", error);

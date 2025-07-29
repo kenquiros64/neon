@@ -34,6 +34,12 @@ func (s *SyncService) startup(ctx context.Context) {
 
 // SyncRoutes syncs routes from the remote repository to the local repository
 func (s *SyncService) SyncRoutes() error {
+	// Check internet connectivity before attempting sync
+	if err := helpers.CheckInternetConnection(); err != nil {
+		zap.L().Error("no internet connection available for sync", zap.Error(err))
+		return err
+	}
+
 	remoteRepo := remote.NewRouteRepository(s.remoteDB)
 	localRepo := local.NewRouteRepository(s.localDB)
 
@@ -61,6 +67,12 @@ func (s *SyncService) SyncRoutes() error {
 
 // SyncUsers syncs users from the remote repository to the local repository
 func (s *SyncService) SyncUsers() error {
+	// Check internet connectivity before attempting sync
+	if err := helpers.CheckInternetConnection(); err != nil {
+		zap.L().Error("no internet connection available for sync", zap.Error(err))
+		return err
+	}
+
 	remoteRepo := remote.NewUserRepository(s.remoteDB)
 	localRepo := local.NewUserRepository(s.localDB)
 

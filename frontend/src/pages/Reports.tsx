@@ -224,7 +224,7 @@ const Reports: React.FC = () => {
 
     if (!report) {
         return (
-            <Box sx={{ p: 3, maxWidth: 1500, mx: 'auto', mt: 4 }}>
+            <Box sx={{ p: 3, mx: 'auto', mt: 4 }}>
                 <Alert severity="info" sx={{ mb: 3 }}>
                     <Typography variant="h6">No hay reporte activo</Typography>
                     <Typography>No se encontró un reporte abierto o pendiente. Vaya a la página de tiquetes para iniciar uno nuevo.</Typography>
@@ -298,7 +298,7 @@ const Reports: React.FC = () => {
     const isPendingReport = report.partial_closed_at !== null && report.closed_at === null;
 
     return (
-        <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+        <Box sx={{ p: 3, mx: 'auto' }}>
             {/* Report Status Header */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

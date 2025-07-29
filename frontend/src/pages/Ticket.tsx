@@ -292,6 +292,13 @@ const Ticket: React.FC = () => {
         }
     }, [selectedTime]);
 
+    // Focus input field when component mounts
+    useEffect(() => {
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 100);
+    }, []);
+
     if (!reportStatusChecked || reportLoading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>

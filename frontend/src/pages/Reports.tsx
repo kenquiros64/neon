@@ -235,7 +235,7 @@ const Reports: React.FC = () => {
                     <CardContent>
                         <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Timeline color="primary" />
-                            Últimos 2 Reportes
+                            Últimos Reportes
                             <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
                                 Para reimprimir reportes anteriores
                             </Typography>
@@ -487,7 +487,7 @@ const Reports: React.FC = () => {
                         <CardContent>
                             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Timeline color="primary" />
-                                Últimos 2 Reportes
+                                Últimos Reportes
                                 <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
                                     Para reimprimir reportes anteriores
                                 </Typography>

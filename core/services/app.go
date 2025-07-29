@@ -44,7 +44,7 @@ func (a *App) Startup() {
 
 	err := wails.Run(&options.App{
 		Title:     "neon",
-		MinWidth:  1280,
+		MinWidth:  1366,
 		MinHeight: 900,
 		MaxWidth:  1920,
 		MaxHeight: 1080,

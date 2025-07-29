@@ -71,7 +71,7 @@ const Ticket: React.FC = () => {
     const [reportStatusChecked, setReportStatusChecked] = useState(false);
 
     // Check if there's a pending report from another user
-    const hasPendingReportFromOtherUser = report && report.username !== user?.username;
+    const hasPendingReportFromOtherUser = report && report.username !== user.username;
 
     const handleSelect = (id: String) => {
         setSelectedRouteID(id);
@@ -105,7 +105,7 @@ const Ticket: React.FC = () => {
     const handleSelectStop = (id: String) => {
         setSelectedStopID(id);
 
-        const mainStop = selectedRoute?.stops.find((stop) => stop.code === id);
+        const mainStop = selectedRoute.stops.find((stop) => stop.code === id);
         if (!mainStop) {
             return;
         }
@@ -159,7 +159,7 @@ const Ticket: React.FC = () => {
         try {
             // Create ticket objects based on quantity
             const ticketsToAdd: models.Ticket[] = [];
-            const currentSelectedStop = selectedRoute?.stops.find(stop => stop.code === selectedStopID);
+            const currentSelectedStop = selectedRoute.stops.find(stop => stop.code === selectedStopID);
             
             if (!currentSelectedStop || !selectedRoute || !selectedTime || !user) {
                 toast.error("Faltan datos para crear el ticket");
@@ -735,7 +735,7 @@ const Ticket: React.FC = () => {
                 })()}
 
                 <List sx={{ p: 0, mt: 1 }}>
-                    {selectedRoute?.stops.map((stop) => {
+                    {selectedRoute.stops.map((stop) => {
                         const isSelected = stop.code === selectedStopID;
                         const passengerCount = getCount(stop);
                         
@@ -887,7 +887,7 @@ const Ticket: React.FC = () => {
                 onConfirm={handlePurchaseConfirm}
                 ticketType={purchaseTicketType}
                 route={selectedRoute}
-                stop={selectedRoute?.stops.find(stop => stop.code === selectedStopID) || null}
+                stop={selectedRoute.stops.find(stop => stop.code === selectedStopID) || null}
                 selectedTime={selectedTime}
             />
         </Grid>

@@ -34,7 +34,7 @@ const StartReport: React.FC = () => {
 
     const handleStartReport = async () => {
 
-        if (!user?.username) {
+        if (!user.username) {
             toast.error('Usuario no válido');
             return;
         }

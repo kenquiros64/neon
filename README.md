@@ -11,11 +11,11 @@ here: https://wails.io/docs/reference/project-config
 
 ### MongoDB Configuration
 
-The application uses a YAML-based configuration file for MongoDB settings located at `~/.config/neon/mongo.yaml` (on Unix systems) or the equivalent on other platforms.
+The application uses a YAML-based configuration file for MongoDB settings located at `~/.config/neon/config.yaml` (on Unix systems) or the equivalent on other platforms.
 
-When you first run the application, it will automatically create a default `mongo.yaml` file with placeholder values. You can modify this file to configure your MongoDB connection.
+When you first run the application, it will automatically create a default `config.yaml` file with placeholder values. You can modify this file to configure your MongoDB connection.
 
-Example `mongo.yaml` structure:
+Example `config.yaml` structure:
 ```yaml
 # MongoDB Configuration
 host: "localhost"
@@ -41,7 +41,7 @@ Environment variables take precedence over the configuration file.
 
 ### Database Locations
 
-- **MongoDB Config**: `~/.config/neon/mongo.yaml`
+- **MongoDB Config**: `~/.config/neon/config.yaml`
 - **SQLite Database**: `~/.config/neon/data/oxygen.db`
 - **CloverDB Database**: `~/.config/neon/data/titanium/`
 - **Logs**: `~/.cache/neon/logs/app.log`

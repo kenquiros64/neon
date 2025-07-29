@@ -41,7 +41,6 @@ const StartReport: React.FC = () => {
 
         try {
             const newReport = await startReport(user.username, selectedTimetable);
-            console.log('Report started successfully:', newReport);
             toast.success('Reporte iniciado exitosamente');
         } catch (error) {
             console.error('Error starting report:', error);

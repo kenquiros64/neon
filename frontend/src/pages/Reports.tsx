@@ -185,13 +185,11 @@ const Reports: React.FC = () => {
 
     // Check report status when component mounts
     useEffect(() => {
-        console.log('Reports page mounted, checking report status');
         checkAndLoadReport();
     }, []);
 
     // React to report state changes from other components (like when a report is started)
     useEffect(() => {
-        console.log('Report state changed in Reports page:', report);
         if (report) {
             // If we received a report from the global state, mark as checked
             setReportStatusChecked(true);

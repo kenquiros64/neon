@@ -64,7 +64,7 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
             ? selectedRoute?.timetable
             : selectedRoute?.holiday_timetable;
             
-        const selectedTimeObj = timetable?.find((time: models.Time) => 
+        const selectedTimeObj = timetable.find((time: models.Time) => 
             to24HourFormat(time) === timeString
         );
         
@@ -79,7 +79,6 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
             ? selectedRoute.timetable
             : selectedRoute.holiday_timetable;
 
-        console.log("INCREASING")
         if (!times || times.length === 0) {
             console.error("Times not found or empty");
             return;

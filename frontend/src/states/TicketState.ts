@@ -103,7 +103,6 @@ export const useTicketState = create<TicketState & Actions>()((set, get) => ({
         GetAllCountsFromToday().then((counts: models.Count[]) => {
             let counterMap: CounterMap = {};
             for (let count of counts) {
-                console.log(`Code: ${count.key}, Count: ${count.value}, Last Reset: ${count.last_reset}`);
                 counterMap[count.key] = count.value;
             }
             set({ routeTimeCounts: counterMap });

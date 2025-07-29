@@ -41,12 +41,11 @@ import routeDark from "../assets/images/route_dark.svg";
 
 const Ticket: React.FC = () => {
     const { report, checkReportStatus, reportLoading, resetReportState } = useReportState();
-    const [showDialog, setShowDialog] = useState(false);
+    const [showStartReportDialog, setShowStartReportDialog] = useState(false);
     const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
     const [purchaseTicketType, setPurchaseTicketType] = useState<'regular' | 'gold'>('regular');
     const { user } = useAuthState();
     const {theme} = useTheme();
-    const navigate = useNavigate();
     
     // Add ref for input focus
     const inputRef = useRef<HTMLInputElement>(null);
@@ -84,7 +83,7 @@ const Ticket: React.FC = () => {
 
         setSelectedRoute(route);
 
-        const mainStop = route.stops?.find((stop) => stop.is_main);
+        const mainStop = route.stops.find((stop) => stop.is_main);
         if (!mainStop) {
             return;
         }
@@ -196,8 +195,6 @@ const Ticket: React.FC = () => {
             
             setShowPurchaseDialog(false);
             
-            console.log("Tickets saved successfully:", savedTickets);
-            
         } catch (error) {
             console.error("Error saving tickets:", error);
             toast.error("Error al guardar los tickets. No se modificaron los conteos.");
@@ -249,9 +246,8 @@ const Ticket: React.FC = () => {
         if (!report) {
             checkReportStatus().catch((error) => {
                 if (error === "ROW_NOT_FOUND") {
-                    console.log("No report found, checking status");
                     setReportStatusChecked(true);   
-                    setShowDialog(true);
+                    setShowStartReportDialog(true);
                     return;
                 }
                 console.error("Error checking report status", error);
@@ -262,18 +258,17 @@ const Ticket: React.FC = () => {
         }
         fetchRoutes();
         setReportStatusChecked(true);
-        setShowDialog(false);
+        setShowStartReportDialog(false);
     }, []);
 
     useEffect(() => {
-        console.log("Report state changed in Ticket page:", report);
         if (report) {
             fetchRoutes();
             setReportStatusChecked(true);
-            setShowDialog(false);
+            setShowStartReportDialog(false);
             return;
         }
-        setShowDialog(true);
+        setShowStartReportDialog(true);
 
     }, [report, reportLoading]);
 
@@ -340,7 +335,7 @@ const Ticket: React.FC = () => {
     }
 
     // Show StartReport dialog if needed
-    if (showDialog) {
+    if (showStartReportDialog) {
         return <StartReport />;
     }
 
@@ -657,10 +652,10 @@ const Ticket: React.FC = () => {
                                     )}
                                     
                                     {(() => {
-                                        const currentIndex = selectedRoute.stops?.findIndex(
+                                        const currentIndex = selectedRoute.stops.findIndex(
                                             stop => stop.name === selectedStop.name
                                         );
-                                        const totalStops = selectedRoute.stops?.length || 0;
+                                        const totalStops = selectedRoute.stops.length || 0;
                                         
                                         if (currentIndex !== -1 && totalStops > 0) {
                                             return (

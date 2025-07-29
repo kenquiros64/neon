@@ -151,3 +151,58 @@ func (r *ReportRepository) GetOpenOrPendingReport() (*models.Report, error) {
 
 	return &report, nil
 }
+
+// GetLatestReportsByUsername gets the latest 2 closed reports for a specific username
+func (r *ReportRepository) GetLatestReportsByUsername(username string) ([]*models.Report, error) {
+	query := dialect.Select(goqu.C("*")).From(TableReports).Where(
+		goqu.And(
+			goqu.C("username").Eq(username),
+			goqu.C("status").Eq(false), // Only closed reports
+		),
+	).Order(goqu.C("created_at").Desc()).Limit(2)
+
+	sql, args, err := query.Prepared(true).ToSQL()
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare query: %w", err)
+	}
+
+	rows, err := r.db.GetDB().Query(sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query reports: %w", err)
+	}
+	defer rows.Close()
+
+	var reports []*models.Report
+	for rows.Next() {
+		var report models.Report
+		if err := rows.Scan(
+			&report.ID,
+			&report.Username,
+			&report.Timetable,
+			&report.PartialTickets,
+			&report.PartialCash,
+			&report.FinalCash,
+			&report.Status,
+			&report.TotalCash,
+			&report.TotalTickets,
+			&report.TotalGold,
+			&report.TotalGoldCash,
+			&report.TotalNull,
+			&report.TotalNullCash,
+			&report.TotalRegular,
+			&report.TotalRegularCash,
+			&report.PartialClosedAt,
+			&report.ClosedAt,
+			&report.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan report: %w", err)
+		}
+		reports = append(reports, &report)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate reports: %w", err)
+	}
+
+	return reports, nil
+}

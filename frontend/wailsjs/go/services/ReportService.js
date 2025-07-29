@@ -6,6 +6,10 @@ export function CheckIfThereIsAnOpenOrPendingReport() {
   return window['go']['services']['ReportService']['CheckIfThereIsAnOpenOrPendingReport']();
 }
 
+export function GetLatestReportsByUsername(arg1) {
+  return window['go']['services']['ReportService']['GetLatestReportsByUsername'](arg1);
+}
+
 export function PartialCloseReport(arg1, arg2) {
   return window['go']['services']['ReportService']['PartialCloseReport'](arg1, arg2);
 }

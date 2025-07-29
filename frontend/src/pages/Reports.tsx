@@ -44,7 +44,8 @@ import { useReportState } from "../states/ReportState";
 import { useRoutesState } from "../states/RoutesState";
 import { useAuthState } from "../states/AuthState";
 import { toast } from "react-toastify";
-import { NullifyTicket, UpdateTickets } from "../../wailsjs/go/services/TicketService";
+import { NullifyTicket } from "../../wailsjs/go/services/TicketService";
+import { GetLatestReportsByUsername } from "../../wailsjs/go/services/ReportService";
 import { models } from "../../wailsjs/go/models";
 
 const Reports: React.FC = () => {
@@ -58,16 +59,39 @@ const Reports: React.FC = () => {
     const [nullifyLoading, setNullifyLoading] = useState(false);
     const { user } = useAuthState();
 
-    // Mock data for latest reports (you'll need to implement the actual service)
+    // Latest reports data - ensure it's always an array
     const [latestReports, setLatestReports] = useState<models.Report[]>([]);
 
     const checkAndLoadReport = async () => {
         try {
             await checkReportStatus();
             setReportStatusChecked(true);
+            // If no active report, fetch latest reports for display
+            if (!report) {
+                await fetchLatestReports();
+            }
         } catch (error) {
             console.error("Error checking report status:", error);
             setReportStatusChecked(true);
+            // Even on error, try to fetch latest reports for display
+            await fetchLatestReports();
+        }
+    };
+
+    const fetchLatestReports = async () => {
+        if (!user?.username) return;
+        
+        try {
+            const reports = await GetLatestReportsByUsername(user.username);
+            // Ensure reports is an array and handle null/undefined cases
+            if (reports && Array.isArray(reports)) {
+                setLatestReports(reports);
+            } else {
+                setLatestReports([]);
+            }
+        } catch (error) {
+            console.error("Error fetching latest reports:", error);
+            setLatestReports([]);
         }
     };
 
@@ -90,6 +114,8 @@ const Reports: React.FC = () => {
             } else {
                 await totalCloseReport(report.id, Math.round(cashAmount));
                 toast.success('Reporte cerrado totalmente');
+                // After total close, fetch latest reports to show the newly closed report
+                await fetchLatestReports();
             }
             setCloseDialogOpen(false);
             setFinalCash('');
@@ -184,6 +210,10 @@ const Reports: React.FC = () => {
         }
     }, [nullifyLoading]);
 
+    useEffect(() => {
+        fetchLatestReports();
+    }, [user?.username]); // Fetch latest reports whenever the user changes
+
     if (!reportStatusChecked || reportLoading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -194,11 +224,73 @@ const Reports: React.FC = () => {
 
     if (!report) {
         return (
-            <Box sx={{ p: 3, maxWidth: 600, mx: 'auto', mt: 8 }}>
+            <Box sx={{ p: 3, maxWidth: 1500, mx: 'auto', mt: 4 }}>
                 <Alert severity="info" sx={{ mb: 3 }}>
                     <Typography variant="h6">No hay reporte activo</Typography>
                     <Typography>No se encontró un reporte abierto o pendiente. Vaya a la página de tiquetes para iniciar uno nuevo.</Typography>
                 </Alert>
+
+                {/* Latest Reports Table when no active report */}
+                <Card>
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Timeline color="primary" />
+                            Últimos 2 Reportes
+                            <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
+                                Para reimprimir reportes anteriores
+                            </Typography>
+                        </Typography>
+                        
+                        {!latestReports || latestReports.length === 0 ? (
+                            <Alert severity="info">
+                                No hay reportes anteriores disponibles
+                            </Alert>
+                        ) : (
+                            <TableContainer>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>ID</TableCell>
+                                            <TableCell>Fecha</TableCell>
+                                            <TableCell align="right">Total Generado</TableCell>
+                                            <TableCell align="right">Tiquetes</TableCell>
+                                            <TableCell>Horario</TableCell>
+                                            <TableCell align="center">Acciones</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {latestReports.map((pastReport) => (
+                                            <TableRow key={pastReport.id}>
+                                                <TableCell>#{pastReport.id}</TableCell>
+                                                <TableCell>{formatDateTime(pastReport.created_at)}</TableCell>
+                                                <TableCell align="right">{formatCurrency(pastReport.total_cash)}</TableCell>
+                                                <TableCell align="right">{pastReport.total_tickets}</TableCell>
+                                                <TableCell>
+                                                        <Chip
+                                                            label={pastReport.timetable === "regular" ? 'Regular' : 'Feriado'}
+                                                            color={pastReport.timetable === "regular" ? 'primary' : 'success'}
+                                                            size="small"
+                                                        />
+                                                    </TableCell>
+                                                <TableCell align="center">
+                                                    <Tooltip title="Reimprimir reporte">
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handlePrintReport(pastReport)}
+                                                            color="primary"
+                                                        >
+                                                            <Print />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        )}
+                    </CardContent>
+                </Card>
             </Box>
         );
     }
@@ -233,19 +325,8 @@ const Reports: React.FC = () => {
                             </Typography>
                             
                             <Grid container spacing={2} sx={{ mt: 1 }}>
-                                {/* <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'primary.light', borderRadius: 2 }}>
-                                        <LocalAtm sx={{ fontSize: 32, color: 'primary.contrastText', mb: 1 }} />
-                                        <Typography variant="h6" color="primary.contrastText">
-                                            {formatCurrency(report.initial_cash)}
-                                        </Typography>
-                                        <Typography variant="body2" color="primary.contrastText">
-                                            Efectivo Inicial
-                                        </Typography>
-                                    </Box>
-                                </Grid> */}
                                 <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'info.light', borderRadius: 2 }}>
+                                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'info.dark', borderRadius: 2 }}>
                                         <Receipt sx={{ fontSize: 32, color: 'info.contrastText', mb: 1 }} />
                                         <Typography variant="h6" color="info.contrastText">
                                             {report.total_tickets}
@@ -268,6 +349,17 @@ const Reports: React.FC = () => {
                                     </Box>
                                 </Grid>
                                 
+                                <Grid size={{ xs: 6, sm: 3 }}>
+                                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'error.light', borderRadius: 2 }}>
+                                        <Receipt sx={{ fontSize: 32, color: 'primary.contrastText', mb: 1 }} />
+                                        <Typography variant="h6" color="primary.contrastText">
+                                            {formatCurrency(report.total_null)}
+                                        </Typography>
+                                        <Typography variant="body2" color="primary.contrastText">
+                                            Anulados
+                                        </Typography>
+                                    </Box>
+                                </Grid>
                                 
                                 {isPendingReport && (
                                     <Grid size={{ xs: 6, sm: 3 }}>
@@ -401,7 +493,7 @@ const Reports: React.FC = () => {
                                 </Typography>
                             </Typography>
                             
-                            {latestReports.length === 0 ? (
+                            {!latestReports || latestReports.length === 0 ? (
                                 <Alert severity="info">
                                     No hay reportes anteriores disponibles
                                 </Alert>
@@ -414,7 +506,7 @@ const Reports: React.FC = () => {
                                                 <TableCell>Fecha</TableCell>
                                                 <TableCell align="right">Total Generado</TableCell>
                                                 <TableCell align="right">Tiquetes</TableCell>
-                                                <TableCell>Estado</TableCell>
+                                                <TableCell>Horario</TableCell>
                                                 <TableCell align="center">Acciones</TableCell>
                                             </TableRow>
                                         </TableHead>
@@ -425,13 +517,13 @@ const Reports: React.FC = () => {
                                                     <TableCell>{formatDateTime(pastReport.created_at)}</TableCell>
                                                     <TableCell align="right">{formatCurrency(pastReport.total_cash)}</TableCell>
                                                     <TableCell align="right">{pastReport.total_tickets}</TableCell>
-                                                    {/* <TableCell>
+                                                    <TableCell>
                                                         <Chip
-                                                            label={pastReport.status ? 'Abierto' : pastReport.cash_verified ? 'Pendiente' : 'Cerrado'}
-                                                            color={pastReport.status ? 'success' : pastReport.cash_verified ? 'warning' : 'default'}
+                                                            label={pastReport.timetable === "regular" ? 'Regular' : 'Feriado'}
+                                                            color={pastReport.timetable === "regular" ? 'primary' : 'success'}
                                                             size="small"
                                                         />
-                                                    </TableCell> */}
+                                                    </TableCell>
                                                     <TableCell align="center">
                                                         <Tooltip title="Reimprimir reporte">
                                                             <IconButton

@@ -125,3 +125,16 @@ func (r *ReportService) TotalCloseReport(
 
 	return report, nil
 }
+
+// GetLatestReportsByUsername gets the latest 2 closed reports for a specific user
+func (r *ReportService) GetLatestReportsByUsername(username string) ([]*models.Report, error) {
+	repository := local.NewReportRepository(r.ctx, r.localDB)
+
+	reports, err := repository.GetLatestReportsByUsername(username)
+	if err != nil {
+		zap.L().Error("failed to get latest reports", zap.Error(err))
+		return nil, err
+	}
+
+	return reports, nil
+}

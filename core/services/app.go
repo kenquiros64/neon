@@ -48,6 +48,8 @@ func (a *App) Startup() {
 		Title:     "neon",
 		MinWidth:  1280,
 		MinHeight: 900,
+		MaxWidth:  1920,
+		MaxHeight: 1080,
 		AssetServer: &assetserver.Options{
 			Assets: a.assets,
 		},

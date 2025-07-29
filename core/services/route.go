@@ -43,7 +43,7 @@ func (r *RouteService) GetRoutes() ([]models.Route, error) {
 
 // AddRoute adds a route
 func (r *RouteService) AddRoute(route *models.Route) error {
-	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	remotedb := mongodb.NewMongoDB(config.GetMongoDBConfig())
 	if err := remotedb.Connect(r.ctx); err != nil {
 		zap.L().Error("failed to connect to remote database", zap.Error(err))
 		return err
@@ -61,7 +61,7 @@ func (r *RouteService) AddRoute(route *models.Route) error {
 
 // UpdateRoute updates a route
 func (r *RouteService) UpdateRoute(route *models.Route) error {
-	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	remotedb := mongodb.NewMongoDB(config.GetMongoDBConfig())
 	if err := remotedb.Connect(r.ctx); err != nil {
 		zap.L().Error("failed to connect to remote database", zap.Error(err))
 		return err
@@ -79,7 +79,7 @@ func (r *RouteService) UpdateRoute(route *models.Route) error {
 
 // DeleteRoute deletes a route
 func (r *RouteService) DeleteRoute(route *models.Route) error {
-	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	remotedb := mongodb.NewMongoDB(config.GetMongoDBConfig())
 	if err := remotedb.Connect(r.ctx); err != nil {
 		zap.L().Error("failed to connect to remote database", zap.Error(err))
 		return err

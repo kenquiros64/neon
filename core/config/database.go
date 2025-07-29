@@ -4,82 +4,119 @@ package config
 import (
 	"os"
 	"path/filepath"
-	"time"
 
 	"neon/core/constants"
 	"neon/core/helpers"
 
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 // MongoDBConfig represents MongoDB connection configuration
 type MongoDBConfig struct {
-	Host       string `json:"host"`
-	Port       int    `json:"port"`
-	AppName    string `json:"app_name"`
-	Database   string `json:"database"`
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	SSLEnabled bool   `json:"ssl_enabled"`
+	Host       string `yaml:"host"`
+	Port       int    `yaml:"port"`
+	AppName    string `yaml:"app_name"`
+	Database   string `yaml:"database"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
+	SSLEnabled bool   `yaml:"ssl_enabled"`
 }
 
 // SQLiteConfig represents SQLite connection configuration
 type SQLiteConfig struct {
-	FilePath         string        `json:"file_path"`
-	InMemory         bool          `json:"in_memory"`
-	CacheSize        int           `json:"cache_size"`
-	BusyTimeout      time.Duration `json:"busy_timeout"`
-	JournalMode      string        `json:"journal_mode"`
-	Synchronous      string        `json:"synchronous"`
-	ForeignKeys      bool          `json:"foreign_keys"`
-	CheckConstraints bool          `json:"check_constraints"`
-	MaxOpenConns     int           `json:"max_open_conns"`
-	MaxIdleConns     int           `json:"max_idle_conns"`
-	ConnMaxLifetime  time.Duration `json:"conn_max_lifetime"`
+	FilePath     string
+	InMemory     bool
+	MaxOpenConns int
+	MaxIdleConns int
 }
 
 // CloverDBConfig represents CloverDB connection configuration
 type CloverDBConfig struct {
-	FilePath string `json:"file_path"`
+	FilePath string
 }
 
-// DefaultMongoDBConfig returns default MongoDB configuration
-func DefaultMongoDBConfig() *MongoDBConfig {
-	password := os.Getenv("MONGO_PASSWORD")
-	if password == "" {
-		zap.L().Fatal("MONGO_PASSWORD environment variable is not set")
-	}
-	username := os.Getenv("MONGO_USERNAME")
-	if username == "" {
-		zap.L().Fatal("MONGO_USERNAME environment variable is not set")
-	}
-	host := os.Getenv("MONGO_HOST")
-	if host == "" {
-		zap.L().Fatal("MONGO_HOST environment variable is not set")
+var mongoConfig *MongoDBConfig
+
+// LoadMongoConfig loads MongoDB configuration from mongo.yaml with environment variable fallbacks
+func LoadMongoConfig() (*MongoDBConfig, error) {
+	if mongoConfig != nil {
+		return mongoConfig, nil
 	}
 
-	appName := os.Getenv("MONGO_APP_NAME")
-	if appName == "" {
-		zap.L().Fatal("MONGO_APP_NAME environment variable is not set")
+	// Get config file path
+	configPath, err := getMongoConfigFilePath()
+	if err != nil {
+		zap.L().Error("Failed to get mongo config file path", zap.Error(err))
+		return nil, err
 	}
 
-	database := os.Getenv("MONGO_DATABASE")
-	if database == "" {
-		zap.L().Fatal("MONGO_DATABASE environment variable is not set")
+	// Load from file if it exists, otherwise create default config
+	config := &MongoDBConfig{}
+	err = loadMongoConfigFromFile(configPath, config)
+	if err != nil {
+		zap.L().Info("Failed to load mongo config from file, using defaults", zap.Error(err))
+		applyMongoEnvironmentOverrides(config)
 	}
 
-	return &MongoDBConfig{
-		Host:       host,
-		Database:   database,
-		AppName:    appName,
-		SSLEnabled: false,
-		Username:   username,
-		Password:   password,
+	mongoConfig = config
+	return mongoConfig, nil
+}
+
+// getMongoConfigFilePath returns the path to the mongo.yaml file
+func getMongoConfigFilePath() (string, error) {
+	appDir, err := helpers.GetAppDataDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(appDir, "config.yaml"), nil
+}
+
+// loadMongoConfigFromFile loads MongoDB configuration from a YAML file
+func loadMongoConfigFromFile(path string, config *MongoDBConfig) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(data, config)
+}
+
+// applyMongoEnvironmentOverrides applies environment variable overrides to the MongoDB config
+func applyMongoEnvironmentOverrides(config *MongoDBConfig) {
+	if host := os.Getenv("MONGO_HOST"); host != "" {
+		config.Host = host
+	}
+	if username := os.Getenv("MONGO_USERNAME"); username != "" {
+		config.Username = username
+	}
+	if password := os.Getenv("MONGO_PASSWORD"); password != "" {
+		config.Password = password
+	}
+	if appName := os.Getenv("MONGO_APP_NAME"); appName != "" {
+		config.AppName = appName
+	}
+	if database := os.Getenv("MONGO_DATABASE"); database != "" {
+		config.Database = database
 	}
 }
 
-// DefaultSQLiteConfig returns default SQLite configuration
-func DefaultSQLiteConfig() *SQLiteConfig {
+// GetMongoDBConfig returns MongoDB configuration from the loaded config
+func GetMongoDBConfig() *MongoDBConfig {
+	config, err := LoadMongoConfig()
+	if err != nil {
+		zap.L().Fatal("Failed to load MongoDB configuration", zap.Error(err))
+	}
+
+	// Validate required fields if they're still empty after loading
+	if config.Username == "" || config.Password == "" {
+		zap.L().Fatal("MongoDB username and password must be configured in mongo.yaml or environment variables")
+	}
+
+	return config
+}
+
+// GetSQLiteConfig returns default SQLite configuration
+func GetSQLiteConfig() *SQLiteConfig {
 	dbName := "oxygen.db"
 	appDir, err := helpers.GetAppDataDir()
 	if err != nil {
@@ -88,16 +125,15 @@ func DefaultSQLiteConfig() *SQLiteConfig {
 	dbPath := filepath.Join(appDir, constants.DataDir, dbName)
 
 	return &SQLiteConfig{
-		FilePath:        dbPath,
-		InMemory:        false,
-		MaxOpenConns:    25,
-		MaxIdleConns:    25,
-		ConnMaxLifetime: 5 * time.Minute,
+		FilePath:     dbPath,
+		InMemory:     false,
+		MaxOpenConns: 25,
+		MaxIdleConns: 25,
 	}
 }
 
-// DefaultCloverDBConfig returns default CloverDB configuration
-func DefaultCloverDBConfig() *CloverDBConfig {
+// GetCloverDBConfig returns default CloverDB configuration
+func GetCloverDBConfig() *CloverDBConfig {
 	dbName := "titanium"
 	appDir, err := helpers.GetAppDataDir()
 	if err != nil {

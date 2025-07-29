@@ -81,12 +81,12 @@ func (a *App) Startup() {
 }
 
 func initialize(ctx context.Context) {
-	cloverdb = embedded.NewCloverDB(config.DefaultCloverDBConfig())
+	cloverdb = embedded.NewCloverDB(config.GetCloverDBConfig())
 	if err := cloverdb.Connect(ctx); err != nil {
 		zap.L().Fatal("Error connecting to local database", zap.Error(err))
 	}
 
-	sqlitedb = embedded.NewSQLite(config.DefaultSQLiteConfig())
+	sqlitedb = embedded.NewSQLite(config.GetSQLiteConfig())
 	if err := sqlitedb.Connect(ctx); err != nil {
 		zap.L().Fatal("Error connecting to sqlite database", zap.Error(err))
 	}

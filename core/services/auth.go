@@ -62,7 +62,7 @@ func (a *AuthService) Register(user *models.User) error {
 		return helpers.ErrInvalidRequest
 	}
 
-	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	remotedb := mongodb.NewMongoDB(config.GetMongoDBConfig())
 	if err := remotedb.Connect(a.ctx); err != nil {
 		zap.L().Error("failed to connect to remote database", zap.Error(err))
 		return err

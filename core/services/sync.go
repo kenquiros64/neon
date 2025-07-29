@@ -39,7 +39,7 @@ func (s *SyncService) SyncRoutes() error {
 		return err
 	}
 
-	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	remotedb := mongodb.NewMongoDB(config.GetMongoDBConfig())
 	if err := remotedb.Connect(s.ctx); err != nil {
 		zap.L().Error("failed to connect to remote database", zap.Error(err))
 		return err
@@ -79,7 +79,7 @@ func (s *SyncService) SyncUsers() error {
 		return err
 	}
 
-	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	remotedb := mongodb.NewMongoDB(config.GetMongoDBConfig())
 	if err := remotedb.Connect(s.ctx); err != nil {
 		zap.L().Error("failed to connect to remote database", zap.Error(err))
 		return err

@@ -59,7 +59,6 @@ func (d *Database) Connect(ctx context.Context) error {
 	// Configure connection pool
 	db.SetMaxOpenConns(d.config.MaxOpenConns)
 	db.SetMaxIdleConns(d.config.MaxIdleConns)
-	db.SetConnMaxLifetime(d.config.ConnMaxLifetime)
 
 	// Test the connection
 	if err := db.PingContext(ctx); err != nil {

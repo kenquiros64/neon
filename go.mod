@@ -6,6 +6,7 @@ require (
 	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/ostafen/clover/v2 v2.0.0-alpha.3
 	github.com/wailsapp/wails/v2 v2.10.2
+	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.38.0
 )
 

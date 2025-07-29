@@ -1,0 +1,10 @@
+# MongoDB Configuration
+# Copy this file to ~/.config/neon/mongo.yaml and update with your settings
+
+host: "localhost"
+port: 27017
+app_name: "neon"
+database: "neon"
+username: "your_mongodb_username"
+password: "your_mongodb_password"
+ssl_enabled: false 

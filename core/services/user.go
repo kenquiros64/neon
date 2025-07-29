@@ -29,7 +29,7 @@ func (u *UserService) startup(ctx context.Context) {
 
 // AddUser adds a user
 func (u *UserService) AddUser(user *models.User) error {
-	remotedb := mongodb.NewMongoDB(config.DefaultMongoDBConfig())
+	remotedb := mongodb.NewMongoDB(config.GetMongoDBConfig())
 	if err := remotedb.Connect(u.ctx); err != nil {
 		zap.L().Error("failed to connect to remote database", zap.Error(err))
 		return err

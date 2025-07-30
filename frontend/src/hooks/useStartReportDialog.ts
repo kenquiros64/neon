@@ -11,16 +11,15 @@ export const useStartReportDialog = ({
     reportStatusChecked
 }: UseStartReportDialogProps) => {
     const [showStartReportDialog, setShowStartReportDialog] = useState(false);
-    const { reportLoading } = useReportState();
     
     // Show dialog when no report exists and status has been checked
     useEffect(() => {
-        if (!report && reportStatusChecked && !reportLoading) {
+        if (!report && reportStatusChecked) {
             setShowStartReportDialog(true);
         } else if (report) {
             setShowStartReportDialog(false);
         }
-    }, [report, reportStatusChecked, reportLoading]);
+    }, [report, reportStatusChecked]);
 
     return {
         showStartReportDialog

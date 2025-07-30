@@ -1,172 +1,38 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
     Box,
-    Button,
     Card,
     CardContent,
     Typography,
     Grid,
     Divider,
     Alert,
-    TextField,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    Chip,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    InputAdornment,
-    CircularProgress,
-    IconButton,
-    Tooltip
+    CircularProgress
 } from "@mui/material";
 import {
-    MonetizationOn,
     Receipt,
-    Warning,
-    CheckCircle,
-    Cancel,
-    Print,
-    Search,
-    LocalAtm,
-    Assignment,
-    Timeline,
-    AttachMoney,
-    RotateLeft
+    Assignment
 } from "@mui/icons-material";
 import { useReportCheck } from "../hooks/useReportCheck";
 import { useReportState } from "../states/ReportState";
-import { useRoutesState } from "../states/RoutesState";
 import { useAuthState } from "../states/AuthState";
+import { useLatestReports } from "../hooks/useLatestReports";
 import { toast } from "react-toastify";
-import { NullifyTicket } from "../../wailsjs/go/services/TicketService";
-import { GetLatestReportsByUsername } from "../../wailsjs/go/services/ReportService";
+import ReportStatsCards from "../components/ReportStatsCards";
+import LatestReportsTable from "../components/LatestReportsTable";
+import ReportActionsPanel from "../components/ReportActionsPanel";
+import CloseReportDialog from "../components/CloseReportDialog";
 import { models } from "../../wailsjs/go/models";
 
 const Reports: React.FC = () => {
     const { report, reportStatusChecked } = useReportCheck();
-    const { fetchRoutes } = useRoutesState();
-    const { reportLoading } = useReportState();
-    // We still need direct access to report state for closing operations
-    const { checkReportStatus, partialCloseReport, totalCloseReport } = useReportState();
+    const { reportLoading, partialCloseReport, totalCloseReport, checkReportStatus } = useReportState();
+    const { user } = useAuthState();
+    const { latestReports, fetchLatestReports } = useLatestReports(user?.username);
+
+    
     const [closeDialogOpen, setCloseDialogOpen] = useState(false);
     const [closeType, setCloseType] = useState<'partial' | 'total'>('partial');
-    const [finalCash, setFinalCash] = useState<string>('');
-    const [ticketIDToNull, setTicketIDToNull] = useState<string>('');
-    const [nullifyLoading, setNullifyLoading] = useState(false);
-    const { user } = useAuthState();
-
-    // Latest reports data - ensure it's always an array
-    const [latestReports, setLatestReports] = useState<models.Report[]>([]);
-
-    const checkAndLoadReport = async () => {
-        try {
-            // Report status is now handled by useReportCheck hook
-            // If no active report, fetch latest reports for display
-            if (!report && reportStatusChecked) {
-                await fetchLatestReports();
-            }
-        } catch (error) {
-            console.error("Error loading latest reports:", error);
-            // Even on error, try to fetch latest reports for display
-            await fetchLatestReports();
-        }
-    };
-
-    const fetchLatestReports = async () => {
-        if (!user?.username) return;
-        
-        try {
-            const reports = await GetLatestReportsByUsername(user.username);
-            // Ensure reports is an array and handle null/undefined cases
-            if (reports && Array.isArray(reports)) {
-                setLatestReports(reports);
-            } else {
-                setLatestReports([]);
-            }
-        } catch (error) {
-            console.error("Error fetching latest reports:", error);
-            setLatestReports([]);
-        }
-    };
-
-    const handleCloseReport = async () => {
-        const cashAmount = parseFloat(finalCash);
-        if (!finalCash || isNaN(cashAmount) || cashAmount < 0) {
-            toast.error('Por favor ingrese un monto final válido');
-            return;
-        }
-
-        if (!report) {
-            toast.error('No hay reporte activo');
-            return;
-        }
-
-        try {
-            if (closeType === 'partial') {
-                await partialCloseReport(report.id, Math.round(cashAmount));
-                toast.success('Reporte cerrado parcialmente');
-            } else {
-                await totalCloseReport(report.id, Math.round(cashAmount));
-                toast.success('Reporte cerrado totalmente');
-                // After total close, fetch latest reports to show the newly closed report
-                await fetchLatestReports();
-            }
-            setCloseDialogOpen(false);
-            setFinalCash('');
-        } catch (error) {
-            console.error('Error closing report:', error);
-            toast.error('Error al cerrar el reporte');
-        }
-    };
-
-    const handleNullifyTicket = async () => {
-        const ticketID = parseInt(ticketIDToNull);
-        if (!ticketIDToNull || isNaN(ticketID)) {
-            toast.error('Por favor ingrese un ID de ticket válido');
-            return;
-        }
-
-        setNullifyLoading(true);
-        try {
-            // Create a mock ticket with the ID to update (you'll need the actual ticket data)
-            const ticketToUpdate = new models.Ticket({
-                id: ticketID,
-                is_null: true,
-            });
-
-            await NullifyTicket(ticketID, report?.id ?? 0);
-            toast.success(`Tiquete ${ticketID} marcado como devuelto`);
-            setTicketIDToNull('');
-        } catch (error) {
-            if (error === "TICKET_NOT_BELONG_TO_REPORT") {
-                toast.error('El tiquete no pertenece al reporte actual');
-                return;
-            }
-            if (error === "TICKET_ALREADY_NULLIFIED") {
-                toast.error('El tiquete ya ha sido anulado previamente');
-                return;
-            }
-            if (error === "TICKET_ALREADY_CLOSED") {
-                toast.error('Tiquete no se puede anular, fue creado antes del cierre parcial');
-                return;
-            }
-            console.error('Error nullifying ticket:', error);
-            toast.error('Error al anular el ticket. Verifique que el ID existe.');
-        } finally {
-            setNullifyLoading(false);
-        }
-    };
-
-    const formatCurrency = (amount: number) => {
-        return `₡${amount.toLocaleString()}`;
-    };
 
     const formatDateTime = (dateString?: string) => {
         if (!dateString) return "N/A";
@@ -178,34 +44,38 @@ const Reports: React.FC = () => {
         toast.info('Funcionalidad de impresión en desarrollo');
     };
 
-    useEffect(() => {
-        if (!reportStatusChecked) {
-            checkAndLoadReport();
-        }
-    }, [reportStatusChecked]);
+    const handleOpenCloseDialog = (type: 'partial' | 'total') => {
+        setCloseType(type);
+        setCloseDialogOpen(true);
+    };
 
-    // Check report status when component mounts
+    const handleCloseReport = async (cashAmount: number, type: 'partial' | 'total') => {
+        if (!report) {
+            toast.error('No hay reporte activo');
+            return;
+        }
+
+        if (type === 'partial') {
+            await partialCloseReport(report.id, cashAmount);
+            toast.success('Reporte cerrado parcialmente');
+        } else {
+            await totalCloseReport(report.id, cashAmount);
+            toast.success('Reporte cerrado totalmente');
+            // After total close, fetch latest reports to show the newly closed report
+            await fetchLatestReports();
+        }
+    };
+
     useEffect(() => {
-        checkAndLoadReport();
+        checkReportStatus()
     }, []);
 
-    // React to report state changes from other components (like when a report is started)
+    // Load latest reports when component mounts or when report status changes
     useEffect(() => {
-        if (report && reportStatusChecked) {
-            // If we received a report from the global state, fetch latest reports
+        if (reportStatusChecked) {
             fetchLatestReports();
         }
-    }, [report, reportStatusChecked]);
-
-    useEffect(() => {
-        if (!nullifyLoading) {
-            checkAndLoadReport()
-        }
-    }, [nullifyLoading]);
-
-    useEffect(() => {
-        fetchLatestReports();
-    }, [user?.username]); // Fetch latest reports whenever the user changes
+    }, [reportStatusChecked]);
 
     if (!reportStatusChecked || reportLoading) {
         return (
@@ -226,62 +96,10 @@ const Reports: React.FC = () => {
                 {/* Latest Reports Table when no active report */}
                 <Card>
                     <CardContent>
-                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Timeline color="primary" />
-                            Últimos Reportes
-                            <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
-                                Para reimprimir reportes anteriores
-                            </Typography>
-                        </Typography>
-                        
-                        {!latestReports || latestReports.length === 0 ? (
-                            <Alert severity="info">
-                                No hay reportes anteriores disponibles
-                            </Alert>
-                        ) : (
-                            <TableContainer>
-                                <Table>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>ID</TableCell>
-                                            <TableCell>Fecha</TableCell>
-                                            <TableCell align="right">Total Generado</TableCell>
-                                            <TableCell align="right">Tiquetes</TableCell>
-                                            <TableCell>Horario</TableCell>
-                                            <TableCell align="center">Acciones</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {latestReports.map((pastReport) => (
-                                            <TableRow key={pastReport.id}>
-                                                <TableCell>#{pastReport.id}</TableCell>
-                                                <TableCell>{formatDateTime(pastReport.created_at)}</TableCell>
-                                                <TableCell align="right">{formatCurrency(pastReport.total_cash)}</TableCell>
-                                                <TableCell align="right">{pastReport.total_tickets}</TableCell>
-                                                <TableCell>
-                                                        <Chip
-                                                            label={pastReport.timetable === "regular" ? 'Regular' : 'Feriado'}
-                                                            color={pastReport.timetable === "regular" ? 'primary' : 'success'}
-                                                            size="small"
-                                                        />
-                                                    </TableCell>
-                                                <TableCell align="center">
-                                                    <Tooltip title="Reimprimir reporte">
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => handlePrintReport(pastReport)}
-                                                            color="primary"
-                                                        >
-                                                            <Print />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        )}
+                        <LatestReportsTable 
+                            latestReports={latestReports}
+                            onPrintReport={handlePrintReport}
+                        />
                     </CardContent>
                 </Card>
             </Box>
@@ -317,57 +135,10 @@ const Reports: React.FC = () => {
                                 Reporte Actual - ID #{report.id}
                             </Typography>
                             
-                            <Grid container spacing={2} sx={{ mt: 1 }}>
-                                <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'info.dark', borderRadius: 2 }}>
-                                        <Receipt sx={{ fontSize: 32, color: 'info.contrastText', mb: 1 }} />
-                                        <Typography variant="h6" color="info.contrastText">
-                                            {report.total_tickets}
-                                        </Typography>
-                                        <Typography variant="body2" color="info.contrastText">
-                                            Tiquetes Vendidos
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                
-                                <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'success.light', borderRadius: 2 }}>
-                                        <AttachMoney sx={{ fontSize: 32, color: 'success.contrastText', mb: 1 }} />
-                                        <Typography variant="h6" color="success.contrastText">
-                                            {formatCurrency(report.total_cash)}
-                                        </Typography>
-                                        <Typography variant="body2" color="success.contrastText">
-                                            Total Generado
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                
-                                <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'error.light', borderRadius: 2 }}>
-                                        <Receipt sx={{ fontSize: 32, color: 'primary.contrastText', mb: 1 }} />
-                                        <Typography variant="h6" color="primary.contrastText">
-                                            {formatCurrency(report.total_null)}
-                                        </Typography>
-                                        <Typography variant="body2" color="primary.contrastText">
-                                            Anulados
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                
-                                {isPendingReport && (
-                                    <Grid size={{ xs: 6, sm: 3 }}>
-                                        <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'warning.light', borderRadius: 2 }}>
-                                            <Warning sx={{ fontSize: 32, color: 'warning.contrastText', mb: 1 }} />
-                                            <Typography variant="h6" color="warning.contrastText">
-                                                {formatCurrency(report.partial_cash)}
-                                            </Typography>
-                                            <Typography variant="body2" color="warning.contrastText">
-                                                Efectivo Pendiente
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                )}
-                            </Grid>
+                            <ReportStatsCards 
+                                report={report} 
+                                isPendingReport={isPendingReport} 
+                            />
 
                             <Divider sx={{ my: 3 }} />
 
@@ -377,9 +148,9 @@ const Reports: React.FC = () => {
                             </Typography>
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <Typography variant="body2" color="text.secondary">Tiquetes Regulares: {report.total_regular} - {formatCurrency(report.total_regular_cash)}</Typography>
-                                    <Typography variant="body2" color="text.secondary">Tiquetes Gold: {report.total_gold} - {formatCurrency(report.total_gold_cash)}</Typography>
-                                    <Typography variant="body2" color="text.secondary">Tiquetes Anulados: {report.total_null} - {formatCurrency(report.total_null_cash)}</Typography>
+                                    <Typography variant="body2" color="text.secondary">Tiquetes Regulares: {report.total_regular} - ₡{report.total_regular_cash.toLocaleString()}</Typography>
+                                    <Typography variant="body2" color="text.secondary">Tiquetes Gold: {report.total_gold} - ₡{report.total_gold_cash.toLocaleString()}</Typography>
+                                    <Typography variant="body2" color="text.secondary">Tiquetes Anulados: {report.total_null} - ₡{report.total_null_cash.toLocaleString()}</Typography>
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 6 }}>
                                     <Typography variant="body2" color="text.secondary">Creado: {formatDateTime(report.created_at)}</Typography>
@@ -397,192 +168,35 @@ const Reports: React.FC = () => {
 
                 {/* Action Panel */}
                 <Grid size={{ xs: 12, md: 4 }}>
-                    {/* Close Report Actions */}
-                    <Card sx={{ mb: 3 }}>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Acciones de Cierre
-                            </Typography>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                {!isPendingReport && (
-                                    <Button
-                                        variant="outlined"
-                                        color="warning"
-                                        startIcon={<Warning />}
-                                        onClick={() => {
-                                            setCloseType('partial');
-                                            setCloseDialogOpen(true);
-                                        }}
-                                        disabled={reportLoading}
-                                    >
-                                        Cierre Parcial
-                                    </Button>
-                                )}
-                                <Button
-                                    variant="contained"
-                                    color="error"
-                                    startIcon={<Cancel />}
-                                    onClick={() => {
-                                        setCloseType('total');
-                                        setCloseDialogOpen(true);
-                                    }}
-                                    disabled={reportLoading}
-                                >
-                                    Cierre Total
-                                </Button>
-                            </Box>
-                        </CardContent>
-                    </Card>
-
-                    {/* Nullify Ticket */}
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Anular Tiquete
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                Marcar un tiquete como devuelto por el cliente
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <TextField
-                                    size="small"
-                                    label="ID del tiquete"
-                                    value={ticketIDToNull}
-                                    onChange={(e) => setTicketIDToNull(e.target.value)}
-                                    type="number"
-                                    slotProps={{
-                                        input: {
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    <Search />
-                                                </InputAdornment>
-                                            )
-                                        }
-                                    }}
-                                />
-                                <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    onClick={handleNullifyTicket}
-                                    disabled={nullifyLoading || !ticketIDToNull}
-                                    startIcon={nullifyLoading ? <CircularProgress size={16} /> : <RotateLeft />}
-                                >
-                                    Anular
-                                </Button>
-                            </Box>
-                        </CardContent>
-                    </Card>
+                    <ReportActionsPanel
+                        isPendingReport={isPendingReport}
+                        reportLoading={reportLoading}
+                        reportId={report.id}
+                        onOpenCloseDialog={handleOpenCloseDialog}
+                    />
                 </Grid>
 
                 {/* Latest Reports Table */}
                 <Grid size={12}>
                     <Card>
                         <CardContent>
-                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Timeline color="primary" />
-                                Últimos Reportes
-                                <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
-                                    Para reimprimir reportes anteriores
-                                </Typography>
-                            </Typography>
-                            
-                            {!latestReports || latestReports.length === 0 ? (
-                                <Alert severity="info">
-                                    No hay reportes anteriores disponibles
-                                </Alert>
-                            ) : (
-                                <TableContainer>
-                                    <Table>
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>ID</TableCell>
-                                                <TableCell>Fecha</TableCell>
-                                                <TableCell align="right">Total Generado</TableCell>
-                                                <TableCell align="right">Tiquetes</TableCell>
-                                                <TableCell>Horario</TableCell>
-                                                <TableCell align="center">Acciones</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {latestReports.map((pastReport) => (
-                                                <TableRow key={pastReport.id}>
-                                                    <TableCell>#{pastReport.id}</TableCell>
-                                                    <TableCell>{formatDateTime(pastReport.created_at)}</TableCell>
-                                                    <TableCell align="right">{formatCurrency(pastReport.total_cash)}</TableCell>
-                                                    <TableCell align="right">{pastReport.total_tickets}</TableCell>
-                                                    <TableCell>
-                                                        <Chip
-                                                            label={pastReport.timetable === "regular" ? 'Regular' : 'Feriado'}
-                                                            color={pastReport.timetable === "regular" ? 'primary' : 'success'}
-                                                            size="small"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        <Tooltip title="Reimprimir reporte">
-                                                            <IconButton
-                                                                size="small"
-                                                                onClick={() => handlePrintReport(pastReport)}
-                                                                color="primary"
-                                                            >
-                                                                <Print />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            )}
+                            <LatestReportsTable 
+                                latestReports={latestReports}
+                                onPrintReport={handlePrintReport}
+                            />
                         </CardContent>
                     </Card>
                 </Grid>
             </Grid>
 
             {/* Close Report Dialog */}
-            <Dialog open={closeDialogOpen} onClose={() => setCloseDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {closeType === 'partial' ? 'Cierre Parcial de Reporte' : 'Cierre Total de Reporte'}
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        {closeType === 'partial' 
-                            ? 'El cierre parcial permite continuar vendiendo tiquetes pero registra el estado actual.'
-                            : 'El cierre total finaliza completamente el reporte. No se podrán vender más tiquetes.'
-                        }
-                    </Typography>   
-                    <TextField
-                        fullWidth
-                        label="Efectivo final contado"
-                        value={finalCash}
-                        onChange={(e) => setFinalCash(e.target.value)}
-                        type="number"
-                        slotProps={{
-                            input: {
-                                startAdornment: (
-                                <InputAdornment position="start">
-                                    <LocalAtm />
-                                    </InputAdornment>
-                                )
-                            }
-                        }}
-                        helperText="Ingrese el monto total de efectivo contado al momento del cierre"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setCloseDialogOpen(false)}>
-                        Cancelar
-                    </Button>
-                    <Button 
-                        onClick={handleCloseReport} 
-                        variant="contained"
-                        color={closeType === 'partial' ? 'warning' : 'error'}
-                        disabled={reportLoading || !finalCash}
-                    >
-                        {closeType === 'partial' ? 'Cierre Parcial' : 'Cierre Total'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <CloseReportDialog
+                open={closeDialogOpen}
+                closeType={closeType}
+                reportLoading={reportLoading}
+                onClose={() => setCloseDialogOpen(false)}
+                onCloseReport={handleCloseReport}
+            />
         </Box>
     );
 };

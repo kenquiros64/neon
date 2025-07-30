@@ -25,6 +25,7 @@ import {useTheme} from "../themes/ThemeProvider";
 import {useAuthState} from "../states/AuthState";
 import {useTicketState} from "../states/TicketState";
 import {useRoutesState} from "../states/RoutesState";
+import { useReportState } from "../states/ReportState";
 
 const routes: { [key: string]: string } = {
   "/home": "Boleteria",
@@ -42,6 +43,7 @@ const HomeLayout: React.FC = () => {
   const { user, logout } = useAuthState();
   const { resetTicketState } = useTicketState();
   const { resetRoutesState } = useRoutesState();
+  const { resetReportState } = useReportState();
 
   const pageTitle: string = routes[location.pathname] || "Página desconocida";
 
@@ -191,9 +193,10 @@ const HomeLayout: React.FC = () => {
                 open ? { justifyContent: "initial" } : { justifyContent: "center" },
               ]}
                 onClick={() => {
-                  logout();
                   resetRoutesState();
                   resetTicketState();
+                  resetReportState();
+                  logout();
                 }}
             >
               <ListItemIcon

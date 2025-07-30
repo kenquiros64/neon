@@ -21,6 +21,7 @@ import { useReportState } from '../states/ReportState';
 const Ticket: React.FC = () => {
     const { selectedRoute, selectedTime, getCount, incrementCount } = useTicketState();
     const { user } = useAuthState();
+    const { reportLoading } = useReportState();
 
     // Custom hooks
     const { report, reportStatusChecked } = useReportCheck();
@@ -32,7 +33,6 @@ const Ticket: React.FC = () => {
         report, 
         reportStatusChecked
     });
-    const { reportLoading } = useReportState();
     
     const {
         selectedRouteID,
@@ -91,7 +91,7 @@ const Ticket: React.FC = () => {
     }
 
     // Get the selected stop for display
-    const selectedStop = selectedRoute?.stops?.find(stop => stop.code === selectedStopID);
+    const selectedStop = selectedRoute.stops.find(stop => stop.code === selectedStopID);
 
     return (
         <Grid container sx={{ height: "100%", margin: 0 }}>

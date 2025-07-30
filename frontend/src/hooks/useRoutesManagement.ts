@@ -16,15 +16,13 @@ export const useRoutesManagement = ({
 }: UseRoutesManagementProps) => {
     const { routes, routesLoading, fetchRoutes, resetRoutesState } = useRoutesState();
     const { logout } = useAuthState();
+    const { resetReportState } = useReportState();
     const { resetTicketState } = useTicketState();
-    const { reportLoading } = useReportState();
 
     // Fetch routes when report is available
     useEffect(() => {
-        if (report && reportStatusChecked && !reportLoading) {
-            fetchRoutes();
-        }
-    }, [report, reportStatusChecked, reportLoading]);
+        fetchRoutes();
+    }, []);
 
     // Handle no routes available (only show toast once per session)
     useEffect(() => {
@@ -35,6 +33,7 @@ export const useRoutesManagement = ({
             toast.info("No hay rutas disponibles");
             resetRoutesState();
             resetTicketState();
+            resetReportState();
             logout();
         }
     }, [routes, routesLoading]);

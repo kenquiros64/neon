@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useReportState } from '../states/ReportState';
 
 interface UseStartReportDialogProps {
     report: any;
     reportStatusChecked: boolean;
-    reportLoading: boolean;
 }
 
 export const useStartReportDialog = ({ 
     report, 
-    reportStatusChecked, 
-    reportLoading 
+    reportStatusChecked
 }: UseStartReportDialogProps) => {
     const [showStartReportDialog, setShowStartReportDialog] = useState(false);
-
+    const { reportLoading } = useReportState();
+    
     // Show dialog when no report exists and status has been checked
     useEffect(() => {
         if (!report && reportStatusChecked && !reportLoading) {

@@ -25,11 +25,10 @@ export const useReportCheck = () => {
         if (report) {
             setReportStatusChecked(true);
         }
-    }, [report, reportLoading]);
+    }, []);
 
     return {
         report,
-        reportLoading,
         reportStatusChecked
     };
 };

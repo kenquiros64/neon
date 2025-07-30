@@ -50,8 +50,9 @@ import { GetLatestReportsByUsername } from "../../wailsjs/go/services/ReportServ
 import { models } from "../../wailsjs/go/models";
 
 const Reports: React.FC = () => {
-    const { report, reportLoading, reportStatusChecked } = useReportCheck();
+    const { report, reportStatusChecked } = useReportCheck();
     const { fetchRoutes } = useRoutesState();
+    const { reportLoading } = useReportState();
     // We still need direct access to report state for closing operations
     const { checkReportStatus, partialCloseReport, totalCloseReport } = useReportState();
     const [closeDialogOpen, setCloseDialogOpen] = useState(false);
@@ -195,12 +196,6 @@ const Reports: React.FC = () => {
             fetchLatestReports();
         }
     }, [report, reportStatusChecked]);
-
-    useEffect(() => {
-        if (report && report.status) {
-            fetchRoutes();
-        }
-    }, [report]);
 
     useEffect(() => {
         if (!nullifyLoading) {

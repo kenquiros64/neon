@@ -3,22 +3,21 @@ import { useRoutesState } from '../states/RoutesState';
 import { useAuthState } from '../states/AuthState';
 import { useTicketState } from '../states/TicketState';
 import { toast } from 'react-toastify';
+import { useReportState } from '../states/ReportState';
 
 interface UseRoutesManagementProps {
     report: any;
     reportStatusChecked: boolean;
-    reportLoading: boolean;
 }
 
 export const useRoutesManagement = ({ 
     report, 
-    reportStatusChecked, 
-    reportLoading 
+    reportStatusChecked
 }: UseRoutesManagementProps) => {
     const { routes, routesLoading, fetchRoutes, resetRoutesState } = useRoutesState();
     const { logout } = useAuthState();
     const { resetTicketState } = useTicketState();
-    const hasShownNoRoutesToast = useRef(false);
+    const { reportLoading } = useReportState();
 
     // Fetch routes when report is available
     useEffect(() => {
@@ -31,26 +30,14 @@ export const useRoutesManagement = ({
     useEffect(() => {
         if (
             routes.length === 0 && 
-            !routesLoading && 
-            !reportLoading && 
-            reportStatusChecked && 
-            report && 
-            !hasShownNoRoutesToast.current
+            !routesLoading
         ) {
-            hasShownNoRoutesToast.current = true;
             toast.info("No hay rutas disponibles");
             resetRoutesState();
             resetTicketState();
             logout();
         }
-    }, [routes, routesLoading, reportLoading, reportStatusChecked, report]);
-
-    // Reset toast flag when user logs back in
-    useEffect(() => {
-        if (report) {
-            hasShownNoRoutesToast.current = false;
-        }
-    }, [report]);
+    }, [routes, routesLoading]);
 
     return {
         routes,

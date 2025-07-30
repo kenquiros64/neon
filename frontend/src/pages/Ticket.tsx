@@ -15,6 +15,7 @@ import { useTicketPurchase } from "../hooks/useTicketPurchase";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useTicketState } from "../states/TicketState";
 import { useAuthState } from "../states/AuthState";
+import { useReportState } from '../states/ReportState';
 
 
 const Ticket: React.FC = () => {
@@ -22,17 +23,16 @@ const Ticket: React.FC = () => {
     const { user } = useAuthState();
 
     // Custom hooks
-    const { report, reportLoading, reportStatusChecked } = useReportCheck();
+    const { report, reportStatusChecked } = useReportCheck();
     const { routes, routesLoading } = useRoutesManagement({ 
         report, 
         reportStatusChecked, 
-        reportLoading 
     });
     const { showStartReportDialog } = useStartReportDialog({ 
         report, 
-        reportStatusChecked, 
-        reportLoading 
+        reportStatusChecked
     });
+    const { reportLoading } = useReportState();
     
     const {
         selectedRouteID,

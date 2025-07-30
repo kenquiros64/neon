@@ -40,6 +40,7 @@ import {
     AttachMoney,
     RotateLeft
 } from "@mui/icons-material";
+import { useReportCheck } from "../hooks/useReportCheck";
 import { useReportState } from "../states/ReportState";
 import { useRoutesState } from "../states/RoutesState";
 import { useAuthState } from "../states/AuthState";
@@ -49,9 +50,10 @@ import { GetLatestReportsByUsername } from "../../wailsjs/go/services/ReportServ
 import { models } from "../../wailsjs/go/models";
 
 const Reports: React.FC = () => {
-    const { report, checkReportStatus, partialCloseReport, totalCloseReport, reportLoading } = useReportState();
+    const { report, reportLoading, reportStatusChecked } = useReportCheck();
     const { fetchRoutes } = useRoutesState();
-    const [reportStatusChecked, setReportStatusChecked] = useState(false);
+    // We still need direct access to report state for closing operations
+    const { checkReportStatus, partialCloseReport, totalCloseReport } = useReportState();
     const [closeDialogOpen, setCloseDialogOpen] = useState(false);
     const [closeType, setCloseType] = useState<'partial' | 'total'>('partial');
     const [finalCash, setFinalCash] = useState<string>('');
@@ -64,15 +66,13 @@ const Reports: React.FC = () => {
 
     const checkAndLoadReport = async () => {
         try {
-            await checkReportStatus();
-            setReportStatusChecked(true);
+            // Report status is now handled by useReportCheck hook
             // If no active report, fetch latest reports for display
-            if (!report) {
+            if (!report && reportStatusChecked) {
                 await fetchLatestReports();
             }
         } catch (error) {
-            console.error("Error checking report status:", error);
-            setReportStatusChecked(true);
+            console.error("Error loading latest reports:", error);
             // Even on error, try to fetch latest reports for display
             await fetchLatestReports();
         }
@@ -190,11 +190,11 @@ const Reports: React.FC = () => {
 
     // React to report state changes from other components (like when a report is started)
     useEffect(() => {
-        if (report) {
-            // If we received a report from the global state, mark as checked
-            setReportStatusChecked(true);
+        if (report && reportStatusChecked) {
+            // If we received a report from the global state, fetch latest reports
+            fetchLatestReports();
         }
-    }, [report]);
+    }, [report, reportStatusChecked]);
 
     useEffect(() => {
         if (report && report.status) {

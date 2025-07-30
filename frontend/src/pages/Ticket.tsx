@@ -7,24 +7,32 @@ import { StopInfoCard } from "../components/StopInfoCard";
 import { RouteList } from "../components/RouteList";
 import { StopList } from "../components/StopList";
 import { TicketInputSection } from "../components/TicketInputSection";
-import { useReportStatus } from "../hooks/useReportStatus";
+import { useReportCheck } from "../hooks/useReportCheck";
+import { useRoutesManagement } from "../hooks/useRoutesManagement";
+import { useStartReportDialog } from "../hooks/useStartReportDialog";
 import { useTicketSelection } from "../hooks/useTicketSelection";
 import { useTicketPurchase } from "../hooks/useTicketPurchase";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
-import { useRoutesState } from '../states/RoutesState';
 import { useTicketState } from "../states/TicketState";
 import { useAuthState } from "../states/AuthState";
-import { useReportState } from '../states/ReportState';
 
 
 const Ticket: React.FC = () => {
-    const { routes, routesLoading } = useRoutesState();
     const { selectedRoute, selectedTime, getCount, incrementCount } = useTicketState();
     const { user } = useAuthState();
-    const { report, reportLoading } = useReportState();
 
     // Custom hooks
-    const { showStartReportDialog, reportStatusChecked } = useReportStatus();
+    const { report, reportLoading, reportStatusChecked } = useReportCheck();
+    const { routes, routesLoading } = useRoutesManagement({ 
+        report, 
+        reportStatusChecked, 
+        reportLoading 
+    });
+    const { showStartReportDialog } = useStartReportDialog({ 
+        report, 
+        reportStatusChecked, 
+        reportLoading 
+    });
     
     const {
         selectedRouteID,

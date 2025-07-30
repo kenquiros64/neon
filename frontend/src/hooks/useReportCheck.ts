@@ -14,24 +14,22 @@ export const useReportCheck = () => {
     // Check report status when component mounts
     useEffect(() => {
         setReportStatusChecked(false);
-        if (!report) {
-            checkReportStatus().then((report) => {
-                setReportStatusChecked(true);
-            }).catch((error) => {
-                if (error === "ROW_NOT_FOUND") {
-                    setReportStatusChecked(true);   
-                    return;
-                }
-                console.error("Error checking report status", error);
-                setReportStatusChecked(true);
-                resetReportState();
-                resetTicketState();
-                resetRoutesState();
-                logout();
-            });
-            return;
-        }
-        setReportStatusChecked(true);
+        
+        // Always check report status to ensure it's current
+        checkReportStatus().then((report) => {
+            setReportStatusChecked(true);
+        }).catch((error) => {
+            if (error === "ROW_NOT_FOUND") {
+                setReportStatusChecked(true);   
+                return;
+            }
+            console.error("Error checking report status", error);
+            setReportStatusChecked(true);
+            resetReportState();
+            resetTicketState();
+            resetRoutesState();
+            logout();
+        });
     }, []);
 
     return {

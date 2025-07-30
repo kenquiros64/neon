@@ -30,7 +30,6 @@ const Ticket: React.FC = () => {
         reportStatusChecked, 
     });
     const { showStartReportDialog } = useStartReportDialog({ 
-        report, 
         reportStatusChecked
     });
     
@@ -86,12 +85,16 @@ const Ticket: React.FC = () => {
         return <StartReport />;
     }
 
-    if (routesLoading) {
+    if (routesLoading || !report) {
         return null;
     }
 
     // Get the selected stop for display
     const selectedStop = selectedRoute.stops.find(stop => stop.code === selectedStopID);
+
+    if (!report) {
+        return null;
+    }
 
     return (
         <Grid container sx={{ height: "100%", margin: 0 }}>

@@ -92,10 +92,6 @@ const Ticket: React.FC = () => {
     // Get the selected stop for display
     const selectedStop = selectedRoute.stops.find(stop => stop.code === selectedStopID);
 
-    if (!report) {
-        return null;
-    }
-
     return (
         <Grid container sx={{ height: "100%", margin: 0 }}>
             {/* Left Panel - Ticket Input Section */}

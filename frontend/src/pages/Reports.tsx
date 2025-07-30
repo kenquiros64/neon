@@ -79,7 +79,7 @@ const Reports: React.FC = () => {
     };
 
     const fetchLatestReports = async () => {
-        if (!user.username) return;
+        if (!user?.username) return;
         
         try {
             const reports = await GetLatestReportsByUsername(user.username);
@@ -210,7 +210,7 @@ const Reports: React.FC = () => {
 
     useEffect(() => {
         fetchLatestReports();
-    }, [user.username]); // Fetch latest reports whenever the user changes
+    }, [user?.username]); // Fetch latest reports whenever the user changes
 
     if (!reportStatusChecked || reportLoading) {
         return (

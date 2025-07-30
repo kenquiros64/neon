@@ -3,7 +3,7 @@ import {models} from "../../wailsjs/go/models";
 import {Login} from "../../wailsjs/go/services/AuthService";
 
 type AuthState = {
-    user: models.User;
+    user: models.User | null;
 }
 
 type Actions = {
@@ -12,13 +12,7 @@ type Actions = {
 }
 
 const initialState: AuthState = {
-    user: {
-        username: "",
-        password: "",
-        name: "",
-        role: "",
-        created_at: "",
-    },
+    user: null,
 }
 
 export const useAuthState = create<AuthState & Actions>()((set) => ({

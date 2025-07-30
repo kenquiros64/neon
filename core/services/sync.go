@@ -35,7 +35,6 @@ func (s *SyncService) startup(ctx context.Context) {
 func (s *SyncService) SyncRoutes() error {
 	// Check internet connectivity before attempting sync
 	if err := helpers.CheckInternetConnection(); err != nil {
-		zap.L().Error("no internet connection available for sync", zap.Error(err))
 		return err
 	}
 
@@ -75,7 +74,6 @@ func (s *SyncService) SyncRoutes() error {
 func (s *SyncService) SyncUsers() error {
 	// Check internet connectivity before attempting sync
 	if err := helpers.CheckInternetConnection(); err != nil {
-		zap.L().Error("no internet connection available for sync", zap.Error(err))
 		return err
 	}
 

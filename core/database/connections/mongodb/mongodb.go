@@ -10,7 +10,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
-	"go.uber.org/zap"
 
 	"neon/core/config"
 	"neon/core/helpers"
@@ -47,7 +46,6 @@ func (m *MongoDB) Connect(ctx context.Context) error {
 	}
 
 	if err := helpers.CheckInternetConnection(); err != nil {
-		zap.L().Error("no internet connection available for connect to MongoDB", zap.Error(err))
 		return err
 	}
 

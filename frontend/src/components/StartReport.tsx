@@ -34,18 +34,17 @@ const StartReport: React.FC = () => {
 
     const handleStartReport = async () => {
 
-        if (!user.username) {
+        if (!user?.username) {
             toast.error('Usuario no válido');
             return;
         }
 
-        try {
-            const newReport = await startReport(user.username, selectedTimetable);
+        startReport(user.username, selectedTimetable).then(() => {
             toast.success('Reporte iniciado exitosamente');
-        } catch (error) {
+        }).catch((error) => {
             console.error('Error starting report:', error);
             toast.error('Error al iniciar el reporte');
-        }
+        });
     };
 
     return (

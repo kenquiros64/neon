@@ -97,7 +97,7 @@ const HomeLayout: React.FC = () => {
             {/* Username */}
             <Typography variant="body1">
               <span style={{ fontWeight: 200 }}>Bienvenido(a)</span>{" "}
-              <span style={{ fontWeight: "bold" }}>{user.name}</span>
+              <span style={{ fontWeight: "bold" }}>{user?.name}</span>
             </Typography>
             <Divider orientation="vertical" flexItem />
             {/* Current Time */}

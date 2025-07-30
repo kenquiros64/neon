@@ -4,9 +4,10 @@ import { Route as RouteIcon, TripOrigin, LocationOn } from "@mui/icons-material"
 import { useTheme } from "../themes/ThemeProvider";
 import routeLight from "../assets/images/route_light.svg";
 import routeDark from "../assets/images/route_dark.svg";
+import { models } from '../../wailsjs/go/models';
 
 interface RouteInfoCardProps {
-    route: any; // Replace with proper Route type
+    route: models.Route;
 }
 
 export const RouteInfoCard: React.FC<RouteInfoCardProps> = ({ route }) => {

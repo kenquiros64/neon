@@ -4,16 +4,11 @@ import { useAuthState } from '../states/AuthState';
 import { useTicketState } from '../states/TicketState';
 import { toast } from 'react-toastify';
 import { useReportState } from '../states/ReportState';
+import { models } from '../../wailsjs/go/models';
 
-interface UseRoutesManagementProps {
-    report: any;
-    reportStatusChecked: boolean;
-}
+interface UseRoutesManagementProps {}
 
-export const useRoutesManagement = ({ 
-    report, 
-    reportStatusChecked
-}: UseRoutesManagementProps) => {
+export const useRoutesManagement = ({}: UseRoutesManagementProps) => {
     const { routes, routesLoading, fetchRoutes, resetRoutesState } = useRoutesState();
     const { logout } = useAuthState();
     const { resetReportState } = useReportState();

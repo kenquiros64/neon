@@ -5,11 +5,11 @@ import { AddTicket } from '../../wailsjs/go/services/TicketService';
 import { to24HourFormat } from '../util/Helpers';
 
 interface UseTicketPurchaseProps {
-    selectedRoute: any;
+    selectedRoute: models.Route;
     selectedStopID: String | null;
     selectedTime: models.Time;
-    user: any;
-    report: any;
+    user: models.User | null;
+    report: models.Report | null;
     incrementCount: (quantity: number, ticketType: 'regular' | 'gold') => void;
     focusInput: () => void;
 }
@@ -28,7 +28,7 @@ export const useTicketPurchase = ({
 
     const handlePurchaseConfirm = async (quantity: number, idNumber?: string) => {
         try {
-            const currentSelectedStop = selectedRoute.stops.find((stop: any) => stop.code === selectedStopID);
+            const currentSelectedStop = selectedRoute.stops.find((stop: models.Stop) => stop.code === selectedStopID);
             
             if (!currentSelectedStop || !selectedRoute || !selectedTime || !user) {
                 toast.error("Faltan datos para crear el ticket");

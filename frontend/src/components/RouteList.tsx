@@ -11,12 +11,13 @@ import {
 import { useTheme } from "../themes/ThemeProvider";
 import { fullRouteName, nextDeparture, to12HourFormat } from "../util/Helpers";
 import routeList from "../assets/images/map.png";
+import { models } from '../../wailsjs/go/models';
 
 interface RouteListProps {
-    routes: any[]; // Replace with proper Route[] type
+    routes: models.Route[];
     selectedRouteID: String | null;
     onRouteSelect: (id: String) => void;
-    report: any; // Replace with proper Report type
+    report: models.Report; 
 }
 
 export const RouteList: React.FC<RouteListProps> = ({

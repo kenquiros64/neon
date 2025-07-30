@@ -13,12 +13,13 @@ import {
 import { People } from "@mui/icons-material";
 import { useTheme } from "../themes/ThemeProvider";
 import stopList from "../assets/images/stop_list.svg";
+import { models } from '../../wailsjs/go/models';
 
 interface StopListProps {
-    stops: any[]; // Replace with proper Stop[] type
+    stops: models.Stop[]; 
     selectedStopID: String | null;
     onStopSelect: (id: String) => void;
-    getCount: (stop: any) => number;
+    getCount: (stop: models.Stop) => number;
 }
 
 export const StopList: React.FC<StopListProps> = ({

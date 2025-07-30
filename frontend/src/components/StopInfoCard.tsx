@@ -2,10 +2,11 @@ import React from 'react';
 import { Box, Typography } from "@mui/material";
 import { DirectionsBus, Star, LocalAtm } from "@mui/icons-material";
 import { useTheme } from "../themes/ThemeProvider";
+import { models } from '../../wailsjs/go/models';
 
 interface StopInfoCardProps {
-    stop: any; // Replace with proper Stop type
-    route: any; // Replace with proper Route type
+    stop: models.Stop | null;
+    route: models.Route | null;
 }
 
 export const StopInfoCard: React.FC<StopInfoCardProps> = ({ stop, route }) => {
@@ -13,8 +14,8 @@ export const StopInfoCard: React.FC<StopInfoCardProps> = ({ stop, route }) => {
 
     if (!stop || !route) return null;
 
-    const currentIndex = route.stops?.findIndex((s: any) => s.name === stop.name) ?? -1;
-    const totalStops = route.stops?.length || 0;
+    const currentIndex = route.stops.findIndex((s: any) => s.name === stop.name) ?? -1;
+    const totalStops = route.stops.length || 0;
 
     return (
         <Box

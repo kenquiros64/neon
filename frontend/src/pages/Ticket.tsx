@@ -25,10 +25,7 @@ const Ticket: React.FC = () => {
 
     // Custom hooks
     const { report, reportStatusChecked } = useReportCheck();
-    const { routes, routesLoading } = useRoutesManagement({ 
-        report, 
-        reportStatusChecked, 
-    });
+    const { routes, routesLoading } = useRoutesManagement({});
     const { showStartReportDialog } = useStartReportDialog({ 
         reportStatusChecked
     });
@@ -90,7 +87,7 @@ const Ticket: React.FC = () => {
     }
 
     // Get the selected stop for display
-    const selectedStop = selectedRoute.stops.find(stop => stop.code === selectedStopID);
+    const selectedStop = selectedRoute.stops.find(stop => stop.code === selectedStopID) || null;
 
     return (
         <Grid container sx={{ height: "100%", margin: 0 }}>

@@ -1,5 +1,5 @@
-// Package mongodb provides a MongoDB database connection
-package mongodb
+// Package remote provides a MongoDB database connection
+package remote
 
 import (
 	"context"

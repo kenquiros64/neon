@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"neon/core/database/connections/embedded"
+	"neon/core/database/embedded"
 	"neon/core/helpers"
 	"neon/core/helpers/enums"
 	"neon/core/models"

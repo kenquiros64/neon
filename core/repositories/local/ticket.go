@@ -3,7 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
-	"neon/core/database/connections/embedded"
+	"neon/core/database/embedded"
 	"neon/core/models"
 	"time"
 

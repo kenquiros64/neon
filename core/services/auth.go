@@ -4,8 +4,8 @@ package services
 import (
 	"context"
 	"neon/core/config"
-	"neon/core/database/connections/embedded"
-	"neon/core/database/connections/mongodb"
+	"neon/core/database/embedded"
+	remotedb "neon/core/database/remote"
 	"neon/core/helpers"
 	"neon/core/models"
 	"neon/core/repositories/local"
@@ -62,7 +62,7 @@ func (a *AuthService) Register(user *models.User) error {
 		return helpers.ErrInvalidRequest
 	}
 
-	remotedb := mongodb.NewMongoDB(config.GetMongoDBConfig())
+	remotedb := remotedb.NewMongoDB(config.GetMongoDBConfig())
 	if err := remotedb.Connect(a.ctx); err != nil {
 		zap.L().Error("failed to connect to remote database", zap.Error(err))
 		return err

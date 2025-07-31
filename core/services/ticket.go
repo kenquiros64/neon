@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"neon/core/database/connections/embedded"
+	"neon/core/database/embedded"
 	"neon/core/helpers"
 	"neon/core/models"
 	"neon/core/repositories/local"

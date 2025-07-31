@@ -2,7 +2,7 @@ package services
 
 import (
 	"neon/core/constants"
-	"neon/core/database/connections/embedded"
+	"neon/core/database/embedded"
 	"neon/core/models"
 	"neon/core/repositories/local"
 	"time"

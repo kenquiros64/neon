@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 
 	"neon/core/constants"
-	"neon/core/database/connections/mongodb"
+	"neon/core/database/remote"
 	"neon/core/models"
 )
 
@@ -20,7 +20,7 @@ type UserRepository struct {
 }
 
 // NewUserRepository creates a new remote user repository
-func NewUserRepository(db *mongodb.MongoDB) *UserRepository {
+func NewUserRepository(db *remote.MongoDB) *UserRepository {
 	return &UserRepository{
 		collection: db.GetCollection(constants.UserCollection),
 	}

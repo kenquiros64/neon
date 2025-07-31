@@ -4,7 +4,7 @@ package local
 import (
 	"fmt"
 	"neon/core/constants"
-	"neon/core/database/connections/embedded"
+	"neon/core/database/embedded"
 	"neon/core/helpers"
 	"neon/core/models"
 

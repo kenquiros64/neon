@@ -4,7 +4,7 @@ import (
 	"context"
 	"embed"
 	"neon/core/config"
-	"neon/core/database/connections/embedded"
+	"neon/core/database/embedded"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"

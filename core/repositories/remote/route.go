@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"neon/core/constants"
-	"neon/core/database/connections/mongodb"
+	"neon/core/database/remote"
 	"neon/core/helpers"
 	"neon/core/models"
 
@@ -18,7 +18,7 @@ type RouteRepository struct {
 }
 
 // NewRouteRepository creates a new remote route repository
-func NewRouteRepository(db *mongodb.MongoDB) *RouteRepository {
+func NewRouteRepository(db *remote.MongoDB) *RouteRepository {
 	return &RouteRepository{
 		collection: db.GetCollection(constants.RouteCollection),
 	}

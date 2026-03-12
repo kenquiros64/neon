@@ -64,3 +64,30 @@ func (r *UserRepository) All(ctx context.Context) ([]models.User, error) {
 
 	return users, nil
 }
+
+// Update updates a user in MongoDB (by username)
+func (r *UserRepository) Update(ctx context.Context, user *models.User) error {
+	if user == nil {
+		return fmt.Errorf("user is nil")
+	}
+	now := time.Now().Format(time.RFC3339)
+	user.UpdatedAt = &now
+
+	_, err := r.collection.UpdateOne(ctx, bson.M{"username": user.Username}, bson.M{"$set": user})
+	if err != nil {
+		return fmt.Errorf("failed to update user: %w", err)
+	}
+	return nil
+}
+
+// Delete deletes a user from MongoDB (by username)
+func (r *UserRepository) Delete(ctx context.Context, user *models.User) error {
+	if user == nil {
+		return fmt.Errorf("user is nil")
+	}
+	_, err := r.collection.DeleteOne(ctx, bson.M{"username": user.Username})
+	if err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	return nil
+}

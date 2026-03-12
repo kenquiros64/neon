@@ -17,6 +17,8 @@ import {
   DirectionsBus,
   Logout,
   NotesOutlined,
+  Route as RouteIcon,
+  People,
 } from "@mui/icons-material";
 import {useNavigate} from "react-router";
 import {HomeAppBar, HomeDrawer, HomeDrawerHeader} from "../components/HomeDrawer";
@@ -31,6 +33,8 @@ const routes: { [key: string]: string } = {
   "/home": "Boleteria",
   "/home/ticket": "Boleteria",
   "/home/reports": "Reportes",
+  "/home/admin/routes": "Rutas",
+  "/home/admin/users": "Usuarios",
 };
 
 const HomeLayout: React.FC = () => {
@@ -41,6 +45,7 @@ const HomeLayout: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   const { user, logout } = useAuthState();
+  const isAdmin = user?.role === "admin";
   const { resetTicketState } = useTicketState();
   const { resetRoutesState } = useRoutesState();
   const { resetReportState } = useReportState();
@@ -180,6 +185,68 @@ const HomeLayout: React.FC = () => {
               />
             </ListItemButton>
           </ListItem>
+          {isAdmin && (
+            <>
+              <ListItem disablePadding sx={{ display: "block" }}>
+                <ListItemButton
+                  sx={[
+                    {
+                      minHeight: 48,
+                      px: 2.5,
+                    },
+                    open ? { justifyContent: "initial" } : { justifyContent: "center" },
+                  ]}
+                  selected={location.pathname === "/home/admin/routes"}
+                  onClick={() => navigate("admin/routes")}
+                >
+                  <ListItemIcon
+                    sx={[
+                      {
+                        minWidth: 0,
+                        justifyContent: "center",
+                      },
+                      open ? { mr: 3 } : { mr: "auto" },
+                    ]}
+                  >
+                    <RouteIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={"Rutas"}
+                    sx={[open ? { opacity: 1 } : { opacity: 0 }]}
+                  />
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding sx={{ display: "block" }}>
+                <ListItemButton
+                  sx={[
+                    {
+                      minHeight: 48,
+                      px: 2.5,
+                    },
+                    open ? { justifyContent: "initial" } : { justifyContent: "center" },
+                  ]}
+                  selected={location.pathname === "/home/admin/users"}
+                  onClick={() => navigate("admin/users")}
+                >
+                  <ListItemIcon
+                    sx={[
+                      {
+                        minWidth: 0,
+                        justifyContent: "center",
+                      },
+                      open ? { mr: 3 } : { mr: "auto" },
+                    ]}
+                  >
+                    <People />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={"Usuarios"}
+                    sx={[open ? { opacity: 1 } : { opacity: 0 }]}
+                  />
+                </ListItemButton>
+              </ListItem>
+            </>
+          )}
         </List>
         <Divider />
         <List>

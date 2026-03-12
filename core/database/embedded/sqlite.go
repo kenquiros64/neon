@@ -14,8 +14,8 @@ import (
 	"neon/core/constants"
 )
 
-// Database represents a SQLite database connection
-type Database struct {
+// SQLite represents a SQLite database connection
+type SQLite struct {
 	db        *sql.DB
 	ctx       context.Context
 	config    *config.SQLiteConfig
@@ -24,28 +24,28 @@ type Database struct {
 }
 
 // NewSQLite creates a new SQLite connection instance
-func NewSQLite(cfg *config.SQLiteConfig) *Database {
-	return &Database{
+func NewSQLite(cfg *config.SQLiteConfig) *SQLite {
+	return &SQLite{
 		config: cfg,
 	}
 }
 
 // Connect establishes a connection to SQLite
-func (d *Database) Connect(ctx context.Context) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+func (s *SQLite) Connect(ctx context.Context) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	if d.connected {
+	if s.connected {
 		return nil
 	}
-	dsn := d.config.FilePath
-	if d.config.InMemory {
+	dsn := s.config.FilePath
+	if s.config.InMemory {
 		dsn = ":memory:"
 	}
 
 	// Create database directory if it doesn't exist
-	if !d.config.InMemory {
-		if err := d.createDatabaseDirectory(); err != nil {
+	if !s.config.InMemory {
+		if err := s.createDatabaseDirectory(); err != nil {
 			return fmt.Errorf("failed to create database directory: %w", err)
 		}
 	}
@@ -57,8 +57,8 @@ func (d *Database) Connect(ctx context.Context) error {
 	}
 
 	// Configure connection pool
-	db.SetMaxOpenConns(d.config.MaxOpenConns)
-	db.SetMaxIdleConns(d.config.MaxIdleConns)
+	db.SetMaxOpenConns(s.config.MaxOpenConns)
+	db.SetMaxIdleConns(s.config.MaxIdleConns)
 
 	// Test the connection
 	if err := db.PingContext(ctx); err != nil {
@@ -66,16 +66,16 @@ func (d *Database) Connect(ctx context.Context) error {
 		return fmt.Errorf("failed to ping SQLite database: %w", err)
 	}
 
-	d.db = db
-	d.connected = true
+	s.db = db
+	s.connected = true
 
 	// Initialize tables
-	if err := d.initTables(); err != nil {
+	if err := s.initTables(); err != nil {
 		return fmt.Errorf("failed to initialize tables: %w", err)
 	}
 
 	// Initialize triggers
-	if err := d.initTriggers(); err != nil {
+	if err := s.initTriggers(); err != nil {
 		return fmt.Errorf("failed to initialize triggers: %w", err)
 	}
 
@@ -83,51 +83,51 @@ func (d *Database) Connect(ctx context.Context) error {
 }
 
 // Close closes the SQLite connection
-func (d *Database) Close() error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+func (s *SQLite) Close() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	if !d.connected {
+	if !s.connected {
 		return nil
 	}
 
-	if err := d.db.Close(); err != nil {
+	if err := s.db.Close(); err != nil {
 		return fmt.Errorf("failed to close SQLite database: %w", err)
 	}
 
-	d.connected = false
+	s.connected = false
 	return nil
 }
 
 // Ping tests the SQLite connection
-func (d *Database) Ping(ctx context.Context) error {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
+func (s *SQLite) Ping(ctx context.Context) error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	if !d.connected {
+	if !s.connected {
 		return fmt.Errorf("SQLite is not connected")
 	}
 
-	return d.db.PingContext(ctx)
+	return s.db.PingContext(ctx)
 }
 
 // IsConnected returns the connection status
-func (d *Database) IsConnected() bool {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
-	return d.connected
+func (s *SQLite) IsConnected() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.connected
 }
 
 // GetDB returns the SQLite database instance
-func (d *Database) GetDB() *sql.DB {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
-	return d.db
+func (s *SQLite) GetDB() *sql.DB {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.db
 }
 
 // createDatabaseDirectory creates the directory for the database file
-func (d *Database) createDatabaseDirectory() error {
-	dir := filepath.Dir(d.config.FilePath)
+func (s *SQLite) createDatabaseDirectory() error {
+	dir := filepath.Dir(s.config.FilePath)
 	if dir == "." {
 		return nil
 	}
@@ -142,70 +142,70 @@ func (d *Database) createDatabaseDirectory() error {
 }
 
 // BeginTx begins a new transaction
-func (d *Database) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
+func (s *SQLite) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	if !d.connected {
+	if !s.connected {
 		return nil, fmt.Errorf("SQLite is not connected")
 	}
 
-	return d.db.BeginTx(ctx, opts)
+	return s.db.BeginTx(ctx, opts)
 }
 
 // Exec executes a query without returning any rows
-func (d *Database) Exec(query string, args ...interface{}) (sql.Result, error) {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
+func (s *SQLite) Exec(query string, args ...interface{}) (sql.Result, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	if !d.connected {
+	if !s.connected {
 		return nil, fmt.Errorf("SQLite is not connected")
 	}
 
-	return d.db.Exec(query, args...)
+	return s.db.Exec(query, args...)
 }
 
 // Query executes a query that returns rows
-func (d *Database) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
+func (s *SQLite) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	if !d.connected {
+	if !s.connected {
 		return nil, fmt.Errorf("SQLite is not connected")
 	}
 
-	return d.db.Query(query, args...)
+	return s.db.Query(query, args...)
 }
 
 // QueryRow executes a query that returns at most one row
-func (d *Database) QueryRow(query string, args ...interface{}) *sql.Row {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
+func (s *SQLite) QueryRow(query string, args ...interface{}) *sql.Row {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-	return d.db.QueryRow(query, args...)
+	return s.db.QueryRow(query, args...)
 }
 
 // initTables creates the necessary tables if they don't exist
-func (d *Database) initTables() error {
-	if err := d.createReportsTable(); err != nil {
+func (s *SQLite) initTables() error {
+	if err := s.createReportsTable(); err != nil {
 		return err
 	}
-	return d.createTicketsTable()
+	return s.createTicketsTable()
 }
 
 // initTriggers creates the necessary triggers if they don't exist
-func (d *Database) initTriggers() error {
-	if err := d.createTriggerUpdateReportAfterTicketInsert(); err != nil {
+func (s *SQLite) initTriggers() error {
+	if err := s.createTriggerUpdateReportAfterTicketInsert(); err != nil {
 		return err
 	}
-	if err := d.createTriggerUpdateReportAfterTicketIsUpdatedToNull(); err != nil {
+	if err := s.createTriggerUpdateReportAfterTicketIsUpdatedToNull(); err != nil {
 		return err
 	}
 	return nil
 }
 
 // createReportsTable creates the reports table if it doesn't exist
-func (d *Database) createReportsTable() error {
+func (s *SQLite) createReportsTable() error {
 	query := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -229,7 +229,7 @@ func (d *Database) createReportsTable() error {
 		)
 	`, constants.ReportsTable)
 
-	_, err := d.db.Exec(query)
+	_, err := s.db.Exec(query)
 	if err != nil {
 		return fmt.Errorf("failed to create reports table: %w", err)
 	}
@@ -238,7 +238,7 @@ func (d *Database) createReportsTable() error {
 }
 
 // createTicketsTable creates the tickets table if it doesn't exist
-func (d *Database) createTicketsTable() error {
+func (s *SQLite) createTicketsTable() error {
 	query := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -258,7 +258,7 @@ func (d *Database) createTicketsTable() error {
 		)
 	`, constants.TicketsTable, constants.ReportsTable)
 
-	_, err := d.db.Exec(query)
+	_, err := s.db.Exec(query)
 	if err != nil {
 		return fmt.Errorf("failed to create tickets table: %w", err)
 	}
@@ -268,7 +268,7 @@ func (d *Database) createTicketsTable() error {
 
 // createTriggerUpdateReportAfterTicketInsert creates the trigger to update the report after
 // a ticket is inserted
-func (d *Database) createTriggerUpdateReportAfterTicketInsert() error {
+func (s *SQLite) createTriggerUpdateReportAfterTicketInsert() error {
 	query := `
 		CREATE TRIGGER IF NOT EXISTS update_report_after_ticket_insert
 		AFTER INSERT ON tickets
@@ -288,7 +288,7 @@ func (d *Database) createTriggerUpdateReportAfterTicketInsert() error {
 		END
 	`
 
-	_, err := d.db.Exec(query)
+	_, err := s.db.Exec(query)
 	if err != nil {
 		return fmt.Errorf("failed to create trigger update_report_after_ticket_insert: %w", err)
 	}
@@ -298,7 +298,7 @@ func (d *Database) createTriggerUpdateReportAfterTicketInsert() error {
 
 // createTriggerUpdateReportAfterTicketIsUpdatedToNull creates the trigger to update the report after
 // a ticket is updated to null
-func (d *Database) createTriggerUpdateReportAfterTicketIsUpdatedToNull() error {
+func (s *SQLite) createTriggerUpdateReportAfterTicketIsUpdatedToNull() error {
 	query := `
 		CREATE TRIGGER IF NOT EXISTS update_report_after_ticket_null
 		AFTER UPDATE OF is_null ON tickets
@@ -317,7 +317,7 @@ func (d *Database) createTriggerUpdateReportAfterTicketIsUpdatedToNull() error {
 		END
 	`
 
-	_, err := d.db.Exec(query)
+	_, err := s.db.Exec(query)
 	if err != nil {
 		return fmt.Errorf("failed to create trigger update_report_after_ticket_is_updated_to_null: %w", err)
 	}

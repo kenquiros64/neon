@@ -10,12 +10,12 @@ import (
 	"neon/core/config"
 	"neon/core/constants"
 
-	c "github.com/ostafen/clover/v2"
+	"github.com/ostafen/clover/v2"
 )
 
 // CloverDB represents a CloverDB database connection
 type CloverDB struct {
-	db        *c.DB
+	db        *clover.DB
 	config    *config.CloverDBConfig
 	connected bool
 	mu        sync.RWMutex
@@ -38,7 +38,7 @@ func (d *CloverDB) Connect(ctx context.Context) error {
 	}
 
 	// Open database connection
-	db, err := c.Open(d.config.FilePath)
+	db, err := clover.Open(d.config.FilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open CloverDB database: %w", err)
 	}
@@ -71,7 +71,7 @@ func (d *CloverDB) IsConnected() bool {
 }
 
 // GetDB returns the underlying CloverDB database connection
-func (d *CloverDB) GetDB() *c.DB {
+func (d *CloverDB) GetDB() *clover.DB {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 	return d.db
@@ -87,7 +87,7 @@ func (d *CloverDB) initCollections() {
 	for _, collection := range collections {
 		err := d.db.CreateCollection(collection)
 		if err != nil {
-			if err == c.ErrCollectionExist {
+			if err == clover.ErrCollectionExist {
 				continue
 			}
 

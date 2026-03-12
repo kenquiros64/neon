@@ -13,11 +13,11 @@ import (
 // TicketRepository implements TicketRepository for SQLite using goqu
 type TicketRepository struct {
 	ctx context.Context
-	db  *embedded.Database
+	db  *embedded.SQLite
 }
 
 // NewTicketRepository creates a new ticket repository with goqu
-func NewTicketRepository(ctx context.Context, db *embedded.Database) *TicketRepository {
+func NewTicketRepository(ctx context.Context, db *embedded.SQLite) *TicketRepository {
 	return &TicketRepository{
 		ctx: ctx,
 		db:  db,

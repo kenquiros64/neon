@@ -5,3 +5,15 @@
 export function AddUser(arg1) {
   return window['go']['services']['UserService']['AddUser'](arg1);
 }
+
+export function DeleteUser(arg1) {
+  return window['go']['services']['UserService']['DeleteUser'](arg1);
+}
+
+export function GetUsers() {
+  return window['go']['services']['UserService']['GetUsers']();
+}
+
+export function UpdateUser(arg1) {
+  return window['go']['services']['UserService']['UpdateUser'](arg1);
+}

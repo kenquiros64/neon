@@ -14,11 +14,11 @@ import (
 // TicketService is a service for tickets
 type TicketService struct {
 	ctx     context.Context
-	localDB *embedded.Database
+	localDB *embedded.SQLite
 }
 
 // NewTicketService creates a new ticket service
-func NewTicketService(localDB *embedded.Database) *TicketService {
+func NewTicketService(localDB *embedded.SQLite) *TicketService {
 	return &TicketService{localDB: localDB}
 }
 

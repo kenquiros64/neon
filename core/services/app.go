@@ -19,7 +19,7 @@ type App struct {
 
 var (
 	cloverdb *embedded.CloverDB
-	sqlitedb *embedded.Database
+	sqlitedb *embedded.SQLite
 )
 
 // NewApp creates a new App instance
@@ -33,9 +33,9 @@ func (a *App) Startup() {
 	initialize(context.Background())
 	syncService := NewSyncService(cloverdb)
 	authService := NewAuthService(cloverdb)
-	userService := NewUserService(cloverdb)
+	userService := NewUserService(cloverdb, syncService)
 	ticketService := NewTicketService(sqlitedb)
-	routeService := NewRouteService(cloverdb)
+	routeService := NewRouteService(cloverdb, syncService)
 	counterService := NewCounterService(cloverdb)
 	reportService := NewReportService(sqlitedb)
 

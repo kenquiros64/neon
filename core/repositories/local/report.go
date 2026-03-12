@@ -12,11 +12,11 @@ import (
 // ReportRepository implements ReportRepository
 type ReportRepository struct {
 	ctx context.Context
-	db  *embedded.Database
+	db  *embedded.SQLite
 }
 
 // NewReportRepository creates a new report repository
-func NewReportRepository(ctx context.Context, db *embedded.Database) *ReportRepository {
+func NewReportRepository(ctx context.Context, db *embedded.SQLite) *ReportRepository {
 	return &ReportRepository{
 		ctx: ctx,
 		db:  db,

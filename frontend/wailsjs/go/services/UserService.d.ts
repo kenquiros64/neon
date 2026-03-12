@@ -3,3 +3,9 @@
 import {models} from '../models';
 
 export function AddUser(arg1:models.User):Promise<void>;
+
+export function DeleteUser(arg1:models.User):Promise<void>;
+
+export function GetUsers():Promise<Array<models.User>>;
+
+export function UpdateUser(arg1:models.User):Promise<void>;

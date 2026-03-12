@@ -14,13 +14,14 @@ import (
 
 // RouteService is a service for routes
 type RouteService struct {
-	ctx     context.Context
-	localDB *embedded.CloverDB
+	ctx         context.Context
+	localDB     *embedded.CloverDB
+	syncService *SyncService
 }
 
 // NewRouteService creates a new route service
-func NewRouteService(localDB *embedded.CloverDB) *RouteService {
-	return &RouteService{localDB: localDB}
+func NewRouteService(localDB *embedded.CloverDB, syncService *SyncService) *RouteService {
+	return &RouteService{localDB: localDB, syncService: syncService}
 }
 
 // startup starts the route service
@@ -56,6 +57,10 @@ func (r *RouteService) AddRoute(route *models.Route) error {
 		return err
 	}
 
+	if err := r.syncService.SyncRoutes(); err != nil {
+		zap.L().Error("failed to sync routes after add", zap.Error(err))
+		return err
+	}
 	return nil
 }
 
@@ -74,6 +79,10 @@ func (r *RouteService) UpdateRoute(route *models.Route) error {
 		return err
 	}
 
+	if err := r.syncService.SyncRoutes(); err != nil {
+		zap.L().Error("failed to sync routes after update", zap.Error(err))
+		return err
+	}
 	return nil
 }
 
@@ -92,5 +101,9 @@ func (r *RouteService) DeleteRoute(route *models.Route) error {
 		return err
 	}
 
+	if err := r.syncService.SyncRoutes(); err != nil {
+		zap.L().Error("failed to sync routes after delete", zap.Error(err))
+		return err
+	}
 	return nil
 }

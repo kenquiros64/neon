@@ -17,11 +17,11 @@ import (
 // ReportService is a service for reports
 type ReportService struct {
 	ctx     context.Context
-	localDB *embedded.Database
+	localDB *embedded.SQLite
 }
 
 // NewReportService creates a new report service
-func NewReportService(localDB *embedded.Database) *ReportService {
+func NewReportService(localDB *embedded.SQLite) *ReportService {
 	return &ReportService{localDB: localDB}
 }
 

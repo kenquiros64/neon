@@ -82,19 +82,92 @@ function formStateToRoute(state: RouteFormState, existingRoute: models.Route | n
     return route;
 }
 
+/** Returns true if the code at the given stop index is duplicated by another stop in the same route (case-insensitive, trimmed). */
+function isStopCodeDuplicateInRoute(stops: models.Stop[], index: number): boolean {
+    const code = (stops[index]?.code ?? "").trim().toLowerCase();
+    if (!code) return false; // empty is handled separately
+    return stops.some((s, i) => i !== index && (s.code ?? "").trim().toLowerCase() === code);
+}
+
+/** Returns a Set of stop codes (lowercase) used in the given routes. */
+function getStopCodesFromRoutes(routes: models.Route[]): Set<string> {
+    const set = new Set<string>();
+    for (const r of routes) {
+        for (const s of r.stops ?? []) {
+            const code = (s.code ?? "").trim().toLowerCase();
+            if (code) set.add(code);
+        }
+    }
+    return set;
+}
+
+/** Returns true if the code at the given index is used by another route (not the one being edited). */
+function isStopCodeUsedInOtherRoute(
+    stops: models.Stop[],
+    index: number,
+    codesFromOtherRoutes: Set<string>
+): boolean {
+    const code = (stops[index]?.code ?? "").trim().toLowerCase();
+    if (!code) return false;
+    return codesFromOtherRoutes.has(code);
+}
+
+function getDuplicateCodes(stops: models.Stop[]): string[] {
+    const seen = new Map<string, number>();
+    const duplicates: string[] = [];
+    for (const s of stops) {
+        const code = (s.code ?? "").trim();
+        if (!code) continue;
+        const key = code.toLowerCase();
+        const count = (seen.get(key) ?? 0) + 1;
+        seen.set(key, count);
+        if (count === 2) duplicates.push(code);
+    }
+    return [...new Set(duplicates)];
+}
+
+/** Compare route ids (both may be number[] from ObjectID). */
+function sameRouteId(a: models.Route | null, b: models.Route | null): boolean {
+    if (a == null || b == null) return a === b;
+    const idA = a.id;
+    const idB = b.id;
+    if (idA == null || idB == null) return false;
+    const arrA = Array.isArray(idA) ? idA : [idA];
+    const arrB = Array.isArray(idB) ? idB : [idB];
+    return arrA.length === arrB.length && arrA.every((v, i) => v === arrB[i]);
+}
+
 interface RouteFormDialogProps {
     open: boolean;
     route: models.Route | null;
+    /** All existing routes (used to validate that stop codes are not used by another route). */
+    allRoutes?: models.Route[];
     onClose: () => void;
     onSave: (route: models.Route) => Promise<void>;
 }
 
-export const RouteFormDialog: React.FC<RouteFormDialogProps> = ({ open, route, onClose, onSave }) => {
+export const RouteFormDialog: React.FC<RouteFormDialogProps> = ({ open, route, allRoutes = [], onClose, onSave }) => {
     const [state, setState] = useState<RouteFormState>(() => routeToFormState(route));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const isEdit = route != null && route.id != null && (route.id as number[]).length > 0;
+
+    // Stop codes from other routes (exclude current when editing) for cross-route validation
+    const codesFromOtherRoutes = React.useMemo(() => {
+        const other = (allRoutes ?? []).filter((r) => !sameRouteId(r, route));
+        return getStopCodesFromRoutes(other);
+    }, [allRoutes, route]);
+
+    const getCodeError = useCallback(
+        (index: number): string | undefined => {
+            if (isStopCodeDuplicateInRoute(state.stops, index) && 
+            isStopCodeUsedInOtherRoute(state.stops, index, codesFromOtherRoutes))
+                return "Código ya usado";
+            return undefined;
+        },
+        [state.stops, codesFromOtherRoutes]
+    );
 
     React.useEffect(() => {
         if (open) {
@@ -142,6 +215,23 @@ export const RouteFormDialog: React.FC<RouteFormDialogProps> = ({ open, route, o
         }
         if (state.stops.length === 0) {
             setError("Debe haber al menos una parada.");
+            return;
+        }
+        const duplicateCodes = getDuplicateCodes(state.stops);
+        if (duplicateCodes.length > 0) {
+            setError(`El código de parada no puede repetirse en la misma ruta: ${duplicateCodes.join(", ")}`);
+            return;
+        }
+        const codesUsedElsewhere = state.stops
+            .map((s) => (s.code ?? "").trim().toLowerCase())
+            .filter((code) => code && codesFromOtherRoutes.has(code));
+        if (codesUsedElsewhere.length > 0) {
+            setError(`El código de parada ya está en uso en otra ruta: ${[...new Set(codesUsedElsewhere)].join(", ")}`);
+            return;
+        }
+        const emptyCodeStop = state.stops.find((s, i) => !(s.code ?? "").trim());
+        if (emptyCodeStop) {
+            setError("Todas las paradas deben tener un código.");
             return;
         }
         if (state.timetable.length === 0) {
@@ -225,6 +315,8 @@ export const RouteFormDialog: React.FC<RouteFormDialogProps> = ({ open, route, o
                                                         value={stop.code}
                                                         onChange={(e) => changeStop(idx, "code", e.target.value)}
                                                         placeholder="Código"
+                                                        error={!!getCodeError(idx)}
+                                                        helperText={getCodeError(idx)}
                                                     />
                                                 </TableCell>
                                                 <TableCell align="right">

@@ -10,14 +10,14 @@ export function GetLatestReportsByUsername(arg1) {
   return window['go']['services']['ReportService']['GetLatestReportsByUsername'](arg1);
 }
 
-export function PartialCloseReport(arg1, arg2) {
-  return window['go']['services']['ReportService']['PartialCloseReport'](arg1, arg2);
+export function PartialCloseReport(arg1, arg2, arg3) {
+  return window['go']['services']['ReportService']['PartialCloseReport'](arg1, arg2, arg3);
 }
 
 export function StartReport(arg1, arg2) {
   return window['go']['services']['ReportService']['StartReport'](arg1, arg2);
 }
 
-export function TotalCloseReport(arg1, arg2) {
-  return window['go']['services']['ReportService']['TotalCloseReport'](arg1, arg2);
+export function TotalCloseReport(arg1, arg2, arg3) {
+  return window['go']['services']['ReportService']['TotalCloseReport'](arg1, arg2, arg3);
 }

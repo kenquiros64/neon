@@ -7,8 +7,8 @@ interface ReportState {
     reportLoading: boolean;
     startReport: (username: string, timetable: string) => Promise<models.Report>;
     checkReportStatus: () => Promise<models.Report | null>;
-    partialCloseReport: (reportID: number, finalCash: number) => Promise<models.Report>;
-    totalCloseReport: (reportID: number, finalCash: number) => Promise<models.Report>;
+    partialCloseReport: (reportID: number, finalCash: number, closedByUsername: string) => Promise<models.Report>;
+    totalCloseReport: (reportID: number, finalCash: number, closedByUsername: string) => Promise<models.Report>;
     resetReportState: () => void;
 }
 
@@ -43,10 +43,10 @@ export const useReportState = create<ReportState>((set, get) => ({
         }
     },
 
-    partialCloseReport: async (reportID: number, finalCash: number) => {
+    partialCloseReport: async (reportID: number, finalCash: number, closedByUsername: string) => {
         set({ reportLoading: true });
         try {
-            const output = await PartialCloseReport(reportID, finalCash);
+            const output = await PartialCloseReport(reportID, finalCash, closedByUsername);
             set({ report: output, reportLoading: false });
             return output;
         } catch (error) {
@@ -56,10 +56,10 @@ export const useReportState = create<ReportState>((set, get) => ({
         }
     },
 
-    totalCloseReport: async (reportID: number, finalCash: number) => {
+    totalCloseReport: async (reportID: number, finalCash: number, closedByUsername: string) => {
         set({ reportLoading: true });
         try {
-            const output = await TotalCloseReport(reportID, finalCash);
+            const output = await TotalCloseReport(reportID, finalCash, closedByUsername);
             set({ report: null, reportLoading: false });
             return output;
         } catch (error) {

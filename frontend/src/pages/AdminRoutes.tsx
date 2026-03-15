@@ -51,7 +51,7 @@ const AdminRoutes: React.FC = () => {
         try {
             await SyncRoutes();
             await fetchRoutes();
-            toast.success("Rutas sincronizadas desde MongoDB");
+            toast.success("Rutas sincronizadas");
         } catch (e: unknown) {
             toast.error(e instanceof Error ? e.message : "Error al sincronizar");
         } finally {
@@ -127,7 +127,7 @@ const AdminRoutes: React.FC = () => {
                         onClick={handleSync}
                         disabled={syncing}
                     >
-                        {syncing ? "Sincronizando…" : "Sincronizar desde MongoDB"}
+                        {syncing ? "Sincronizando…" : "Sincronizar"}
                     </Button>
                     <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
                         Nueva ruta
@@ -136,14 +136,14 @@ const AdminRoutes: React.FC = () => {
             </Box>
 
             <Alert severity="info" sx={{ mb: 2 }}>
-                Las rutas se guardan en MongoDB y luego se sincronizan al almacenamiento local.
+                Las rutas se guardan remotamente y luego se sincronizan al almacenamiento local.
             </Alert>
 
             <Card>
                 <CardContent>
                     {routes.length === 0 ? (
                         <Typography color="text.secondary">
-                            No hay rutas. Sincronice desde MongoDB o cree una nueva ruta.
+                            No hay rutas. Sincronice o cree una nueva ruta.
                         </Typography>
                     ) : (
                         <TableContainer component={Paper} variant="outlined">
@@ -186,6 +186,7 @@ const AdminRoutes: React.FC = () => {
             <RouteFormDialog
                 open={formOpen}
                 route={editingRoute}
+                allRoutes={routes}
                 onClose={() => setFormOpen(false)}
                 onSave={handleSaveRoute}
             />

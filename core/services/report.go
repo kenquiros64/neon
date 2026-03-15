@@ -71,10 +71,11 @@ func (r *ReportService) CheckIfThereIsAnOpenOrPendingReport() (*models.Report, e
 	return report, nil
 }
 
-// PartialCloseReport closes a report
+// PartialCloseReport closes a report partially (records cash counted, ticket count, and who closed)
 func (r *ReportService) PartialCloseReport(
 	reportID int64,
 	cash int,
+	closedByUsername *string,
 ) (*models.Report, error) {
 	repository := local.NewReportRepository(r.ctx, r.localDB)
 
@@ -89,6 +90,9 @@ func (r *ReportService) PartialCloseReport(
 
 	now := time.Now().Format(time.RFC3339)
 	report.PartialClosedAt = &now
+	report.PartialCash = cash
+	report.PartialTickets = report.TotalTickets // tickets sold so far at partial close time
+	report.PartialClosedBy = closedByUsername
 
 	if err := repository.Update(*report); err != nil {
 		zap.L().Error("failed to update report", zap.Error(err))
@@ -98,10 +102,11 @@ func (r *ReportService) PartialCloseReport(
 	return report, nil
 }
 
-// TotalCloseReport closes a report
+// TotalCloseReport closes a report totally (records final cash counted and who closed)
 func (r *ReportService) TotalCloseReport(
 	reportID int64,
 	cash int,
+	closedByUsername *string,
 ) (*models.Report, error) {
 	repository := local.NewReportRepository(r.ctx, r.localDB)
 
@@ -117,6 +122,8 @@ func (r *ReportService) TotalCloseReport(
 	now := time.Now().Format(time.RFC3339)
 	report.ClosedAt = &now
 	report.Status = false
+	report.FinalCash = cash
+	report.ClosedBy = closedByUsername
 
 	if err := repository.Update(*report); err != nil {
 		zap.L().Error("failed to update report", zap.Error(err))

@@ -63,7 +63,7 @@ const AdminUsers: React.FC = () => {
         try {
             await SyncUsers();
             await fetchUsers();
-            toast.success("Usuarios sincronizados desde MongoDB");
+            toast.success("Usuarios sincronizados");
         } catch (e: unknown) {
             toast.error(e instanceof Error ? e.message : "Error al sincronizar");
         } finally {
@@ -139,7 +139,7 @@ const AdminUsers: React.FC = () => {
                         onClick={handleSync}
                         disabled={syncing}
                     >
-                        {syncing ? "Sincronizando…" : "Sincronizar desde MongoDB"}
+                        {syncing ? "Sincronizando…" : "Sincronizar"}
                     </Button>
                     <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
                         Nuevo usuario
@@ -148,14 +148,14 @@ const AdminUsers: React.FC = () => {
             </Box>
 
             <Alert severity="info" sx={{ mb: 2 }}>
-                Los usuarios se guardan en MongoDB y luego se sincronizan al almacenamiento local.
+                Los usuarios se guardan remotamente y luego se sincronizan al almacenamiento local.
             </Alert>
 
             <Card>
                 <CardContent>
                     {users.length === 0 ? (
                         <Typography color="text.secondary">
-                            No hay usuarios. Sincronice desde MongoDB o cree un nuevo usuario.
+                            No hay usuarios. Sincronice o cree un nuevo usuario.
                         </Typography>
                     ) : (
                         <TableContainer component={Paper} variant="outlined">

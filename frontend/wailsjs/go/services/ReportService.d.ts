@@ -6,8 +6,8 @@ export function CheckIfThereIsAnOpenOrPendingReport():Promise<models.Report>;
 
 export function GetLatestReportsByUsername(arg1:string):Promise<Array<models.Report>>;
 
-export function PartialCloseReport(arg1:number,arg2:number):Promise<models.Report>;
+export function PartialCloseReport(arg1:number,arg2:number,arg3:any):Promise<models.Report>;
 
 export function StartReport(arg1:string,arg2:string):Promise<models.Report>;
 
-export function TotalCloseReport(arg1:number,arg2:number):Promise<models.Report>;
+export function TotalCloseReport(arg1:number,arg2:number,arg3:any):Promise<models.Report>;

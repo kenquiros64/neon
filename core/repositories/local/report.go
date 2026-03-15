@@ -101,6 +101,8 @@ func (r *ReportRepository) GetByID(reportID int64) (*models.Report, error) {
 		&report.PartialClosedAt,
 		&report.ClosedAt,
 		&report.CreatedAt,
+		&report.PartialClosedBy,
+		&report.ClosedBy,
 	); err != nil {
 		return nil, fmt.Errorf("failed to scan report: %w", err)
 	}
@@ -145,6 +147,8 @@ func (r *ReportRepository) GetOpenOrPendingReport() (*models.Report, error) {
 		&report.PartialClosedAt,
 		&report.ClosedAt,
 		&report.CreatedAt,
+		&report.PartialClosedBy,
+		&report.ClosedBy,
 	); err != nil {
 		return nil, err
 	}
@@ -194,6 +198,8 @@ func (r *ReportRepository) GetLatestReportsByUsername(username string) ([]*model
 			&report.PartialClosedAt,
 			&report.ClosedAt,
 			&report.CreatedAt,
+			&report.PartialClosedBy,
+			&report.ClosedBy,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan report: %w", err)
 		}

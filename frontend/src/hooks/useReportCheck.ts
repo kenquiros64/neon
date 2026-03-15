@@ -3,6 +3,14 @@ import { useReportState } from '../states/ReportState';
 import { useAuthState } from '../states/AuthState';
 import { useTicketState } from '../states/TicketState';
 import { useRoutesState } from '../states/RoutesState';
+import { toast } from 'react-toastify';
+
+function getErrorMessage(error: unknown): string {
+    if (error == null) return 'Error desconocido';
+    if (typeof error === 'string') return error;
+    if (error instanceof Error) return error.message;
+    return String(error);
+}
 
 export const useReportCheck = () => {
     const { report, checkReportStatus, resetReportState } = useReportState();
@@ -14,22 +22,27 @@ export const useReportCheck = () => {
     // Check report status when component mounts
     useEffect(() => {
         setReportStatusChecked(false);
-        
-        // Always check report status to ensure it's current
-        checkReportStatus().then((report) => {
-            setReportStatusChecked(true);
-        }).catch((error) => {
-            if (error === "ROW_NOT_FOUND") {
-                setReportStatusChecked(true);   
-                return;
-            }
-            console.error("Error checking report status", error);
-            setReportStatusChecked(true);
-            resetReportState();
-            resetTicketState();
-            resetRoutesState();
-            logout();
-        });
+
+        checkReportStatus()
+            .then(() => {
+                setReportStatusChecked(true);
+            })
+            .catch((error) => {
+                const msg = getErrorMessage(error);
+                const isRowNotFound = msg.includes('ROW_NOT_FOUND') || msg.includes('row not found') || error === 'ROW_NOT_FOUND';
+
+                if (isRowNotFound) {
+                    setReportStatusChecked(true);
+                    return;
+                }
+
+                toast.error(`Error al verificar el reporte: ${msg}`, { autoClose: 8000 });
+                setReportStatusChecked(true);
+                resetReportState();
+                resetTicketState();
+                resetRoutesState();
+                logout();
+            });
     }, []);
 
     return {

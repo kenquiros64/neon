@@ -54,12 +54,17 @@ const Reports: React.FC = () => {
             toast.error('No hay reporte activo');
             return;
         }
+        const closedBy = user?.username ?? '';
+        if (!closedBy) {
+            toast.error('No se pudo identificar el usuario');
+            return;
+        }
 
         if (type === 'partial') {
-            await partialCloseReport(report.id, cashAmount);
+            await partialCloseReport(report.id, cashAmount, closedBy);
             toast.success('Reporte cerrado parcialmente');
         } else {
-            await totalCloseReport(report.id, cashAmount);
+            await totalCloseReport(report.id, cashAmount, closedBy);
             toast.success('Reporte cerrado totalmente');
             // After total close, fetch latest reports to show the newly closed report
             await fetchLatestReports();

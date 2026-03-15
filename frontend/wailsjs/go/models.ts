@@ -35,6 +35,8 @@ export namespace models {
 	    partial_closed_at?: string;
 	    closed_at?: string;
 	    created_at?: string;
+	    partial_closed_by?: string;
+	    closed_by?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Report(source);
@@ -60,6 +62,8 @@ export namespace models {
 	        this.partial_closed_at = source["partial_closed_at"];
 	        this.closed_at = source["closed_at"];
 	        this.created_at = source["created_at"];
+	        this.partial_closed_by = source["partial_closed_by"];
+	        this.closed_by = source["closed_by"];
 	    }
 	}
 	export class Time {

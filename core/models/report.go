@@ -24,4 +24,6 @@ type Report struct {
 	PartialClosedAt  *string         `json:"partial_closed_at" db:"partial_closed_at" goqu:"omitnil"`
 	ClosedAt         *string         `json:"closed_at" db:"closed_at" goqu:"omitnil"`
 	CreatedAt        *string         `json:"created_at" db:"created_at" goqu:"skipupdate"`
+	PartialClosedBy  *string         `json:"partial_closed_by" db:"partial_closed_by" goqu:"omitnil"`
+	ClosedBy         *string         `json:"closed_by" db:"closed_by" goqu:"omitnil"`
 }

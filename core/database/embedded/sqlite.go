@@ -225,7 +225,9 @@ func (s *SQLite) createReportsTable() error {
 			total_regular_cash INTEGER NOT NULL DEFAULT 0,
 			partial_closed_at TEXT,
 			closed_at TEXT,
-			created_at TEXT
+			created_at TEXT,
+			partial_closed_by TEXT,
+			closed_by TEXT
 		)
 	`, constants.ReportsTable)
 

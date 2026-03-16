@@ -91,7 +91,6 @@ func (r *ReportService) PartialCloseReport(
 	now := time.Now().Format(time.RFC3339)
 	report.PartialClosedAt = &now
 	report.PartialCash = cash
-	report.PartialTickets = report.TotalTickets // tickets sold so far at partial close time
 	report.PartialClosedBy = closedByUsername
 
 	if err := repository.Update(*report); err != nil {

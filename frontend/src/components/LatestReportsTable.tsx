@@ -124,12 +124,17 @@ function ReportDetailDialog({
                                     display: "flex",
                                     flexDirection: "column",
                                     justifyContent: "center",
+                                    alignItems: "center",
                                     bgcolor: "action.selected",
                                     borderRadius: 1,
                                 }}
                             >
-                                <Typography variant="body2" color="text.secondary" gutterBottom>Por tipo</Typography>
-                                <Typography variant="body2">Reg. {report.total_regular} · Gold {report.total_gold} · Anul. {report.total_null}</Typography>
+                                <Typography variant="body2" color="text.secondary" gutterBottom>Horario</Typography>
+                                <Chip
+                                    label={report.timetable === "regular" ? "Regular" : "Feriado"}
+                                    color={report.timetable === "regular" ? "primary" : "success"}
+                                    size="small"
+                                />
                             </Box>
                         </Grid>
                         {/* Fila 2: desglose por tipo (3 tarjetas iguales) */}

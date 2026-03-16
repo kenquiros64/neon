@@ -70,7 +70,7 @@ func (t *TicketService) NullifyTicket(ticketID int64, reportID int64) error {
 		return helpers.ErrTicketNotBelongToReport
 	}
 
-	// If the report is partiallly closed, we can't a ticket created before the partial closed at
+	// If the report is partiallly closed, we can't nullify a ticket created before the partial closed at
 	if report.PartialClosedAt != nil {
 		createdAt, err := time.Parse(time.RFC3339, ticket.CreatedAt)
 		if err != nil {

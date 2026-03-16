@@ -269,10 +269,12 @@ func (s *SQLite) createTicketsTable() error {
 }
 
 // createTriggerUpdateReportAfterTicketInsert creates the trigger to update the report after
-// a ticket is inserted
+// a ticket is inserted. Drops first so existing DBs get the updated definition (partial_tickets
+// and partial_cash are set only at partial close, not updated by the trigger).
 func (s *SQLite) createTriggerUpdateReportAfterTicketInsert() error {
+	_, _ = s.db.Exec("DROP TRIGGER IF EXISTS update_report_after_ticket_insert")
 	query := `
-		CREATE TRIGGER IF NOT EXISTS update_report_after_ticket_insert
+		CREATE TRIGGER update_report_after_ticket_insert
 		AFTER INSERT ON tickets
 		FOR EACH ROW
 		BEGIN
@@ -284,8 +286,8 @@ func (s *SQLite) createTriggerUpdateReportAfterTicketInsert() error {
 				total_gold_cash = total_gold_cash + CASE WHEN NEW.is_gold = 1 THEN NEW.fare ELSE 0 END,
 				total_regular = total_regular + CASE WHEN NEW.is_gold = 0 AND NEW.is_null = 0 THEN 1 ELSE 0 END,
 				total_regular_cash = total_regular_cash + CASE WHEN NEW.is_gold = 0 AND NEW.is_null = 0 THEN NEW.fare ELSE 0 END,
-				partial_tickets = CASE WHEN partial_closed_at IS NOT NULL THEN partial_tickets + 1 ELSE partial_tickets END,
-				partial_cash = CASE WHEN partial_closed_at IS NOT NULL THEN partial_cash + NEW.fare ELSE partial_cash END
+				partial_tickets = CASE WHEN partial_closed_at IS NULL THEN partial_tickets + 1 ELSE partial_tickets END,
+				partial_cash = CASE WHEN partial_closed_at IS NULL THEN partial_cash + NEW.fare ELSE partial_cash END
 			WHERE id = NEW.report_id;
 		END
 	`
@@ -299,10 +301,11 @@ func (s *SQLite) createTriggerUpdateReportAfterTicketInsert() error {
 }
 
 // createTriggerUpdateReportAfterTicketIsUpdatedToNull creates the trigger to update the report after
-// a ticket is updated to null
+// a ticket is updated to null. Drops first so existing DBs get the updated definition.
 func (s *SQLite) createTriggerUpdateReportAfterTicketIsUpdatedToNull() error {
+	_, _ = s.db.Exec("DROP TRIGGER IF EXISTS update_report_after_ticket_null")
 	query := `
-		CREATE TRIGGER IF NOT EXISTS update_report_after_ticket_null
+		CREATE TRIGGER update_report_after_ticket_null
 		AFTER UPDATE OF is_null ON tickets
 		FOR EACH ROW
 		WHEN NEW.is_null = 1 AND OLD.is_null = 0

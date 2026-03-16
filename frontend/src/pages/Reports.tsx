@@ -36,8 +36,10 @@ const Reports: React.FC = () => {
 
     const formatDateTime = (dateString?: string) => {
         if (!dateString) return "N/A";
-        return new Date(dateString).toLocaleString('es-CR');
+        return new Date(dateString).toLocaleString("es-CR");
     };
+
+    const formatCurrency = (amount: number) => `₡${amount.toLocaleString()}`;
 
     const handlePrintReport = (reportToPrint: models.Report) => {
         // Implement print functionality
@@ -147,25 +149,98 @@ const Reports: React.FC = () => {
 
                             <Divider sx={{ my: 3 }} />
 
-                            {/* Detailed Breakdown */}
-                            <Typography variant="h6" gutterBottom>
-                                Desglose Detallado
+                            {/* Desglose detallado */}
+                            <Typography variant="subtitle1" fontWeight={600} color="text.secondary" gutterBottom>
+                                Desglose detallado
+                            </Typography>
+
+                            <Grid container spacing={2} sx={{ mb: 2 }}>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <Box
+                                        sx={{
+                                            textAlign: "center",
+                                            p: 2,
+                                            minHeight: 80,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            justifyContent: "center",
+                                            bgcolor: "action.hover",
+                                            borderRadius: 1,
+                                        }}
+                                    >
+                                        <Typography variant="caption" color="text.secondary">Regulares</Typography>
+                                        <Typography variant="h6">{report.total_regular}</Typography>
+                                        <Typography variant="body2">{formatCurrency(report.total_regular_cash)}</Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <Box
+                                        sx={{
+                                            textAlign: "center",
+                                            p: 2,
+                                            minHeight: 80,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            justifyContent: "center",
+                                            bgcolor: "action.hover",
+                                            borderRadius: 1,
+                                        }}
+                                    >
+                                        <Typography variant="caption" color="text.secondary">Gold</Typography>
+                                        <Typography variant="h6">{report.total_gold}</Typography>
+                                        <Typography variant="body2">{formatCurrency(report.total_gold_cash)}</Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <Box
+                                        sx={{
+                                            textAlign: "center",
+                                            p: 2,
+                                            minHeight: 80,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            justifyContent: "center",
+                                            bgcolor: "action.hover",
+                                            borderRadius: 1,
+                                        }}
+                                    >
+                                        <Typography variant="caption" color="text.secondary">Anulados</Typography>
+                                        <Typography variant="h6">{report.total_null}</Typography>
+                                        <Typography variant="body2">{formatCurrency(report.total_null_cash)}</Typography>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: "block", mb: 1 }}>
+                                Información
                             </Typography>
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <Typography variant="body2" color="text.secondary">Tiquetes Regulares: {report.total_regular} - ₡{report.total_regular_cash.toLocaleString()}</Typography>
-                                    <Typography variant="body2" color="text.secondary">Tiquetes Gold: {report.total_gold} - ₡{report.total_gold_cash.toLocaleString()}</Typography>
-                                    <Typography variant="body2" color="text.secondary">Tiquetes Anulados: {report.total_null} - ₡{report.total_null_cash.toLocaleString()}</Typography>
+                                    <Typography variant="body2" color="text.secondary">Usuario</Typography>
+                                    <Typography variant="body1" fontWeight={500}>{report.username}</Typography>
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 6 }}>
-                                    <Typography variant="body2" color="text.secondary">Creado: {formatDateTime(report.created_at)}</Typography>
-                                    {report.partial_closed_at && (
-                                        <Typography variant="body2" color="text.secondary">Cierre Parcial: {formatDateTime(report.partial_closed_at)}</Typography>
-                                    )}
-                                    {report.partial_closed_at && (
-                                        <Typography variant="body2" color="text.secondary">Tiquetes Vendidos durante Cierre Parcial: {report.partial_tickets}</Typography>
-                                    )}
+                                    <Typography variant="body2" color="text.secondary">Creado</Typography>
+                                    <Typography variant="body1">{formatDateTime(report.created_at)}</Typography>
                                 </Grid>
+                                {report.partial_closed_at && (
+                                    <>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <Typography variant="body2" color="text.secondary">Cierre parcial</Typography>
+                                            <Typography variant="body1">{formatDateTime(report.partial_closed_at)}</Typography>
+                                            {report.partial_closed_by && (
+                                                <Typography variant="body2" color="text.secondary">por {report.partial_closed_by}</Typography>
+                                            )}
+                                        </Grid>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
+                                            <Typography variant="body2" color="text.secondary">Tiquetes en cierre parcial</Typography>
+                                            <Typography variant="body1">{report.partial_tickets}</Typography>
+                                            {report.partial_cash != null && report.partial_cash > 0 && (
+                                                <Typography variant="body2" color="text.secondary">{formatCurrency(report.partial_cash)} efectivo contado</Typography>
+                                            )}
+                                        </Grid>
+                                    </>
+                                )}
                             </Grid>
                         </CardContent>
                     </Card>

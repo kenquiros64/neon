@@ -2,7 +2,9 @@ package services
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"runtime"
 	"strconv"
 
@@ -11,6 +13,22 @@ import (
 	"neon/core/helpers/enums"
 	"neon/core/models"
 )
+
+// lpWriteCloser wraps an lp process stdin for ESC/POS raw output. Implements io.ReadWriteCloser
+// (Read returns 0, io.EOF so escpos.NewPrinter can use it).
+type lpWriteCloser struct {
+	cmd   *exec.Cmd
+	stdin io.WriteCloser
+}
+
+func (w *lpWriteCloser) Write(p []byte) (n int, err error) { return w.stdin.Write(p) }
+func (w *lpWriteCloser) Read(_ []byte) (n int, err error)  { return 0, io.EOF }
+func (w *lpWriteCloser) Close() error {
+	if err := w.stdin.Close(); err != nil {
+		return err
+	}
+	return w.cmd.Wait()
+}
 
 // PrintService handles thermal receipt printing for tickets and reports (Windows + macOS).
 type PrintService struct{}
@@ -32,27 +50,32 @@ func (p *PrintService) printerSession(printerName string, fn func(printer escpos
 			return fmt.Errorf("printer %q: %w", printerName, err)
 		}
 	default:
-		// macOS / linux: printerName is device path (e.g. /dev/usb/lp0) or use PRINTER_DEVICE env
-		device := printerName
-		if device == "" || device == "default" {
-			device = os.Getenv("PRINTER_DEVICE")
+		// macOS / linux: use lp -d "<printer_name>" -o raw - (printer name from PRINTER_DEVICE or default)
+		name := printerName
+		if name == "" || name == "default" {
+			name = os.Getenv("PRINTER_DEVICE")
 		}
-		if device == "" {
-			device = "EPSON_TM_T20IV_SP" // fallback label; may not exist
+		if name == "" {
+			name = "EPSON_TM_T20IV_SP"
 		}
-		f, errOpen := os.OpenFile(device, os.O_WRONLY, 0)
-		if errOpen != nil {
-			return fmt.Errorf("printer device %q: %w", device, errOpen)
+		cmd := exec.Command("lp", "-d", name, "-o", "raw", "-")
+		stdin, errPipe := cmd.StdinPipe()
+		if errPipe != nil {
+			return fmt.Errorf("lp stdin: %w", errPipe)
 		}
-		defer f.Close()
-		printer = escpos.NewPrinter(f)
+		if err = cmd.Start(); err != nil {
+			return fmt.Errorf("lp -d %q: %w", name, err)
+		}
+		printer = escpos.NewPrinter(&lpWriteCloser{cmd: cmd, stdin: stdin})
+		// printer.Close() will close the wrapper, which closes stdin and waits for lp
 	}
 
 	defer func() { _ = printer.Close() }()
 	return fn(printer)
 }
 
-// GetInstalledPrinters returns the list of printer names to use (Windows: system list; macOS: default from env).
+// GetInstalledPrinters returns the list of printer names to use (Windows: system list; macOS: lp printer name from PRINTER_DEVICE or default).
+// On macOS, uses lp -d "<name>" -o raw -; PRINTER_DEVICE can set the queue name, else "EPSON_TM_T20IV_SP" is used.
 func (p *PrintService) GetInstalledPrinters() ([]string, error) {
 	if runtime.GOOS == "windows" {
 		list, err := escpos.GetInstalledPrinters()
@@ -64,11 +87,11 @@ func (p *PrintService) GetInstalledPrinters() ([]string, error) {
 		}
 		return list, nil
 	}
-	device := os.Getenv("PRINTER_DEVICE")
-	if device == "" {
-		return []string{"default"}, nil
+	name := os.Getenv("PRINTER_DEVICE")
+	if name == "" {
+		name = "EPSON_TM_T20IV_SP"
 	}
-	return []string{device}, nil
+	return []string{name}, nil
 }
 
 // GetPrinterStatus returns a short status string and any error.

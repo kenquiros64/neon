@@ -17,7 +17,9 @@ import { useReportCheck } from "../hooks/useReportCheck";
 import { useReportState } from "../states/ReportState";
 import { useAuthState } from "../states/AuthState";
 import { useLatestReports } from "../hooks/useLatestReports";
+import { usePrinters } from "../hooks/usePrinters";
 import { toast } from "react-toastify";
+import { PrintReport } from "../../wailsjs/go/services/PrintService";
 import ReportStatsCards from "../components/ReportStatsCards";
 import LatestReportsTable from "../components/LatestReportsTable";
 import ReportActionsPanel from "../components/ReportActionsPanel";
@@ -29,8 +31,8 @@ const Reports: React.FC = () => {
     const { reportLoading, partialCloseReport, totalCloseReport, checkReportStatus } = useReportState();
     const { user } = useAuthState();
     const { latestReports, fetchLatestReports } = useLatestReports(user?.username);
+    const { defaultPrinter } = usePrinters();
 
-    
     const [closeDialogOpen, setCloseDialogOpen] = useState(false);
     const [closeType, setCloseType] = useState<'partial' | 'total'>('partial');
 
@@ -41,9 +43,17 @@ const Reports: React.FC = () => {
 
     const formatCurrency = (amount: number) => `₡${amount.toLocaleString()}`;
 
-    const handlePrintReport = (reportToPrint: models.Report) => {
-        // Implement print functionality
-        toast.info('Funcionalidad de impresión en desarrollo');
+    const handlePrintReport = async (reportToPrint: models.Report) => {
+        if (!defaultPrinter) {
+            toast.error('No hay impresora configurada. Configure PRINTER_DEVICE (macOS) o instale una impresora (Windows).');
+            return;
+        }
+        try {
+            await PrintReport(reportToPrint, defaultPrinter);
+            toast.success('Reporte enviado a la impresora');
+        } catch (error: any) {
+            toast.error(error?.message || 'Error al imprimir el reporte');
+        }
     };
 
     const handleOpenCloseDialog = (type: 'partial' | 'total') => {

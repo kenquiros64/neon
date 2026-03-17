@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Grid, Divider, CircularProgress } from "@mui/material";
+import { Box, Grid, Divider, CircularProgress, Chip } from "@mui/material";
+import { Print, Warning } from "@mui/icons-material";
 import StartReport from "../components/StartReport";
 import TicketPurchaseDialog from "../components/TicketPurchaseDialog";
 import { RouteInfoCard } from "../components/RouteInfoCard";
@@ -12,6 +13,7 @@ import { useRoutesManagement } from "../hooks/useRoutesManagement";
 import { useStartReportDialog } from "../hooks/useStartReportDialog";
 import { useTicketSelection } from "../hooks/useTicketSelection";
 import { useTicketPurchase } from "../hooks/useTicketPurchase";
+import { usePrinters } from "../hooks/usePrinters";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useTicketState } from "../states/TicketState";
 import { useAuthState } from "../states/AuthState";
@@ -42,6 +44,7 @@ const Ticket: React.FC = () => {
         focusInput
     } = useTicketSelection();
 
+    const { defaultPrinter, status: printerStatus, statusMessage } = usePrinters();
     const {
         showPurchaseDialog,
         purchaseTicketType,
@@ -102,6 +105,17 @@ const Ticket: React.FC = () => {
                     gap: 2,
                 }}
             >
+                {defaultPrinter && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip
+                            icon={printerStatus === 'ready' ? <Print /> : <Warning />}
+                            label={printerStatus === 'ready' ? `Impresora: ${defaultPrinter}` : statusMessage || 'Impresora no disponible'}
+                            color={printerStatus === 'ready' ? 'success' : 'default'}
+                            size="small"
+                            variant="outlined"
+                        />
+                    </Box>
+                )}
                 <TicketInputSection
                     hasPendingReportFromOtherUser={hasPendingReportFromOtherUser}
                     reportUsername={report?.username}

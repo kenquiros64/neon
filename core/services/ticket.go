@@ -13,13 +13,14 @@ import (
 
 // TicketService is a service for tickets
 type TicketService struct {
-	ctx     context.Context
-	localDB *embedded.SQLite
+	ctx           context.Context
+	localDB       *embedded.SQLite
+	printService  *PrintService
 }
 
 // NewTicketService creates a new ticket service
-func NewTicketService(localDB *embedded.SQLite) *TicketService {
-	return &TicketService{localDB: localDB}
+func NewTicketService(localDB *embedded.SQLite, printService *PrintService) *TicketService {
+	return &TicketService{localDB: localDB, printService: printService}
 }
 
 // startup starts the ticket service
@@ -37,6 +38,30 @@ func (t *TicketService) AddTicket(ticket []models.Ticket) ([]models.Ticket, erro
 	}
 
 	return output, nil
+}
+
+// AddTicketWithPrint saves tickets and prints them. If printing fails (e.g. no paper, printer disconnected),
+// created tickets are deleted and an error is returned so the sale is not persisted.
+func (t *TicketService) AddTicketWithPrint(tickets []models.Ticket, printerName string) ([]models.Ticket, error) {
+	repository := local.NewTicketRepository(t.ctx, t.localDB)
+	created, err := repository.BulkCreate(tickets)
+	if err != nil {
+		zap.L().Error("failed to add tickets", zap.Error(err))
+		return nil, err
+	}
+
+	if t.printService != nil && printerName != "" {
+		if err := t.printService.PrintTickets(created, printerName); err != nil {
+			zap.L().Warn("print failed, rolling back tickets", zap.Error(err))
+			if delErr := repository.BulkDelete(created); delErr != nil {
+				zap.L().Error("failed to rollback tickets after print error", zap.Error(delErr))
+				return nil, err
+			}
+			return nil, err
+		}
+	}
+
+	return created, nil
 }
 
 // UpdateTickets updates tickets

@@ -6,6 +6,10 @@ export function AddTicket(arg1) {
   return window['go']['services']['TicketService']['AddTicket'](arg1);
 }
 
+export function AddTicketWithPrint(arg1, arg2) {
+  return window['go']['services']['TicketService']['AddTicketWithPrint'](arg1, arg2);
+}
+
 export function DeleteTickets(arg1) {
   return window['go']['services']['TicketService']['DeleteTickets'](arg1);
 }

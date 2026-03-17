@@ -3,9 +3,11 @@ module neon
 go 1.24.3
 
 require (
+	github.com/DevLumuz/go-escpos v1.0.2
 	github.com/doug-martin/goqu/v9 v9.19.0
+	github.com/joho/godotenv v1.5.1
 	github.com/ostafen/clover/v2 v2.0.0-alpha.3
-	github.com/wailsapp/wails/v2 v2.11.0
+	github.com/wailsapp/wails/v2 v2.10.2
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.38.0
 )
@@ -39,7 +41,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jchv/go-winloader v0.0.0-20250406163304-c1995be93bd1 // indirect
-	github.com/joho/godotenv v1.5.1
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/labstack/echo/v4 v4.13.4 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect

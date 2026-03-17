@@ -34,7 +34,8 @@ func (a *App) Startup() {
 	syncService := NewSyncService(cloverdb)
 	authService := NewAuthService(cloverdb)
 	userService := NewUserService(cloverdb, syncService)
-	ticketService := NewTicketService(sqlitedb)
+	printService := NewPrintService()
+	ticketService := NewTicketService(sqlitedb, printService)
 	routeService := NewRouteService(cloverdb, syncService)
 	counterService := NewCounterService(cloverdb)
 	reportService := NewReportService(sqlitedb)
@@ -71,6 +72,7 @@ func (a *App) Startup() {
 			routeService,
 			counterService,
 			reportService,
+			printService,
 		},
 	})
 

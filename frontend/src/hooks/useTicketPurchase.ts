@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { models } from '../../wailsjs/go/models';
-import { AddTicket } from '../../wailsjs/go/services/TicketService';
+import { AddTicketWithPrint } from '../../wailsjs/go/services/TicketService';
+import { GetInstalledPrinters } from '../../wailsjs/go/services/PrintService';
 import { to24HourFormat } from '../util/Helpers';
 
 interface UseTicketPurchaseProps {
@@ -25,6 +26,15 @@ export const useTicketPurchase = ({
 }: UseTicketPurchaseProps) => {
     const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
     const [purchaseTicketType, setPurchaseTicketType] = useState<'regular' | 'gold'>('regular');
+
+    const getDefaultPrinter = useCallback(async (): Promise<string> => {
+        try {
+            const printers = await GetInstalledPrinters();
+            return printers && printers.length > 0 ? printers[0] : '';
+        } catch {
+            return '';
+        }
+    }, []);
 
     const handlePurchaseConfirm = async (quantity: number, idNumber?: string) => {
         try {
@@ -56,20 +66,30 @@ export const useTicketPurchase = ({
                 ticketsToAdd.push(ticket);
             }
 
-            // Save tickets to database
-            await AddTicket(ticketsToAdd);
+            const printerName = await getDefaultPrinter();
+            // Save tickets and print; if print fails, backend rolls back (no tickets saved)
+            await AddTicketWithPrint(ticketsToAdd, printerName);
             
-            // Only increment counts if database save was successful
+            // Only increment counts if database save (and print) was successful
             incrementCount(quantity, purchaseTicketType);
             
-            // Show success message
-            toast.success(`${quantity} tiquete${quantity > 1 ? 's' : ''} guardado${quantity > 1 ? 's' : ''} exitosamente`);
+            toast.success(
+                printerName
+                    ? `${quantity} tiquete${quantity > 1 ? 's' : ''} guardado${quantity > 1 ? 's' : ''} e impreso${quantity > 1 ? 's' : ''} exitosamente`
+                    : `${quantity} tiquete${quantity > 1 ? 's' : ''} guardado${quantity > 1 ? 's' : ''} exitosamente`
+            );
             
             setShowPurchaseDialog(false);
             
-        } catch (error) {
-            console.error("Error saving tickets:", error);
-            toast.error("Error al guardar los tickets. No se modificaron los conteos.");
+        } catch (error: any) {
+            console.error("Error saving/printing tickets:", error);
+            const msg = error?.message || String(error);
+            const isPrintError = /printer|print|paper|offline|disconnect/i.test(msg);
+            toast.error(
+                isPrintError
+                    ? "Error al imprimir. No se guardaron los tickets. Verifique la impresora (papel, conexión) e intente de nuevo."
+                    : "Error al guardar los tickets. No se modificaron los conteos."
+            );
             // Don't close dialog or increment counts on error
         }
     };

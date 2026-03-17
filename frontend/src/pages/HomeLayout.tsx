@@ -19,7 +19,10 @@ import {
   NotesOutlined,
   Route as RouteIcon,
   People,
+  Print,
+  Warning,
 } from "@mui/icons-material";
+import Chip from "@mui/material/Chip";
 import {useNavigate} from "react-router";
 import {HomeAppBar, HomeDrawer, HomeDrawerHeader} from "../components/HomeDrawer";
 import {ThemeSwitch} from "../components/ThemeSwitch";
@@ -28,6 +31,7 @@ import {useAuthState} from "../states/AuthState";
 import {useTicketState} from "../states/TicketState";
 import {useRoutesState} from "../states/RoutesState";
 import { useReportState } from "../states/ReportState";
+import { usePrinters } from "../hooks/usePrinters";
 
 const routes: { [key: string]: string } = {
   "/home": "Boleteria",
@@ -49,6 +53,8 @@ const HomeLayout: React.FC = () => {
   const { resetTicketState } = useTicketState();
   const { resetRoutesState } = useRoutesState();
   const { resetReportState } = useReportState();
+  const { defaultPrinter, status: printerStatus, statusMessage } = usePrinters();
+  const isTicketPage = location.pathname === "/home" || location.pathname === "/home/ticket";
 
   const pageTitle: string = routes[location.pathname] || "Página desconocida";
 
@@ -98,9 +104,21 @@ const HomeLayout: React.FC = () => {
               {pageTitle}
             </Typography>
           </Box>
-          {/* Right: username, time, and switch */}
+          {/* Right: printer (ticket page), username, time, and switch */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-           
+            {isTicketPage && defaultPrinter && (
+              <>
+                <Chip
+                  icon={printerStatus === "ready" ? <Print /> : <Warning />}
+                  label={printerStatus === "ready" ? `Impresora: ${defaultPrinter}` : statusMessage || "Impresora no disponible"}
+                  color={printerStatus === "ready" ? "success" : "default"}
+                  size="small"
+                  variant="outlined"
+                  sx={{ color: "inherit", borderColor: "currentColor" }}
+                />
+                <Divider orientation="vertical" flexItem />
+              </>
+            )}
             {/* Username */}
             <Typography variant="body1">
               <span style={{ fontWeight: 200 }}>Bienvenido(a)</span>{" "}

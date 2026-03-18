@@ -17,6 +17,9 @@ var ErrUserInvalidPassword = errors.New("USER_INVALID_PASSWORD")
 // ErrNoInternetConnection is the error returned when there is no internet connection
 var ErrNoInternetConnection = errors.New("NO_INTERNET_CONNECTION")
 
+// ErrPrinterNotConfigured is the error returned when the printer endpoint is missing
+var ErrPrinterNotConfigured = errors.New("PRINTER_NOT_CONFIGURED")
+
 // ErrInvalidRequest is the error returned when a request is invalid
 var ErrInvalidRequest = errors.New("INVALID_REQUEST")
 

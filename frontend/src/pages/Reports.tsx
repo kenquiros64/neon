@@ -45,7 +45,7 @@ const Reports: React.FC = () => {
 
     const handlePrintReport = async (reportToPrint: models.Report) => {
         if (!defaultPrinter) {
-            toast.error('No hay impresora configurada. Configure PRINTER_DEVICE (macOS) o instale una impresora (Windows).');
+            toast.error('No hay impresora configurada');
             return;
         }
         try {

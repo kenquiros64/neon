@@ -67,6 +67,11 @@ export const useTicketPurchase = ({
             }
 
             const printerName = await getDefaultPrinter();
+            if (!printerName) {
+                toast.error("No hay impresora ethernet configurada. Configure PRINTER_ADDRESS o PRINTER_DEVICE.");
+                return;
+            }
+
             // Save tickets and print; if print fails, backend rolls back (no tickets saved)
             await AddTicketWithPrint(ticketsToAdd, printerName);
             
@@ -84,7 +89,7 @@ export const useTicketPurchase = ({
         } catch (error: any) {
             console.error("Error saving/printing tickets:", error);
             const msg = error?.message || String(error);
-            const isPrintError = /printer|print|paper|offline|disconnect/i.test(msg);
+            const isPrintError = /printer|print|paper|offline|disconnect|cover|cutter/i.test(msg);
             toast.error(
                 isPrintError
                     ? "Error al imprimir. No se guardaron los tickets. Verifique la impresora (papel, conexión) e intente de nuevo."

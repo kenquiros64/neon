@@ -24,7 +24,7 @@ export function usePrinters(): PrinterState & { refresh: () => Promise<void> } {
             setDefaultPrinter(first);
             if (!first) {
                 setStatus('unknown');
-                setStatusMessage('No hay impresoras configuradas');
+                setStatusMessage('No hay impresora configurada');
                 return;
             }
             const st = await GetPrinterStatus(first);

@@ -17,14 +17,18 @@ export const useKeyboardShortcuts = ({
 }: UseKeyboardShortcutsProps) => {
     useEffect(() => {
         const handleGlobalKeyDown = (e: KeyboardEvent) => {
+            if (e.defaultPrevented) return;
+
             // Don't trigger if there's a pending report from another user
             if (hasPendingReportFromOtherUser) return;
             
             // Don't trigger if a dialog is open
             if (showPurchaseDialog) return;
             
-            // Don't trigger if user is typing in an input field (except our code input)
             const target = e.target as HTMLElement;
+            if (target?.closest('[role="dialog"]')) return;
+
+            // Don't trigger if user is typing in an input field (except our code input)
             if (target.tagName === 'INPUT' && target !== inputRef.current) return;
             if (target.tagName === 'TEXTAREA') return;
             

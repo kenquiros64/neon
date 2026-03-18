@@ -78,6 +78,8 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        e.stopPropagation();
+
         // Check if focus is on ID number input - if so, don't intercept number keys
         const isIDInputFocused = document.activeElement === idRef.current;
         

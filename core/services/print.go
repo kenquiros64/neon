@@ -108,19 +108,6 @@ func (p *PrintService) GetInstalledPrinters() ([]string, error) {
 	return []string{name}, nil
 }
 
-// GetPrinterStatus returns a short status string and any error.
-// If the printer can be opened and initialized, returns "ready". Otherwise returns "" and the error
-// (e.g. printer offline, no paper, disconnected).
-func (p *PrintService) GetPrinterStatus(printerName string) (string, error) {
-	err := p.printerSession(printerName, func(printer escpos.Printer) error {
-		return printer.Initialize()
-	})
-	if err != nil {
-		return "", err
-	}
-	return "ready", nil
-}
-
 // PrintTicket prints one ticket receipt (id, departure -> destination, time, fare, type).
 func (p *PrintService) PrintTicket(ticket models.Ticket, printerName string) error {
 	return p.printerSession(printerName, func(printer escpos.Printer) error {
@@ -128,27 +115,32 @@ func (p *PrintService) PrintTicket(ticket models.Ticket, printerName string) err
 
 		printer.SetCharacterSize(1, 2)
 		if ticket.IsGold {
+			printer.SelectPrintMode(escpos.Underline)
 			printer.Justify(escpos.CenterJustify)
-			printer.Println("TICKET DE ORO")
+			printer.Println("TIQUETE DE ORO")
 		}
 		printer.LF()
 
 		printer.Justify(escpos.CenterJustify)
 		printer.Println("TRANSPORTES")
 		printer.Println("EL PUMA PARDO S.A")
-		printer.Println("3-101-04892")
 		printer.Println("TEL: 2765-1349")
 
 		printer.LF()
 
 		printer.Justify(escpos.LeftJustify)
+
 		printer.SelectPrintMode(escpos.Bold)
 		printer.SetCharacterSize(1, 1)
-		printer.Println(escposSafe(fmt.Sprintf("%s->%s", ticket.Departure, ticket.Destination)))
+		printer.Print("Ruta:    ")
 
-		printer.SelectPrintMode(escpos.Underline)
+		printer.SelectPrintMode(escpos.ThinFont)
+		printer.SetCharacterSize(1, 2)
+		printer.Println(escposSafe(ticket.Destination))
+
+		printer.SelectPrintMode(escpos.Bold)
 		printer.SetCharacterSize(1, 1)
-		printer.Print("Parada: ")
+		printer.Print("Destino: ")
 
 		printer.SelectPrintMode(escpos.ThinFont)
 		printer.SetCharacterSize(1, 2)
@@ -156,7 +148,7 @@ func (p *PrintService) PrintTicket(ticket models.Ticket, printerName string) err
 
 		printer.SelectPrintMode(escpos.Bold)
 		printer.SetCharacterSize(1, 1)
-		printer.Print("Fecha: ")
+		printer.Print("Fecha:   ")
 
 		printer.SelectPrintMode(escpos.ThinFont)
 		printer.SetCharacterSize(1, 2)
@@ -164,28 +156,31 @@ func (p *PrintService) PrintTicket(ticket models.Ticket, printerName string) err
 
 		printer.SelectPrintMode(escpos.Bold)
 		printer.SetCharacterSize(1, 1)
-		printer.Print("Hora: ")
+		printer.Print("Hora:    ")
 
 		printer.SelectPrintMode(escpos.ThinFont)
 		printer.SetCharacterSize(1, 2)
-		printer.Println(escposSafe(ticket.Time))
+		printer.Println(ticket.Time)
 
 		printer.SelectPrintMode(escpos.Bold)
 		printer.SetCharacterSize(1, 1)
-		printer.Print("Tarifa: ")
+		printer.Print("Tarifa:  ")
 
 		printer.SelectPrintMode(escpos.ThinFont)
 		printer.SetCharacterSize(1, 2)
 		printer.Println(strconv.Itoa(ticket.Fare))
 
 		printer.LF()
+		printer.FeedLines(1)
 
 		printer.Justify(escpos.CenterJustify)
-		printer.SetCharacterSize(1, 2)
-		printer.Println("BUEN VIAJE!!!")
+		printer.SetCharacterSize(2, 1)
+		printer.Println("BUEN VIAJE")
+
+		printer.LF()
 
 		printer.SelectPrintMode(escpos.ThinFont)
-		printer.SetCharacterSize(0, 0)
+		printer.SetCharacterSize(1, 1)
 		printer.Justify(escpos.RightJustify)
 		printer.Println(fmt.Sprintf("%d", ticket.ID))
 
@@ -217,13 +212,13 @@ func (p *PrintService) PrintReport(report models.Report, printerName string) err
 
 		printer.Justify(escpos.CenterJustify)
 		printer.SetBold(true)
-		printer.Println(escposSafe("REPORTE"))
+		printer.Println("REPORTE")
 		printer.SetBold(false)
 		printer.LF()
 
 		printer.Justify(escpos.LeftJustify)
 		printer.Println(fmt.Sprintf("ID: %d", report.ID))
-		printer.Println(escposSafe(fmt.Sprintf("Usuario: %s", report.Username)))
+		printer.Println(fmt.Sprintf("Usuario: %s", report.Username))
 
 		var timetable string
 		if report.Timetable == enums.Holiday {
@@ -231,14 +226,14 @@ func (p *PrintService) PrintReport(report models.Report, printerName string) err
 		} else {
 			timetable = "Regular"
 		}
-		printer.Println(escposSafe(fmt.Sprintf("Horario: %s", timetable)))
+		printer.Println(fmt.Sprintf("Horario: %s", timetable))
 		printer.Println("----------------------")
 		printer.Println(fmt.Sprintf("Total tiquetes: %d", report.TotalTickets))
-		printer.Println(escposSafe(fmt.Sprintf("Total efectivo: CRC %s", strconv.Itoa(report.TotalCash))))
+		printer.Println(fmt.Sprintf("Total efectivo: CRC %s", strconv.Itoa(report.TotalCash)))
 		printer.Println("----------------------")
-		printer.Println(escposSafe(fmt.Sprintf("Regulares: %d - CRC %s", report.TotalRegular, strconv.Itoa(report.TotalRegularCash))))
-		printer.Println(escposSafe(fmt.Sprintf("Oro: %d - CRC %s", report.TotalGold, strconv.Itoa(report.TotalGoldCash))))
-		printer.Println(escposSafe(fmt.Sprintf("Anulados: %d - CRC %s", report.TotalNull, strconv.Itoa(report.TotalNullCash))))
+		printer.Println(fmt.Sprintf("Regulares: %d - CRC %s", report.TotalRegular, strconv.Itoa(report.TotalRegularCash)))
+		printer.Println(fmt.Sprintf("Oro: %d - CRC %s", report.TotalGold, strconv.Itoa(report.TotalGoldCash)))
+		printer.Println(fmt.Sprintf("Anulados: %d - CRC %s", report.TotalNull, strconv.Itoa(report.TotalNullCash)))
 		printer.LF()
 
 		printer.FeedLines(3)

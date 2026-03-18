@@ -190,187 +190,82 @@ func (p *PrintService) printTicketReceipt(printer escpos.Printer, ticket models.
 		return err
 	}
 
-	if err := printer.SetCharacterSize(1, 2); err != nil {
-		return err
-	}
+	printer.SetCharacterSize(1, 2)
 
 	if ticket.IsGold {
-		if err := printer.SelectPrintMode(escpos.Underline); err != nil {
-			return err
-		}
-		if err := printer.Justify(escpos.CenterJustify); err != nil {
-			return err
-		}
-		if err := printer.Println("TIQUETE DE ORO"); err != nil {
-			return err
-		}
+		printer.SelectPrintMode(escpos.Underline)
+		printer.Justify(escpos.CenterJustify)
+		printer.Println("TIQUETE DE ORO")
 	}
 
-	if err := printer.LF(); err != nil {
-		return err
-	}
+	printer.LF()
 
-	if err := printer.Justify(escpos.CenterJustify); err != nil {
-		return err
-	}
-	if err := printer.Println("TRANSPORTES"); err != nil {
-		return err
-	}
-	if err := printer.Println("EL PUMA PARDO S.A"); err != nil {
-		return err
-	}
-	if err := printer.Println("TEL: 2765-1349"); err != nil {
-		return err
-	}
+	printer.Justify(escpos.CenterJustify)
+	printer.SetCharacterSize(1, 2)
+	printer.Println("TRANSPORTES")
+	printer.Println("EL PUMA PARDO S.A")
+	printer.Println("TEL: 2765-1349")
 
-	if err := printer.LF(); err != nil {
-		return err
-	}
+	printer.LF()
 
-	if err := printer.Justify(escpos.LeftJustify); err != nil {
-		return err
-	}
+	printer.Justify(escpos.LeftJustify)
 
-	if err := printer.SelectPrintMode(escpos.Bold); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 1); err != nil {
-		return err
-	}
-	if err := printer.Print("Ruta:    "); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.Bold)
+	printer.SetCharacterSize(1, 1)
+	printer.Print("Ruta:    ")
 
-	if err := printer.SelectPrintMode(escpos.ThinFont); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 2); err != nil {
-		return err
-	}
-	if err := printer.Println(escposSafe(ticket.Destination)); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.ThinFont)
+	printer.SetCharacterSize(1, 1)
+	printer.Println(escposSafe(ticket.Destination))
 
-	if err := printer.SelectPrintMode(escpos.Bold); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 1); err != nil {
-		return err
-	}
-	if err := printer.Print("Destino: "); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.Bold)
+	printer.SetCharacterSize(1, 1)
+	printer.Print("Destino: ")
 
-	if err := printer.SelectPrintMode(escpos.ThinFont); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 2); err != nil {
-		return err
-	}
-	if err := printer.Println(escposSafe(ticket.Stop)); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.ThinFont)
+	printer.SetCharacterSize(1, 1)
+	printer.Println(escposSafe(ticket.Stop))
 
-	if err := printer.SelectPrintMode(escpos.Bold); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 1); err != nil {
-		return err
-	}
-	if err := printer.Print("Fecha:   "); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.Bold)
+	printer.SetCharacterSize(1, 1)
+	printer.Print("Fecha:   ")
 
-	if err := printer.SelectPrintMode(escpos.ThinFont); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 2); err != nil {
-		return err
-	}
-	if err := printer.Println(time.Now().Format("02/01/2006")); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.ThinFont)
+	printer.SetCharacterSize(1, 1)
+	printer.Println(time.Now().Format("02/01/2006"))
 
-	if err := printer.SelectPrintMode(escpos.Bold); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 1); err != nil {
-		return err
-	}
-	if err := printer.Print("Hora:    "); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.Bold)
+	printer.SetCharacterSize(1, 1)
+	printer.Print("Hora:    ")
 
-	if err := printer.SelectPrintMode(escpos.ThinFont); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 2); err != nil {
-		return err
-	}
-	if err := printer.Println(ticket.Time); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.ThinFont)
+	printer.SetCharacterSize(1, 1)
+	printer.Println(ticket.Time)
 
-	if err := printer.SelectPrintMode(escpos.Bold); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 1); err != nil {
-		return err
-	}
-	if err := printer.Print("Tarifa:  "); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.Bold)
+	printer.SetCharacterSize(1, 1)
+	printer.Print("Tarifa:  ")
 
-	if err := printer.SelectPrintMode(escpos.ThinFont); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 2); err != nil {
-		return err
-	}
-	if err := printer.Println(strconv.Itoa(ticket.Fare)); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.ThinFont)
+	printer.SetCharacterSize(1, 1)
+	printer.Println(strconv.Itoa(ticket.Fare))
 
-	if err := printer.LF(); err != nil {
-		return err
-	}
-	if err := printer.FeedLines(1); err != nil {
-		return err
-	}
+	printer.LF()
+	printer.FeedLines(1)
 
-	if err := printer.Justify(escpos.CenterJustify); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(2, 1); err != nil {
-		return err
-	}
-	if err := printer.Println("BUEN VIAJE"); err != nil {
-		return err
-	}
+	printer.Justify(escpos.CenterJustify)
+	printer.SetCharacterSize(2, 1)
+	printer.Println("BUEN VIAJE")
 
-	if err := printer.LF(); err != nil {
-		return err
-	}
+	printer.LF()
 
-	if err := printer.SelectPrintMode(escpos.ThinFont); err != nil {
-		return err
-	}
-	if err := printer.SetCharacterSize(1, 1); err != nil {
-		return err
-	}
-	if err := printer.Justify(escpos.RightJustify); err != nil {
-		return err
-	}
-	if err := printer.Println(fmt.Sprintf("%d", ticket.ID)); err != nil {
-		return err
-	}
+	printer.SelectPrintMode(escpos.ThinFont)
+	printer.SetCharacterSize(1, 1)
+	printer.Justify(escpos.RightJustify)
+	printer.Println(fmt.Sprintf("%d", ticket.ID))
 
-	if err := printer.LF(); err != nil {
-		return err
-	}
-	if err := printer.FeedLines(2); err != nil {
-		return err
-	}
+	printer.LF()
+	printer.FeedLines(2)
 
 	return printer.Cut()
 }
@@ -404,31 +299,29 @@ func (p *PrintService) PrintReport(report models.Report, printerName string) err
 		if err := printer.Initialize(); err != nil {
 			return err
 		}
-		if err := printer.Justify(escpos.CenterJustify); err != nil {
-			return err
-		}
-		if err := printer.SetBold(true); err != nil {
-			return err
-		}
-		if err := printer.Println("REPORTE"); err != nil {
-			return err
-		}
-		if err := printer.SetBold(false); err != nil {
-			return err
-		}
-		if err := printer.LF(); err != nil {
-			return err
+
+		printer.SelectPrintMode(escpos.ThinFont)
+		printer.SetCharacterSize(1, 1)
+		printer.Justify(escpos.CenterJustify)
+		printer.SetBold(true)
+		printer.Print(fmt.Sprintf("REPORTE %d", report.ID))
+		printer.SetBold(false)
+		printer.LF()
+
+		printer.Justify(escpos.LeftJustify)
+		printer.Println(fmt.Sprintf("Usuario:     %s", report.Username))
+
+		if report.PartialClosedBy != nil {
+			printer.Println(fmt.Sprintf("Parcial por: %s", *report.PartialClosedBy))
 		}
 
-		if err := printer.Justify(escpos.LeftJustify); err != nil {
-			return err
+		if report.ClosedBy != nil {
+			printer.Println(fmt.Sprintf("Cerrado por: %s", *report.ClosedBy))
 		}
-		if err := printer.Println(fmt.Sprintf("ID: %d", report.ID)); err != nil {
-			return err
-		}
-		if err := printer.Println(fmt.Sprintf("Usuario: %s", report.Username)); err != nil {
-			return err
-		}
+
+		printer.Justify(escpos.CenterJustify)
+		printer.Println("--------------------------------")
+		printer.Justify(escpos.LeftJustify)
 
 		var timetable string
 		if report.Timetable == enums.Holiday {
@@ -437,36 +330,72 @@ func (p *PrintService) PrintReport(report models.Report, printerName string) err
 			timetable = "Regular"
 		}
 
-		if err := printer.Println(fmt.Sprintf("Horario: %s", timetable)); err != nil {
-			return err
+		if report.CreatedAt != nil {
+			date, err := time.Parse(time.RFC3339, *report.CreatedAt)
+			if err != nil {
+				return err
+			}
+			printer.Println(fmt.Sprintf("Fecha:   %s", date.Format("02/01/2006 15:04:05")))
 		}
-		if err := printer.Println("----------------------"); err != nil {
-			return err
+
+		if report.PartialClosedAt != nil {
+			date, err := time.Parse(time.RFC3339, *report.PartialClosedAt)
+			if err != nil {
+				return err
+			}
+			printer.Println(fmt.Sprintf("Parcial: %s", date.Format("02/01/2006 15:04:05")))
 		}
-		if err := printer.Println(fmt.Sprintf("Total tiquetes: %d", report.TotalTickets)); err != nil {
-			return err
+
+		if report.ClosedAt != nil {
+			date, err := time.Parse(time.RFC3339, *report.ClosedAt)
+			if err != nil {
+				return err
+			}
+			printer.Println(fmt.Sprintf("Cerrado: %s", date.Format("02/01/2006 15:04:05")))
 		}
-		if err := printer.Println(fmt.Sprintf("Total efectivo: CRC %s", strconv.Itoa(report.TotalCash))); err != nil {
-			return err
-		}
-		if err := printer.Println("----------------------"); err != nil {
-			return err
-		}
-		if err := printer.Println(fmt.Sprintf("Regulares: %d - CRC %s", report.TotalRegular, strconv.Itoa(report.TotalRegularCash))); err != nil {
-			return err
-		}
-		if err := printer.Println(fmt.Sprintf("Oro: %d - CRC %s", report.TotalGold, strconv.Itoa(report.TotalGoldCash))); err != nil {
-			return err
-		}
-		if err := printer.Println(fmt.Sprintf("Anulados: %d - CRC %s", report.TotalNull, strconv.Itoa(report.TotalNullCash))); err != nil {
-			return err
-		}
-		if err := printer.LF(); err != nil {
-			return err
-		}
-		if err := printer.FeedLines(3); err != nil {
-			return err
-		}
+
+		printer.Println(fmt.Sprintf("Horario: %s", timetable))
+
+		printer.Justify(escpos.CenterJustify)
+		printer.Println("--------------------------------")
+		printer.Justify(escpos.LeftJustify)
+
+		printer.Println(fmt.Sprintf("Regulares: %d", report.TotalRegular))
+		printer.Println(fmt.Sprintf("Total:     C %s", strconv.Itoa(report.TotalRegularCash)))
+
+		printer.Justify(escpos.CenterJustify)
+		printer.Println("--------------------------------")
+		printer.Justify(escpos.LeftJustify)
+		printer.Println(fmt.Sprintf("Oro:       %d", report.TotalGold))
+		printer.Println(fmt.Sprintf("Total:     C %s", strconv.Itoa(report.TotalGoldCash)))
+
+		printer.Justify(escpos.CenterJustify)
+		printer.Println("--------------------------------")
+		printer.Justify(escpos.LeftJustify)
+
+		printer.Println(fmt.Sprintf("Anulados:  %d", report.TotalNull))
+		printer.Println(fmt.Sprintf("Total:     C %s", strconv.Itoa(report.TotalNullCash)))
+
+		printer.Justify(escpos.CenterJustify)
+		printer.Println("--------------------------------")
+		printer.Println("ENTREGAS")
+		printer.Justify(escpos.LeftJustify)
+
+		printer.Println(fmt.Sprintf("Parcial: C %s", strconv.Itoa(report.PartialCash)))
+		printer.Println(fmt.Sprintf("Cierre:  C %s", strconv.Itoa(report.FinalCash)))
+		printer.Println(fmt.Sprintf("Total:   C %s", strconv.Itoa(report.PartialCash+report.FinalCash)))
+
+		printer.Justify(escpos.CenterJustify)
+		printer.Println("--------------------------------")
+		printer.Println("CIERRE")
+		printer.Justify(escpos.LeftJustify)
+
+		printer.Println(fmt.Sprintf("Vendidos:   %d", report.TotalTickets))
+		printer.Println(fmt.Sprintf("Total:      C %s", strconv.Itoa(report.TotalCash)))
+		printer.Println(fmt.Sprintf("Diferencia: C %s", strconv.Itoa(report.TotalCash-report.PartialCash-report.FinalCash)))
+
+		printer.LF()
+		printer.FeedLines(4)
 
 		return printer.Cut()
 	})

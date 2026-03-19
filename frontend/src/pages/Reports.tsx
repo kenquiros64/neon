@@ -25,6 +25,13 @@ import LatestReportsTable from "../components/LatestReportsTable";
 import ReportActionsPanel from "../components/ReportActionsPanel";
 import CloseReportDialog from "../components/CloseReportDialog";
 import { models } from "../../wailsjs/go/models";
+import {
+    formatCurrency,
+    formatDateTime,
+    getReportDeliveriesTotal,
+    getReportDifference,
+    getTimetableLabel,
+} from "../util/reportHelpers";
 
 const Reports: React.FC = () => {
     const { report, reportStatusChecked } = useReportCheck();
@@ -35,13 +42,6 @@ const Reports: React.FC = () => {
 
     const [closeDialogOpen, setCloseDialogOpen] = useState(false);
     const [closeType, setCloseType] = useState<'partial' | 'total'>('partial');
-
-    const formatDateTime = (dateString?: string) => {
-        if (!dateString) return "N/A";
-        return new Date(dateString).toLocaleString("es-CR");
-    };
-
-    const formatCurrency = (amount: number) => `₡${amount.toLocaleString()}`;
 
     const handlePrintReport = async (reportToPrint: models.Report) => {
         if (!defaultPrinter) {
@@ -233,6 +233,10 @@ const Reports: React.FC = () => {
                                     <Typography variant="body2" color="text.secondary">Creado</Typography>
                                     <Typography variant="body1">{formatDateTime(report.created_at)}</Typography>
                                 </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <Typography variant="body2" color="text.secondary">Horario</Typography>
+                                    <Typography variant="body1">{getTimetableLabel(report.timetable)}</Typography>
+                                </Grid>
                                 {report.partial_closed_at && (
                                     <>
                                         <Grid size={{ xs: 12, sm: 6 }}>
@@ -251,6 +255,54 @@ const Reports: React.FC = () => {
                                         </Grid>
                                     </>
                                 )}
+                                {report.closed_at && (
+                                    <Grid size={{ xs: 12, sm: 6 }}>
+                                        <Typography variant="body2" color="text.secondary">Cierre total</Typography>
+                                        <Typography variant="body1">{formatDateTime(report.closed_at)}</Typography>
+                                        {report.closed_by && (
+                                            <Typography variant="body2" color="text.secondary">por {report.closed_by}</Typography>
+                                        )}
+                                    </Grid>
+                                )}
+                            </Grid>
+
+                            <Divider sx={{ my: 3 }} />
+
+                            <Typography variant="subtitle1" fontWeight={600} color="text.secondary" gutterBottom>
+                                Entregas y cierre
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <Box sx={{ p: 2, bgcolor: "warning.light", color: "warning.contrastText", borderRadius: 1 }}>
+                                        <Typography variant="caption">Entrega parcial</Typography>
+                                        <Typography variant="h6">{formatCurrency(report.partial_cash)}</Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <Box sx={{ p: 2, bgcolor: "success.light", color: "success.contrastText", borderRadius: 1 }}>
+                                        <Typography variant="caption">Entrega cierre</Typography>
+                                        <Typography variant="h6">{formatCurrency(report.final_cash)}</Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
+                                        <Typography variant="caption" color="text.secondary">Entregado total</Typography>
+                                        <Typography variant="h6">{formatCurrency(getReportDeliveriesTotal(report))}</Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <Box
+                                        sx={{
+                                            p: 2,
+                                            bgcolor: getReportDifference(report) === 0 ? "success.light" : "error.light",
+                                            color: getReportDifference(report) === 0 ? "success.contrastText" : "error.contrastText",
+                                            borderRadius: 1,
+                                        }}
+                                    >
+                                        <Typography variant="caption">Diferencia</Typography>
+                                        <Typography variant="h6">{formatCurrency(getReportDifference(report))}</Typography>
+                                    </Box>
+                                </Grid>
                             </Grid>
                         </CardContent>
                     </Card>

@@ -23,29 +23,19 @@ import {
 } from "@mui/material";
 import { Timeline, Print, Visibility, Receipt } from "@mui/icons-material";
 import { models } from "../../wailsjs/go/models";
+import {
+    formatCurrency,
+    formatDateTime,
+    formatDateShort,
+    getReportDeliveriesTotal,
+    getReportDifference,
+    getTimetableLabel,
+} from "../util/reportHelpers";
 
 interface LatestReportsTableProps {
     latestReports: models.Report[];
     onPrintReport: (report: models.Report) => void;
 }
-
-const formatCurrency = (amount: number) => `₡${amount.toLocaleString()}`;
-
-const formatDateTime = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleString("es-CR");
-};
-
-const formatDateShort = (dateString?: string) => {
-    if (!dateString) return "—";
-    return new Date(dateString).toLocaleDateString("es-CR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-};
 
 function reportStatus(report: models.Report): "open" | "pending" | "closed" {
     if (report.closed_at) return "closed";
@@ -131,7 +121,7 @@ function ReportDetailDialog({
                             >
                                 <Typography variant="body2" color="text.secondary" gutterBottom>Horario</Typography>
                                 <Chip
-                                    label={report.timetable === "regular" ? "Regular" : "Feriado"}
+                                    label={getTimetableLabel(report.timetable)}
                                     color={report.timetable === "regular" ? "primary" : "success"}
                                     size="small"
                                 />
@@ -202,17 +192,12 @@ function ReportDetailDialog({
                             <Typography variant="body1" fontWeight={500}>{report.username}</Typography>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
-                            <Typography variant="body2" color="text.secondary">Horario</Typography>
-                            <Chip
-                                label={report.timetable === "regular" ? "Regular" : "Feriado"}
-                                color={report.timetable === "regular" ? "primary" : "success"}
-                                size="small"
-                                sx={{ mt: 0.5 }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
                             <Typography variant="body2" color="text.secondary">Creado</Typography>
                             <Typography variant="body1">{formatDateTime(report.created_at)}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Typography variant="body2" color="text.secondary">Horario</Typography>
+                            <Typography variant="body1">{getTimetableLabel(report.timetable)}</Typography>
                         </Grid>
                         {report.partial_closed_at && (
                             <Grid size={{ xs: 12, sm: 6 }}>
@@ -236,9 +221,9 @@ function ReportDetailDialog({
 
                     <Divider sx={{ my: 2 }} />
 
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>Efectivo ingresado por cajero</Typography>
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, sm: 6 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>Entregas y cierre</Typography>
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                        <Grid size={{ xs: 12, sm: 4 }}>
                             <Box
                                 sx={{
                                     p: 2,
@@ -246,16 +231,16 @@ function ReportDetailDialog({
                                     display: "flex",
                                     flexDirection: "column",
                                     justifyContent: "center",
-                                    bgcolor: report.partial_cash != null && report.partial_cash > 0 ? "warning.light" : "action.hover",
-                                    color: report.partial_cash != null && report.partial_cash > 0 ? "warning.contrastText" : "text.secondary",
+                                    bgcolor: "warning.light",
+                                    color: "warning.contrastText",
                                     borderRadius: 1,
                                 }}
                             >
-                                <Typography variant="body2">Cierre parcial (efectivo contado)</Typography>
-                                <Typography variant="h6">{report.partial_cash != null && report.partial_cash > 0 ? formatCurrency(report.partial_cash) : "—"}</Typography>
+                                <Typography variant="body2">Entrega parcial</Typography>
+                                <Typography variant="h6">{formatCurrency(report.partial_cash)}</Typography>
                             </Box>
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
+                        <Grid size={{ xs: 12, sm: 4 }}>
                             <Box
                                 sx={{
                                     p: 2,
@@ -263,18 +248,51 @@ function ReportDetailDialog({
                                     display: "flex",
                                     flexDirection: "column",
                                     justifyContent: "center",
-                                    bgcolor: report.final_cash != null && report.final_cash > 0 ? "success.light" : "action.hover",
-                                    color: report.final_cash != null && report.final_cash > 0 ? "success.contrastText" : "text.secondary",
+                                    bgcolor: "success.light",
+                                    color: "success.contrastText",
                                     borderRadius: 1,
                                 }}
                             >
-                                <Typography variant="body2">Cierre total (efectivo contado)</Typography>
-                                <Typography variant="h6">{report.final_cash != null && report.final_cash > 0 ? formatCurrency(report.final_cash) : "—"}</Typography>
+                                <Typography variant="body2">Entrega cierre</Typography>
+                                <Typography variant="h6">{formatCurrency(report.final_cash)}</Typography>
+                            </Box>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    minHeight: 72,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "center",
+                                    bgcolor: "action.hover",
+                                    borderRadius: 1,
+                                }}
+                            >
+                                <Typography variant="body2" color="text.secondary">Entregado total</Typography>
+                                <Typography variant="h6">{formatCurrency(getReportDeliveriesTotal(report))}</Typography>
+                            </Box>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    minHeight: 72,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "center",
+                                    bgcolor: getReportDifference(report) === 0 ? "success.light" : "error.light",
+                                    color: getReportDifference(report) === 0 ? "success.contrastText" : "error.contrastText",
+                                    borderRadius: 1,
+                                }}
+                            >
+                                <Typography variant="body2">Diferencia</Typography>
+                                <Typography variant="h6">{formatCurrency(getReportDifference(report))}</Typography>
                             </Box>
                         </Grid>
                     </Grid>
 
-                    <Divider sx={{ my: 3 }} />
+                    <Divider sx={{ my: 2 }} />
 
                     <Typography variant="subtitle2" color="text.secondary" gutterBottom>Detalle</Typography>
                     <Grid container spacing={2}>

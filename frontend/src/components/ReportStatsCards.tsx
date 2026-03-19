@@ -56,7 +56,7 @@ const ReportStatsCards: React.FC<ReportStatsCardsProps> = ({ report, isPendingRe
                     <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'warning.light', borderRadius: 2 }}>
                         <Warning sx={{ fontSize: 32, color: 'warning.contrastText', mb: 1 }} />
                         <Typography variant="h6" color="warning.contrastText">
-                            {formatCurrency(report.partial_cash)}
+                            {formatCurrency(report.total_cash-report.partial_cash)}
                         </Typography>
                         <Typography variant="body2" color="warning.contrastText">
                             Efectivo Pendiente

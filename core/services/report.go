@@ -50,7 +50,7 @@ func (r *ReportService) runStartupRemoteSync() {
 
 // pushReportToMySQL attempts to upsert the report to remote MySQL. On failure, caller should set RemoteSynced locally.
 func (r *ReportService) pushReportToMySQL(ctx context.Context, report *models.Report) error {
-	cfg, err := config.LoadMySQLReportSyncConfig()
+	cfg, err := config.LoadMySQLDBSyncConfig()
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (r *ReportService) SyncPendingReportsToRemote(ctx context.Context) (int, er
 		return 0, nil
 	}
 
-	cfg, err := config.LoadMySQLReportSyncConfig()
+	cfg, err := config.LoadMySQLDBSyncConfig()
 	if err != nil {
 		return 0, err
 	}

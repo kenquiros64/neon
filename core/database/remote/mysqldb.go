@@ -13,21 +13,19 @@ import (
 	"neon/core/helpers"
 )
 
-const mysqlReportTLSConfigName = "neon-report-mysql-ca"
-
-// MySQLReportDB is a short-lived connection pool for syncing reports to remote MySQL (e.g. Aiven).
-type MySQLReportDB struct {
+// MySQLDB is a short-lived connection pool for syncing reports to remote MySQL (e.g. Aiven).
+type MySQLDB struct {
 	db  *sql.DB
-	cfg *config.MySQLReportSyncConfig
+	cfg *config.MySQLDBSyncConfig
 }
 
 // NewMySQLReportDB creates a MySQL client for report sync (Connect before use).
-func NewMySQLReportDB(cfg *config.MySQLReportSyncConfig) *MySQLReportDB {
-	return &MySQLReportDB{cfg: cfg}
+func NewMySQLReportDB(cfg *config.MySQLDBSyncConfig) *MySQLDB {
+	return &MySQLDB{cfg: cfg}
 }
 
 // Connect opens the pool, verifies TLS, and ensures the sync table exists.
-func (m *MySQLReportDB) Connect(ctx context.Context) error {
+func (m *MySQLDB) Connect(ctx context.Context) error {
 	if m.cfg == nil {
 		return fmt.Errorf("mysql report sync: nil config")
 	}
@@ -107,12 +105,12 @@ CREATE TABLE IF NOT EXISTS %s (
 }
 
 // DB returns the underlying pool (valid after Connect).
-func (m *MySQLReportDB) DB() *sql.DB {
+func (m *MySQLDB) DB() *sql.DB {
 	return m.db
 }
 
 // Close closes the pool.
-func (m *MySQLReportDB) Close() error {
+func (m *MySQLDB) Close() error {
 	if m.db == nil {
 		return nil
 	}

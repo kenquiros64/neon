@@ -38,8 +38,8 @@ type CloverDBConfig struct {
 	FilePath string
 }
 
-// MySQLReportSyncConfig configures remote MySQL for POS report sync (users/routes stay on MongoDB).
-type MySQLReportSyncConfig struct {
+// MySQLDBSyncConfig configures remote MySQL for sync (users/routes stay on MongoDB).
+type MySQLDBSyncConfig struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
 	Database string `yaml:"database"`
@@ -161,8 +161,8 @@ func GetCloverDBConfig() *CloverDBConfig {
 	}
 }
 
-// getMySQLReportSyncConfigPath returns the path to mysql_report.yaml (app config dir).
-func getMySQLReportSyncConfigPath() (string, error) {
+// getMySQLDBSyncConfigPath returns the path to mysql_report.yaml (app config dir).
+func getMySQLDBSyncConfigPath() (string, error) {
 	appDir, err := helpers.GetAppDataDir()
 	if err != nil {
 		return "", err
@@ -170,15 +170,15 @@ func getMySQLReportSyncConfigPath() (string, error) {
 	return filepath.Join(appDir, "mysql.yaml"), nil
 }
 
-// LoadMySQLReportSyncConfig loads MySQL settings for report sync from mysql_report.yaml plus env overrides.
+// LoadMySQLDBSyncConfig loads MySQL settings for report sync from mysql_report.yaml plus env overrides.
 // Returns an error if required fields are missing (caller should treat sync as unavailable).
-func LoadMySQLReportSyncConfig() (*MySQLReportSyncConfig, error) {
-	path, err := getMySQLReportSyncConfigPath()
+func LoadMySQLDBSyncConfig() (*MySQLDBSyncConfig, error) {
+	path, err := getMySQLDBSyncConfigPath()
 	if err != nil {
 		return nil, err
 	}
 
-	cfg := &MySQLReportSyncConfig{}
+	cfg := &MySQLDBSyncConfig{}
 	if data, err := os.ReadFile(path); err == nil {
 		if uerr := yaml.Unmarshal(data, cfg); uerr != nil {
 			return nil, fmt.Errorf("parse mysql_report.yaml: %w", uerr)
@@ -199,7 +199,7 @@ func LoadMySQLReportSyncConfig() (*MySQLReportSyncConfig, error) {
 	return cfg, nil
 }
 
-func applyMySQLReportSyncEnvOverrides(cfg *MySQLReportSyncConfig) {
+func applyMySQLReportSyncEnvOverrides(cfg *MySQLDBSyncConfig) {
 	if v := os.Getenv("MYSQL_REPORT_HOST"); v != "" {
 		cfg.Host = v
 	}

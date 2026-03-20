@@ -53,7 +53,7 @@ Optional environment overrides:
 - `MYSQL_REPORT_HOST`, `MYSQL_REPORT_PORT`, `MYSQL_REPORT_DATABASE`
 - `MYSQL_REPORT_USERNAME`, `MYSQL_REPORT_PASSWORD`, `MYSQL_REPORT_CA_CERT_PATH`
 
-The app creates table `pos_reports` on first successful connection if it does not exist.
+The app creates table `reports` on first successful connection if it does not exist.
 
 ### Database Locations
 

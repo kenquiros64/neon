@@ -18,7 +18,7 @@ const (
 	RouteCollection = "routes"
 
 	// RemoteReportsMySQLTable is the MySQL table for synced POS report snapshots (remote Aiven / MySQL).
-	RemoteReportsMySQLTable = "pos_reports"
+	RemoteReportsMySQLTable = "reports"
 
 	// ReportsTable is the name of the table for the report model
 	ReportsTable = "reports"

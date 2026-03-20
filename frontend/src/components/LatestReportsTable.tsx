@@ -21,7 +21,7 @@ import {
     Grid,
     Divider,
 } from "@mui/material";
-import { Timeline, Print, Visibility, Receipt } from "@mui/icons-material";
+import { Timeline, Print, Visibility, Receipt, CloudDone, CloudOff } from "@mui/icons-material";
 import { models } from "../../wailsjs/go/models";
 import {
     formatCurrency,
@@ -83,7 +83,7 @@ function ReportDetailDialog({
                                     borderRadius: 1,
                                 }}
                             >
-                                <Typography variant="h5">{report.total_tickets}</Typography>
+                                <Typography variant="h5">{report.partial_tickets + report.final_tickets}</Typography>
                                 <Typography variant="caption" color="text.secondary">Total tiquetes</Typography>
                             </Box>
                         </Grid>
@@ -101,7 +101,7 @@ function ReportDetailDialog({
                                     borderRadius: 1,
                                 }}
                             >
-                                <Typography variant="h5">{formatCurrency(report.total_cash)}</Typography>
+                                <Typography variant="h5">{formatCurrency(report.partial_cash + report.final_cash)}</Typography>
                                 <Typography variant="caption">Total generado</Typography>
                             </Box>
                         </Grid>
@@ -221,6 +221,18 @@ function ReportDetailDialog({
 
                     <Divider sx={{ my: 2 }} />
 
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {report.remote_synced ? <CloudDone fontSize="small" color="success" /> : <CloudOff fontSize="small" color="warning" />}
+                        Copia en servidor (MySQL)
+                    </Typography>
+                    <Typography variant="body2" color={report.remote_synced ? "success.main" : "warning.main"} sx={{ mb: 2 }}>
+                        {report.remote_synced
+                            ? "Sincronizado correctamente."
+                            : "Pendiente de sincronización (se reintentará al iniciar la app si hay conexión)."}
+                    </Typography>
+
+                    <Divider sx={{ my: 2 }} />
+
                     <Typography variant="subtitle2" color="text.secondary" gutterBottom>Entregas y cierre</Typography>
                     <Grid container spacing={2} sx={{ mb: 3 }}>
                         <Grid size={{ xs: 12, sm: 4 }}>
@@ -237,7 +249,7 @@ function ReportDetailDialog({
                                 }}
                             >
                                 <Typography variant="body2">Entrega parcial</Typography>
-                                <Typography variant="h6">{formatCurrency(report.partial_cash)}</Typography>
+                                <Typography variant="h6">{formatCurrency(report.partial_cash_received)}</Typography>
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
@@ -254,7 +266,7 @@ function ReportDetailDialog({
                                 }}
                             >
                                 <Typography variant="body2">Entrega cierre</Typography>
-                                <Typography variant="h6">{formatCurrency(report.final_cash)}</Typography>
+                                <Typography variant="h6">{formatCurrency(report.final_cash_received)}</Typography>
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
@@ -342,6 +354,7 @@ const LatestReportsTable: React.FC<LatestReportsTableProps> = ({
                                 <TableCell>Creado</TableCell>
                                 <TableCell align="right">Total</TableCell>
                                 <TableCell>Estado</TableCell>
+                                <TableCell align="center">Nube</TableCell>
                                 <TableCell align="center">Acciones</TableCell>
                             </TableRow>
                         </TableHead>
@@ -361,9 +374,26 @@ const LatestReportsTable: React.FC<LatestReportsTableProps> = ({
                                         <TableCell>#{pastReport.id}</TableCell>
                                         <TableCell>{pastReport.username}</TableCell>
                                         <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDateShort(pastReport.created_at)}</TableCell>
-                                        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>{formatCurrency(pastReport.total_cash)}</TableCell>
+                                        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>{formatCurrency(pastReport.partial_cash + pastReport.final_cash)}</TableCell>
                                         <TableCell>
                                             <Chip label={statusLabel} color={statusColor} size="small" variant="outlined" />
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <Tooltip
+                                                title={
+                                                    pastReport.remote_synced
+                                                        ? "Reporte guardado en MySQL"
+                                                        : "Sin conexión o error: se sincronizará al reiniciar con internet"
+                                                }
+                                            >
+                                                <Chip
+                                                    icon={pastReport.remote_synced ? <CloudDone /> : <CloudOff />}
+                                                    label={pastReport.remote_synced ? "OK" : "Pend."}
+                                                    color={pastReport.remote_synced ? "success" : "warning"}
+                                                    size="small"
+                                                    variant="outlined"
+                                                />
+                                            </Tooltip>
                                         </TableCell>
                                         <TableCell align="center">
                                             <Tooltip title="Ver detalle y estadísticas">

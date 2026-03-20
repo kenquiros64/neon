@@ -390,9 +390,9 @@ func (p *PrintService) PrintReport(report models.Report, printerName string) err
 		printer.Println("CIERRE")
 		printer.Justify(escpos.LeftJustify)
 
-		printer.Println(fmt.Sprintf("Vendidos:   %d", report.TotalTickets))
-		printer.Println(fmt.Sprintf("Total:      C %s", strconv.Itoa(report.TotalCash)))
-		printer.Println(fmt.Sprintf("Diferencia: C %s", strconv.Itoa(report.TotalCash-report.PartialCash-report.FinalCash)))
+		printer.Println(fmt.Sprintf("Vendidos:   %d", report.PartialTickets+report.FinalTickets))
+		printer.Println(fmt.Sprintf("Total:      C %s", strconv.Itoa(report.PartialCashReceived+report.FinalCashReceived)))
+		printer.Println(fmt.Sprintf("Diferencia: C %s", strconv.Itoa(report.PartialCashReceived+report.FinalCashReceived-report.PartialCash-report.FinalCash)))
 
 		printer.LF()
 		printer.FeedLines(4)

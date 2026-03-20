@@ -2,8 +2,10 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"neon/core/constants"
 	"neon/core/helpers"
@@ -34,6 +36,15 @@ type SQLiteConfig struct {
 // CloverDBConfig represents CloverDB connection configuration
 type CloverDBConfig struct {
 	FilePath string
+}
+
+// MySQLReportSyncConfig configures remote MySQL for POS report sync (users/routes stay on MongoDB).
+type MySQLReportSyncConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Database string `yaml:"database"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
 }
 
 var mongoConfig *MongoDBConfig
@@ -147,5 +158,63 @@ func GetCloverDBConfig() *CloverDBConfig {
 
 	return &CloverDBConfig{
 		FilePath: dbPath,
+	}
+}
+
+// getMySQLReportSyncConfigPath returns the path to mysql_report.yaml (app config dir).
+func getMySQLReportSyncConfigPath() (string, error) {
+	appDir, err := helpers.GetAppDataDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(appDir, "mysql.yaml"), nil
+}
+
+// LoadMySQLReportSyncConfig loads MySQL settings for report sync from mysql_report.yaml plus env overrides.
+// Returns an error if required fields are missing (caller should treat sync as unavailable).
+func LoadMySQLReportSyncConfig() (*MySQLReportSyncConfig, error) {
+	path, err := getMySQLReportSyncConfigPath()
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := &MySQLReportSyncConfig{}
+	if data, err := os.ReadFile(path); err == nil {
+		if uerr := yaml.Unmarshal(data, cfg); uerr != nil {
+			return nil, fmt.Errorf("parse mysql_report.yaml: %w", uerr)
+		}
+	}
+
+	applyMySQLReportSyncEnvOverrides(cfg)
+
+	if cfg.Host == "" || cfg.Username == "" || cfg.Password == "" {
+		return nil, fmt.Errorf("MySQL report sync: set host, username, and password in %s (or MYSQL_REPORT_* env vars)", path)
+	}
+	if cfg.Port == 0 {
+		cfg.Port = 3306
+	}
+	if cfg.Database == "" {
+		cfg.Database = "defaultdb"
+	}
+	return cfg, nil
+}
+
+func applyMySQLReportSyncEnvOverrides(cfg *MySQLReportSyncConfig) {
+	if v := os.Getenv("MYSQL_REPORT_HOST"); v != "" {
+		cfg.Host = v
+	}
+	if v := os.Getenv("MYSQL_REPORT_PORT"); v != "" {
+		if p, err := strconv.Atoi(v); err == nil {
+			cfg.Port = p
+		}
+	}
+	if v := os.Getenv("MYSQL_REPORT_DATABASE"); v != "" {
+		cfg.Database = v
+	}
+	if v := os.Getenv("MYSQL_REPORT_USERNAME"); v != "" {
+		cfg.Username = v
+	}
+	if v := os.Getenv("MYSQL_REPORT_PASSWORD"); v != "" {
+		cfg.Password = v
 	}
 }

@@ -19,7 +19,7 @@ const ReportStatsCards: React.FC<ReportStatsCardsProps> = ({ report, isPendingRe
                 <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'info.dark', borderRadius: 2 }}>
                     <Receipt sx={{ fontSize: 32, color: 'info.contrastText', mb: 1 }} />
                     <Typography variant="h6" color="info.contrastText">
-                        {report.total_tickets}
+                        {report.partial_tickets + report.final_tickets}
                     </Typography>
                     <Typography variant="body2" color="info.contrastText">
                         Tiquetes Vendidos
@@ -31,7 +31,7 @@ const ReportStatsCards: React.FC<ReportStatsCardsProps> = ({ report, isPendingRe
                 <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'success.light', borderRadius: 2 }}>
                     <AttachMoney sx={{ fontSize: 32, color: 'success.contrastText', mb: 1 }} />
                     <Typography variant="h6" color="success.contrastText">
-                        {formatCurrency(report.total_cash)}
+                        {formatCurrency(report.partial_cash + report.final_cash)}
                     </Typography>
                     <Typography variant="body2" color="success.contrastText">
                         Total Generado
@@ -56,7 +56,7 @@ const ReportStatsCards: React.FC<ReportStatsCardsProps> = ({ report, isPendingRe
                     <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'warning.light', borderRadius: 2 }}>
                         <Warning sx={{ fontSize: 32, color: 'warning.contrastText', mb: 1 }} />
                         <Typography variant="h6" color="warning.contrastText">
-                            {formatCurrency(report.total_cash-report.partial_cash)}
+                            {formatCurrency(report.partial_cash_received + report.final_cash_received - report.partial_cash - report.final_cash)}
                         </Typography>
                         <Typography variant="body2" color="warning.contrastText">
                             Efectivo Pendiente

@@ -22,7 +22,7 @@ export const getTimetableLabel = (timetable: models.Report["timetable"]) =>
     timetable === "regular" ? "Regular" : "Feriado";
 
 export const getReportDeliveriesTotal = (report: models.Report) =>
-    report.partial_cash + report.final_cash;
+    report.partial_cash_received + report.final_cash_received;
 
 export const getReportDifference = (report: models.Report) =>
-    report.total_cash - getReportDeliveriesTotal(report);
+    report.partial_cash + report.final_cash - getReportDeliveriesTotal(report);

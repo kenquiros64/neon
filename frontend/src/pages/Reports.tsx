@@ -275,32 +275,19 @@ const Reports: React.FC = () => {
                                 <Grid size={{ xs: 12, sm: 4 }}>
                                     <Box sx={{ p: 2, bgcolor: "warning.light", color: "warning.contrastText", borderRadius: 1 }}>
                                         <Typography variant="caption">Entrega parcial</Typography>
-                                        <Typography variant="h6">{formatCurrency(report.partial_cash)}</Typography>
+                                        <Typography variant="h6">{formatCurrency(report.partial_cash_received)}</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 4 }}>
                                     <Box sx={{ p: 2, bgcolor: "success.light", color: "success.contrastText", borderRadius: 1 }}>
                                         <Typography variant="caption">Entrega cierre</Typography>
-                                        <Typography variant="h6">{formatCurrency(report.final_cash)}</Typography>
+                                        <Typography variant="h6">{formatCurrency(report.final_cash_received)}</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 12, sm: 4 }}>
                                     <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
                                         <Typography variant="caption" color="text.secondary">Entregado total</Typography>
                                         <Typography variant="h6">{formatCurrency(getReportDeliveriesTotal(report))}</Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid size={{ xs: 12, sm: 4 }}>
-                                    <Box
-                                        sx={{
-                                            p: 2,
-                                            bgcolor: getReportDifference(report) === 0 ? "success.light" : "error.light",
-                                            color: getReportDifference(report) === 0 ? "success.contrastText" : "error.contrastText",
-                                            borderRadius: 1,
-                                        }}
-                                    >
-                                        <Typography variant="caption">Diferencia</Typography>
-                                        <Typography variant="h6">{formatCurrency(getReportDifference(report))}</Typography>
                                     </Box>
                                 </Grid>
                             </Grid>

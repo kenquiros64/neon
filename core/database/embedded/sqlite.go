@@ -213,10 +213,11 @@ func (s *SQLite) createReportsTable() error {
 			timetable TEXT NOT NULL DEFAULT 'regular',
 			partial_tickets INTEGER NOT NULL DEFAULT 0,
 			partial_cash INTEGER NOT NULL DEFAULT 0,
+			partial_cash_received INTEGER NOT NULL DEFAULT 0,
+			final_tickets INTEGER NOT NULL DEFAULT 0,
 			final_cash INTEGER NOT NULL DEFAULT 0,
+			final_cash_received INTEGER NOT NULL DEFAULT 0,
 			status BOOLEAN NOT NULL DEFAULT 0,
-			total_cash INTEGER NOT NULL DEFAULT 0,
-			total_tickets INTEGER NOT NULL DEFAULT 0,
 			total_gold INTEGER NOT NULL DEFAULT 0,
 			total_gold_cash INTEGER NOT NULL DEFAULT 0,
 			total_null INTEGER NOT NULL DEFAULT 0,
@@ -227,7 +228,8 @@ func (s *SQLite) createReportsTable() error {
 			closed_at TEXT,
 			created_at TEXT,
 			partial_closed_by TEXT,
-			closed_by TEXT
+			closed_by TEXT,
+			remote_synced INTEGER NOT NULL DEFAULT 0
 		)
 	`, constants.ReportsTable)
 
@@ -235,7 +237,6 @@ func (s *SQLite) createReportsTable() error {
 	if err != nil {
 		return fmt.Errorf("failed to create reports table: %w", err)
 	}
-
 	return nil
 }
 
@@ -280,14 +281,14 @@ func (s *SQLite) createTriggerUpdateReportAfterTicketInsert() error {
 		BEGIN
 			UPDATE reports
 			SET
-				total_cash = total_cash + NEW.fare,
-				total_tickets = total_tickets + 1,
 				total_gold = total_gold + CASE WHEN NEW.is_gold = 1 THEN 1 ELSE 0 END,
 				total_gold_cash = total_gold_cash + CASE WHEN NEW.is_gold = 1 THEN NEW.fare ELSE 0 END,
 				total_regular = total_regular + CASE WHEN NEW.is_gold = 0 AND NEW.is_null = 0 THEN 1 ELSE 0 END,
 				total_regular_cash = total_regular_cash + CASE WHEN NEW.is_gold = 0 AND NEW.is_null = 0 THEN NEW.fare ELSE 0 END,
-				partial_tickets = CASE WHEN partial_closed_at IS NULL THEN partial_tickets + 1 ELSE partial_tickets END,
-				partial_cash = CASE WHEN partial_closed_at IS NULL THEN partial_cash + NEW.fare ELSE partial_cash END
+				partial_tickets = partial_tickets + CASE WHEN partial_closed_at IS NULL THEN 1 ELSE 0 END,
+				partial_cash = partial_cash + CASE WHEN partial_closed_at IS NULL THEN NEW.fare ELSE 0 END,
+				final_tickets = final_tickets + CASE WHEN partial_closed_at IS NOT NULL THEN 1 ELSE 0 END,
+				final_cash = final_cash + CASE WHEN partial_closed_at IS NOT NULL THEN NEW.fare ELSE 0 END
 			WHERE id = NEW.report_id;
 		END
 	`
@@ -314,10 +315,14 @@ func (s *SQLite) createTriggerUpdateReportAfterTicketIsUpdatedToNull() error {
 			SET
 				total_null = total_null + 1,
 				total_null_cash = total_null_cash + NEW.fare,
-				total_tickets = total_tickets - 1,
-				total_cash = total_cash - NEW.fare,
-				partial_tickets = CASE WHEN partial_closed_at IS NOT NULL THEN partial_tickets - 1 ELSE partial_tickets END,
-				partial_cash = CASE WHEN partial_closed_at IS NOT NULL THEN partial_cash - NEW.fare ELSE partial_cash END
+				total_gold = total_gold - CASE WHEN NEW.is_gold = 1 THEN 1 ELSE 0 END,
+				total_gold_cash = total_gold_cash - CASE WHEN NEW.is_gold = 1 THEN NEW.fare ELSE 0 END,
+				total_regular = total_regular - CASE WHEN NEW.is_gold = 0 AND NEW.is_null = 0 THEN 1 ELSE 0 END,
+				total_regular_cash = total_regular_cash - CASE WHEN NEW.is_gold = 0 AND NEW.is_null = 0 THEN NEW.fare ELSE 0 END,
+				partial_tickets = partial_tickets - CASE WHEN partial_closed_at IS NULL THEN 1 ELSE 0 END,
+				partial_cash = partial_cash - CASE WHEN partial_closed_at IS NULL THEN NEW.fare ELSE 0 END,
+				final_tickets = final_tickets - CASE WHEN partial_closed_at IS NOT NULL THEN 1 ELSE 0 END,
+				final_cash = final_cash - CASE WHEN partial_closed_at IS NOT NULL THEN NEW.fare ELSE 0 END
 			WHERE id = NEW.report_id;
 		END
 	`

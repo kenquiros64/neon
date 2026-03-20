@@ -1,0 +1,16 @@
+# Remote MySQL (e.g. Aiven) for syncing closed POS reports.
+# Copy to: ~/.config/neon/mysql_report.yaml (Unix) or your platform app config dir for "neon".
+# Do not commit real passwords.
+
+host: "titanium-neon.b.aivencloud.com"
+port: 23957
+database: "defaultdb"
+username: "avnadmin"
+password: "YOUR_AIVEN_PASSWORD"
+
+# Optional: if TLS fails with system CAs, download the Aiven CA PEM and set:
+# ca_cert_path: "/full/path/to/ca.pem"
+
+# Overrides (optional):
+# MYSQL_REPORT_HOST, MYSQL_REPORT_PORT, MYSQL_REPORT_DATABASE,
+# MYSQL_REPORT_USERNAME, MYSQL_REPORT_PASSWORD, MYSQL_REPORT_CA_CERT_PATH

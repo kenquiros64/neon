@@ -2,7 +2,8 @@ package services
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
+	"errors"
 	"neon/core/database/embedded"
 	"neon/core/helpers"
 	"neon/core/models"
@@ -44,18 +45,18 @@ func (t *TicketService) AddTicket(ticket []models.Ticket) ([]models.Ticket, erro
 // AddTicketWithPrint saves tickets and prints them. If printing fails (e.g. no paper, printer disconnected),
 // created tickets are deleted and an error is returned so the sale is not persisted.
 func (t *TicketService) AddTicketWithPrint(tickets []models.Ticket, printerName string) ([]models.Ticket, error) {
-	if t.printService == nil {
-		return nil, fmt.Errorf("print service is not available")
-	}
+	// if t.printService == nil {
+	// 	return nil, fmt.Errorf("print service is not available")
+	// }
 
-	if printerName == "" {
-		return nil, fmt.Errorf("printer is not configured")
-	}
+	// if printerName == "" {
+	// 	return nil, fmt.Errorf("printer is not configured")
+	// }
 
-	if err := t.printService.EnsurePrinterReady(printerName); err != nil {
-		zap.L().Warn("printer is not ready, skipping ticket creation", zap.Error(err))
-		return nil, err
-	}
+	// if err := t.printService.EnsurePrinterReady(printerName); err != nil {
+	// 	zap.L().Warn("printer is not ready, skipping ticket creation", zap.Error(err))
+	// 	return nil, err
+	// }
 
 	repository := local.NewTicketRepository(t.ctx, t.localDB)
 	created, err := repository.BulkCreate(tickets)
@@ -64,14 +65,14 @@ func (t *TicketService) AddTicketWithPrint(tickets []models.Ticket, printerName 
 		return nil, err
 	}
 
-	if err := t.printService.PrintTickets(created, printerName); err != nil {
-		zap.L().Warn("print failed, rolling back tickets", zap.Error(err))
-		if delErr := repository.BulkDelete(created); delErr != nil {
-			zap.L().Error("failed to rollback tickets after print error", zap.Error(delErr))
-			return nil, err
-		}
-		return nil, err
-	}
+	// if err := t.printService.PrintTickets(created, printerName); err != nil {
+	// 	zap.L().Warn("print failed, rolling back tickets", zap.Error(err))
+	// 	if delErr := repository.BulkDelete(created); delErr != nil {
+	// 		zap.L().Error("failed to rollback tickets after print error", zap.Error(delErr))
+	// 		return nil, err
+	// 	}
+	// 	return nil, err
+	// }
 
 	return created, nil
 }
@@ -92,6 +93,9 @@ func (t *TicketService) NullifyTicket(ticketID int64, reportID int64) error {
 	repository := local.NewTicketRepository(t.ctx, t.localDB)
 	ticket, err := repository.GetByID(ticketID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return helpers.ErrRowNotFound
+		}
 		zap.L().Error("failed to get ticket", zap.Error(err))
 		return err
 	}

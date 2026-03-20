@@ -22,10 +22,11 @@ export namespace models {
 	    timetable: string;
 	    partial_tickets: number;
 	    partial_cash: number;
+	    partial_cash_received: number;
+	    final_tickets: number;
 	    final_cash: number;
+	    final_cash_received: number;
 	    status: boolean;
-	    total_cash: number;
-	    total_tickets: number;
 	    total_gold: number;
 	    total_gold_cash: number;
 	    total_null: number;
@@ -37,6 +38,7 @@ export namespace models {
 	    created_at?: string;
 	    partial_closed_by?: string;
 	    closed_by?: string;
+	    remote_synced: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Report(source);
@@ -49,10 +51,11 @@ export namespace models {
 	        this.timetable = source["timetable"];
 	        this.partial_tickets = source["partial_tickets"];
 	        this.partial_cash = source["partial_cash"];
+	        this.partial_cash_received = source["partial_cash_received"];
+	        this.final_tickets = source["final_tickets"];
 	        this.final_cash = source["final_cash"];
+	        this.final_cash_received = source["final_cash_received"];
 	        this.status = source["status"];
-	        this.total_cash = source["total_cash"];
-	        this.total_tickets = source["total_tickets"];
 	        this.total_gold = source["total_gold"];
 	        this.total_gold_cash = source["total_gold_cash"];
 	        this.total_null = source["total_null"];
@@ -64,6 +67,7 @@ export namespace models {
 	        this.created_at = source["created_at"];
 	        this.partial_closed_by = source["partial_closed_by"];
 	        this.closed_by = source["closed_by"];
+	        this.remote_synced = source["remote_synced"];
 	    }
 	}
 	export class Time {

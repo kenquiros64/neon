@@ -18,6 +18,10 @@ export function StartReport(arg1, arg2) {
   return window['go']['services']['ReportService']['StartReport'](arg1, arg2);
 }
 
+export function SyncPendingReportsToRemote(arg1) {
+  return window['go']['services']['ReportService']['SyncPendingReportsToRemote'](arg1);
+}
+
 export function TotalCloseReport(arg1, arg2, arg3) {
   return window['go']['services']['ReportService']['TotalCloseReport'](arg1, arg2, arg3);
 }

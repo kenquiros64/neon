@@ -39,9 +39,26 @@ For security or deployment purposes, you can still override any MongoDB configur
 
 Environment variables take precedence over the configuration file.
 
+### MySQL report sync (remote)
+
+Closed reports are upserted to a **remote MySQL** database (e.g. **Aiven**). This is separate from MongoDB (users/routes).
+
+1. Copy `mysql_report.example.yaml` to `~/.config/neon/mysql_report.yaml` (same app config folder as `config.yaml`).
+2. Set `host`, `port`, `database`, `username`, and `password`. **Do not commit real credentials.**
+
+TLS is required: the client uses `tls=true` (system root CAs). If verification fails, download your provider’s CA PEM and set `ca_cert_path` in the YAML.
+
+Optional environment overrides:
+
+- `MYSQL_REPORT_HOST`, `MYSQL_REPORT_PORT`, `MYSQL_REPORT_DATABASE`
+- `MYSQL_REPORT_USERNAME`, `MYSQL_REPORT_PASSWORD`, `MYSQL_REPORT_CA_CERT_PATH`
+
+The app creates table `pos_reports` on first successful connection if it does not exist.
+
 ### Database Locations
 
 - **MongoDB Config**: `~/.config/neon/config.yaml`
+- **MySQL report sync Config**: `~/.config/neon/mysql_report.yaml`
 - **SQLite Database**: `~/.config/neon/data/oxygen.db`
 - **CloverDB Database**: `~/.config/neon/data/titanium/`
 - **Logs**: `~/.cache/neon/logs/app.log`

@@ -90,7 +90,15 @@ const Ticket: React.FC = () => {
     const selectedStop = selectedRoute.stops.find(stop => stop.code === selectedStopID) || null;
 
     return (
-        <Grid container sx={{ height: "100%", margin: 0 }}>
+        <Box
+            sx={{
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+            }}
+        >
+        <Grid container sx={{ flex: 1, minHeight: 0, margin: 0 }}>
             {/* Left Panel - Ticket Input Section */}
             <Grid
                 size={{ lg: 5 }}
@@ -118,18 +126,26 @@ const Ticket: React.FC = () => {
             <Grid
                 size="grow"
                 sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minHeight: 0,
                     height: "100%",
-                    maxHeight: "500px",
-                    overflowY: "auto",
-                    overflowX: "hidden",
+                    overflow: "hidden",
                 }}
             >
-                <RouteInfoCard route={selectedRoute} />
+                <Box sx={{ flexShrink: 0 }}>
+                    <RouteInfoCard route={selectedRoute} />
+                </Box>
                 <RouteList
                     routes={routes}
                     selectedRouteID={selectedRouteID}
                     onRouteSelect={handleRouteSelect}
                     report={report}
+                    sx={{
+                        flex: 1,
+                        minHeight: 0,
+                        overflowY: "auto",
+                    }}
                 />
             </Grid>
 
@@ -139,19 +155,27 @@ const Ticket: React.FC = () => {
             <Grid
                 size="grow"
                 sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minHeight: 0,
                     height: "100%",
-                    maxHeight: "500px",
-                    overflowY: "auto",
-                    overflowX: "hidden",
+                    overflow: "hidden",
                 }}
             >
-                <StopInfoCard stop={selectedStop} route={selectedRoute} />
+                <Box sx={{ flexShrink: 0 }}>
+                    <StopInfoCard stop={selectedStop} route={selectedRoute} />
+                </Box>
                 {selectedRoute && (
                     <StopList
                         stops={selectedRoute.stops}
                         selectedStopID={selectedStopID}
                         onStopSelect={handleStopSelect}
                         getCount={getCount}
+                        sx={{
+                            flex: 1,
+                            minHeight: 0,
+                            overflowY: "auto",
+                        }}
                     />
                 )}
             </Grid>
@@ -167,6 +191,7 @@ const Ticket: React.FC = () => {
                 selectedTime={selectedTime}
             />
         </Grid>
+        </Box>
     );
 };
 

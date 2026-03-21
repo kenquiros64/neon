@@ -306,7 +306,15 @@ const HomeLayout: React.FC = () => {
       {/* Main Content */}
       <Box component="main" sx={{ display: "flex", flexDirection: "column", flexGrow: 1, height: "100vh" }}>
         <HomeDrawerHeader />
-        <Box sx={{ flexGrow: 1, overflow: "auto" }}>
+        <Box
+          sx={{
+            flexGrow: 1,
+            minHeight: 0,
+            overflow: "auto",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <Outlet />
         </Box>
       </Box>

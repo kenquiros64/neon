@@ -10,23 +10,26 @@ import {
     Badge,
     Box
 } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material/styles";
 import { People } from "@mui/icons-material";
 import { useTheme } from "../themes/ThemeProvider";
 import stopList from "../assets/images/stop_list.svg";
 import { models } from '../../wailsjs/go/models';
 
 interface StopListProps {
-    stops: models.Stop[]; 
+    stops: models.Stop[];
     selectedStopID: String | null;
     onStopSelect: (id: String) => void;
     getCount: (stop: models.Stop) => number;
+    sx?: SxProps<Theme>;
 }
 
 export const StopList: React.FC<StopListProps> = ({
     stops,
     selectedStopID,
     onStopSelect,
-    getCount
+    getCount,
+    sx,
 }) => {
     const { theme } = useTheme();
 
@@ -87,7 +90,7 @@ export const StopList: React.FC<StopListProps> = ({
     });
 
     return (
-        <List sx={{ p: 0, mt: 1 }}>
+        <List sx={[{ p: 0, mt: 1 }, ...(sx ? (Array.isArray(sx) ? sx : [sx]) : [])]}>
             {stops.map((stop) => {
                 const isSelected = stop.code === selectedStopID;
                 const passengerCount = getCount(stop);

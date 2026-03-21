@@ -8,6 +8,7 @@ import {
     Avatar,
     Typography
 } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material/styles";
 import { useTheme } from "../themes/ThemeProvider";
 import { fullRouteName, nextDeparture, to12HourFormat } from "../util/Helpers";
 import routeList from "../assets/images/map.png";
@@ -17,14 +18,16 @@ interface RouteListProps {
     routes: models.Route[];
     selectedRouteID: String | null;
     onRouteSelect: (id: String) => void;
-    report: models.Report; 
+    report: models.Report;
+    sx?: SxProps<Theme>;
 }
 
 export const RouteList: React.FC<RouteListProps> = ({
     routes,
     selectedRouteID,
     onRouteSelect,
-    report
+    report,
+    sx,
 }) => {
     const { theme } = useTheme();
 
@@ -67,7 +70,7 @@ export const RouteList: React.FC<RouteListProps> = ({
     });
 
     return (
-        <List sx={{ p: 0, mt: 1 }}>
+        <List sx={[{ p: 0, mt: 1 }, ...(sx ? (Array.isArray(sx) ? sx : [sx]) : [])]}>
             {routes.map((route) => {
                 const routeKey = fullRouteName(route);
                 const isSelected = routeKey === selectedRouteID;

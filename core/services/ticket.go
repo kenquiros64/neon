@@ -17,12 +17,13 @@ import (
 type TicketService struct {
 	ctx          context.Context
 	localDB      *embedded.SQLite
+	routeDB      *embedded.CloverDB
 	printService *PrintService
 }
 
 // NewTicketService creates a new ticket service
-func NewTicketService(localDB *embedded.SQLite, printService *PrintService) *TicketService {
-	return &TicketService{localDB: localDB, printService: printService}
+func NewTicketService(localDB *embedded.SQLite, routeDB *embedded.CloverDB, printService *PrintService) *TicketService {
+	return &TicketService{localDB: localDB, routeDB: routeDB, printService: printService}
 }
 
 // startup starts the ticket service
@@ -30,8 +31,62 @@ func (t *TicketService) startup(ctx context.Context) {
 	t.ctx = ctx
 }
 
+// enforceFares overwrites the fare on each ticket with the authoritative value from the
+// local route database. This prevents a client from submitting a manipulated fare.
+func (t *TicketService) enforceFares(tickets []models.Ticket) error {
+	routeRepo := local.NewRouteRepository(t.routeDB)
+	routes, err := routeRepo.All()
+	if err != nil {
+		return err
+	}
+
+	routeIndex := make(map[string]*models.Route, len(routes))
+	for i := range routes {
+		key := routes[i].Departure + "|" + routes[i].Destination
+		routeIndex[key] = &routes[i]
+	}
+
+	for i := range tickets {
+		key := tickets[i].Departure + "|" + tickets[i].Destination
+		route, ok := routeIndex[key]
+		if !ok {
+			zap.L().Error("route not found during fare enforcement",
+				zap.String("departure", tickets[i].Departure),
+				zap.String("destination", tickets[i].Destination),
+			)
+			return helpers.ErrRouteNotFound
+		}
+
+		found := false
+		for _, stop := range route.Stops {
+			if stop.Name == tickets[i].Stop {
+				if tickets[i].IsGold {
+					tickets[i].Fare = stop.GoldFare
+				} else {
+					tickets[i].Fare = stop.Fare
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			zap.L().Error("stop not found during fare enforcement",
+				zap.String("stop", tickets[i].Stop),
+			)
+			return helpers.ErrStopNotFound
+		}
+	}
+
+	return nil
+}
+
 // AddTicket adds a ticket and returns the tickets with generated IDs
 func (t *TicketService) AddTicket(ticket []models.Ticket) ([]models.Ticket, error) {
+	if err := t.enforceFares(ticket); err != nil {
+		zap.L().Error("failed to enforce fares", zap.Error(err))
+		return nil, err
+	}
+
 	repository := local.NewTicketRepository(t.ctx, t.localDB)
 	output, err := repository.BulkCreate(ticket)
 	if err != nil {
@@ -45,6 +100,7 @@ func (t *TicketService) AddTicket(ticket []models.Ticket) ([]models.Ticket, erro
 // AddTicketWithPrint saves tickets and prints them. If printing fails (e.g. no paper, printer disconnected),
 // created tickets are deleted and an error is returned so the sale is not persisted.
 func (t *TicketService) AddTicketWithPrint(tickets []models.Ticket, printerName string) ([]models.Ticket, error) {
+	// WIP: This is not implemented yet
 	// if t.printService == nil {
 	// 	return nil, fmt.Errorf("print service is not available")
 	// }
@@ -57,6 +113,11 @@ func (t *TicketService) AddTicketWithPrint(tickets []models.Ticket, printerName 
 	// 	zap.L().Warn("printer is not ready, skipping ticket creation", zap.Error(err))
 	// 	return nil, err
 	// }
+
+	if err := t.enforceFares(tickets); err != nil {
+		zap.L().Error("failed to enforce fares", zap.Error(err))
+		return nil, err
+	}
 
 	repository := local.NewTicketRepository(t.ctx, t.localDB)
 	created, err := repository.BulkCreate(tickets)

@@ -34,3 +34,9 @@ var ErrTicketNotBelongToReport = errors.New("TICKET_NOT_BELONG_TO_REPORT")
 
 // ErrRouteIsEmpty is the error returned when a route is empty
 var ErrRouteIsEmpty = errors.New("ROUTE_IS_EMPTY")
+
+// ErrRouteNotFound is the error returned when a route cannot be found in the local database
+var ErrRouteNotFound = errors.New("ROUTE_NOT_FOUND")
+
+// ErrStopNotFound is the error returned when a stop cannot be found within a route
+var ErrStopNotFound = errors.New("STOP_NOT_FOUND")

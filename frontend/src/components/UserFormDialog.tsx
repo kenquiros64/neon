@@ -7,9 +7,10 @@ import {
     Button,
     TextField,
     Box,
-    Typography,
+    Alert,
     MenuItem,
 } from "@mui/material";
+import { PersonAdd, Edit as EditIcon } from "@mui/icons-material";
 import { models } from "../../wailsjs/go/models";
 
 interface UserFormDialogProps {
@@ -74,12 +75,13 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({ open, user, onCl
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>{isEdit ? "Editar usuario" : "Nuevo usuario"}</DialogTitle>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {isEdit ? <EditIcon color="primary" /> : <PersonAdd color="primary" />}
+                {isEdit ? "Editar usuario" : "Nuevo usuario"}
+            </DialogTitle>
             <DialogContent>
                 {error && (
-                    <Typography color="error" sx={{ mt: 1, mb: 1 }}>
-                        {error}
-                    </Typography>
+                    <Alert severity="error" sx={{ mt: 1, mb: 1 }}>{error}</Alert>
                 )}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
                     <TextField

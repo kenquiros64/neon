@@ -3,15 +3,15 @@ import {
     List,
     ListItem,
     ListItemButton,
-    ListItemAvatar,
     ListItemText,
-    Avatar,
-    Typography
+    Typography,
+    Box,
+    Chip,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
+import { AltRoute, AccessTime } from "@mui/icons-material";
 import { useTheme } from "../themes/ThemeProvider";
 import { fullRouteName, nextDeparture, to12HourFormat } from "../util/Helpers";
-import routeList from "../assets/images/map.png";
 import { models } from '../../wailsjs/go/models';
 
 interface RouteListProps {
@@ -31,42 +31,43 @@ export const RouteList: React.FC<RouteListProps> = ({
 }) => {
     const { theme } = useTheme();
 
-    const getItemStyles = (routeKey: String, isSelected: boolean) => ({
+    const getItemStyles = (isSelected: boolean) => ({
         cursor: "pointer",
-        padding: "12px 15px", 
-        minHeight: "80px",
+        padding: "10px 14px",
+        minHeight: "72px",
         display: "flex",
         alignItems: "center",
         borderRadius: 2,
         margin: "0 8px",
-        backgroundColor: isSelected 
-            ? (theme === "light" ? 'rgba(25, 118, 210, 0.12)' : 'rgba(144, 202, 249, 0.12)')
+        borderLeft: isSelected
+            ? (theme === "light" ? '4px solid rgba(25, 118, 210, 1)' : '4px solid rgba(144, 202, 249, 1)')
+            : '4px solid transparent',
+        backgroundColor: isSelected
+            ? (theme === "light" ? 'rgba(25, 118, 210, 0.08)' : 'rgba(144, 202, 249, 0.08)')
             : 'transparent',
-        border: isSelected 
-            ? (theme === "light" ? '2px solid rgba(25, 118, 210, 0.3)' : '2px solid rgba(144, 202, 249, 0.3)')
-            : '2px solid transparent',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
-            backgroundColor: isSelected 
-                ? (theme === "light" ? 'rgba(25, 118, 210, 0.16)' : 'rgba(144, 202, 249, 0.16)')
+            backgroundColor: isSelected
+                ? (theme === "light" ? 'rgba(25, 118, 210, 0.12)' : 'rgba(144, 202, 249, 0.12)')
                 : (theme === "light" ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)'),
             transform: 'translateY(-1px)',
-            boxShadow: theme === "light" 
-                ? '0 4px 12px rgba(0, 0, 0, 0.1)' 
+            boxShadow: theme === "light"
+                ? '0 4px 12px rgba(0, 0, 0, 0.08)'
                 : '0 4px 12px rgba(0, 0, 0, 0.3)',
         },
-        boxShadow: isSelected 
-            ? (theme === "light" ? '0 2px 8px rgba(25, 118, 210, 0.2)' : '0 2px 8px rgba(144, 202, 249, 0.2)')
-            : 'none',
     });
 
-    const getAvatarStyles = (isSelected: boolean) => ({
-        width: 56, 
-        height: 56,
+    const getIconContainerStyles = (isSelected: boolean) => ({
+        width: 40,
+        height: 40,
         borderRadius: 2,
-        border: isSelected 
-            ? (theme === "light" ? '2px solid rgba(25, 118, 210, 0.3)' : '2px solid rgba(144, 202, 249, 0.3)')
-            : '2px solid transparent',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: isSelected
+            ? (theme === "light" ? 'rgba(25, 118, 210, 0.12)' : 'rgba(144, 202, 249, 0.12)')
+            : (theme === "light" ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'),
+        flexShrink: 0,
     });
 
     return (
@@ -74,53 +75,50 @@ export const RouteList: React.FC<RouteListProps> = ({
             {routes.map((route) => {
                 const routeKey = fullRouteName(route);
                 const isSelected = routeKey === selectedRouteID;
-                
+
                 return (
-                    <ListItem key={routeKey} disablePadding sx={{ mb: 1 }}>
+                    <ListItem key={routeKey} disablePadding sx={{ mb: 0.5 }}>
                         <ListItemButton
-                            key={routeKey}
                             selected={isSelected}
                             onClick={() => onRouteSelect(routeKey)}
-                            sx={getItemStyles(routeKey, isSelected)}
+                            sx={getItemStyles(isSelected)}
                         >
-                            <ListItemAvatar>
-                                <Avatar
-                                    variant="rounded"
-                                    src={routeList}
-                                    sx={getAvatarStyles(isSelected)}
+                            {/* Icon container */}
+                            <Box sx={getIconContainerStyles(isSelected)}>
+                                <AltRoute
+                                    fontSize="small"
+                                    sx={{ color: isSelected ? 'primary.main' : 'action.active' }}
                                 />
-                            </ListItemAvatar>
+                            </Box>
+
+                            {/* Text content */}
                             <ListItemText
                                 primary={
                                     <Typography
-                                        variant="subtitle1" 
-                                        component="span"  
-                                        sx={{ 
+                                        variant="subtitle2"
+                                        component="span"
+                                        sx={{
                                             fontWeight: 700,
-                                            color: isSelected 
-                                                ? 'primary.main' 
-                                                : 'text.primary',
-                                            fontSize: '1.1rem',
+                                            color: isSelected ? 'primary.main' : 'text.primary',
+                                            fontSize: '0.95rem',
+                                            lineHeight: 1.3,
                                         }}
                                     >
                                         {fullRouteName(route)}
                                     </Typography>
                                 }
                                 secondary={
-                                    <Typography
-                                        variant="body2"
-                                        sx={{ 
-                                            color: 'text.secondary',
-                                            fontSize: '0.9rem',
-                                            fontWeight: 500,
-                                        }}
-                                    >
-                                        🕐 Siguiente: {to12HourFormat(nextDeparture(route, (report?.timetable as 'regular' | 'holiday') || "regular"))}
-                                    </Typography>
+                                    <Box sx={{ mt: 0.5 }}>
+                                        <Chip
+                                            icon={<AccessTime sx={{ fontSize: '0.8rem !important' }} />}
+                                            label={to12HourFormat(nextDeparture(route, (report?.timetable as 'regular' | 'holiday') || "regular"))}
+                                            size="small"
+                                            variant="outlined"
+                                            sx={{ fontSize: '0.7rem', height: 20, '& .MuiChip-label': { px: 0.5 } }}
+                                        />
+                                    </Box>
                                 }
-                                sx={{
-                                    marginLeft: 2,
-                                }}
+                                sx={{ ml: 1.5, my: 0 }}
                             />
                         </ListItemButton>
                     </ListItem>
@@ -128,4 +126,4 @@ export const RouteList: React.FC<RouteListProps> = ({
             })}
         </List>
     );
-}; 
+};

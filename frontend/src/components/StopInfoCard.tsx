@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Typography } from "@mui/material";
-import { DirectionsBus, Star, LocalAtm } from "@mui/icons-material";
+import { Box, Typography, Chip, Divider } from "@mui/material";
+import { DirectionsBus, Star } from "@mui/icons-material";
 import { useTheme } from "../themes/ThemeProvider";
 import { models } from '../../wailsjs/go/models';
 
@@ -20,109 +20,79 @@ export const StopInfoCard: React.FC<StopInfoCardProps> = ({ stop, route }) => {
     return (
         <Box
             sx={{
-                backgroundColor: theme === "light" ? 'rgba(76, 175, 80, 0.08)' : 'rgba(129, 199, 132, 0.08)', 
-                borderRadius: 0, 
+                backgroundColor: theme === "light" ? 'rgba(76, 175, 80, 0.06)' : 'rgba(129, 199, 132, 0.06)',
+                borderRadius: 0,
                 p: 2,
                 minHeight: '140px',
                 height: '140px',
-                border: theme === "light" ? '1px solid rgba(76, 175, 80, 0.2)' : '1px solid rgba(129, 199, 132, 0.2)',
-                borderLeft: 'none',
-                borderRight: 'none',
+                borderTop: theme === "light" ? '1px solid rgba(76, 175, 80, 0.15)' : '1px solid rgba(129, 199, 132, 0.15)',
+                borderBottom: theme === "light" ? '1px solid rgba(76, 175, 80, 0.15)' : '1px solid rgba(129, 199, 132, 0.15)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
             }}
         >
-            {/* Stop Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <DirectionsBus color="success" fontSize="small" />
-                    <Typography variant="body2" color="success.main" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
-                        PARADA ACTUAL
+            {/* Header row */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <DirectionsBus color="success" sx={{ fontSize: 16 }} />
+                    <Typography variant="overline" color="success.main" sx={{ fontWeight: 700, fontSize: '0.65rem', lineHeight: 1 }}>
+                        Parada Actual
                     </Typography>
                 </Box>
-                
-                <Box sx={{ display: 'flex', gap: 1 }}>
+
+                <Box sx={{ display: 'flex', gap: 0.75 }}>
                     {stop.is_main && (
-                        <Typography variant="body2" color="warning.main" sx={{ 
-                            backgroundColor: 'rgba(255, 193, 7, 0.1)', 
-                            px: 1, 
-                            py: 0.3, 
-                            borderRadius: 1,
-                            fontSize: '0.7rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5
-                        }}>
-                            <Star sx={{ fontSize: 12 }} />
-                            PRINCIPAL
-                        </Typography>
+                        <Chip
+                            icon={<Star sx={{ fontSize: '0.8rem !important' }} />}
+                            label="Principal"
+                            size="small"
+                            color="warning"
+                            sx={{ height: 20, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.5 } }}
+                        />
                     )}
-                    
                     {currentIndex !== -1 && totalStops > 0 && (
-                        <Typography variant="body2" color="text.secondary" sx={{ 
-                            backgroundColor: 'action.hover', 
-                            px: 1, 
-                            py: 0.3, 
-                            borderRadius: 1,
-                            fontSize: '0.7rem'
-                        }}>
-                            {currentIndex + 1} DE {totalStops}
-                        </Typography>
+                        <Chip
+                            label={`${currentIndex + 1} / ${totalStops}`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ height: 20, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }}
+                        />
                     )}
                 </Box>
             </Box>
 
-            {/* Stop Content */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                {/* Stop Name and Code */}
+            <Divider sx={{ opacity: 0.5 }} />
+
+            {/* Content row */}
+            <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                 <Box sx={{ flex: 1 }}>
-                    <Typography variant="h4" color="text.primary" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+                    <Typography variant="h5" color="text.primary" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
                         {stop.name}
                     </Typography>
                     {stop.code && (
-                        <Typography variant="body2" color="text.secondary" sx={{ 
-                            fontWeight: 500, 
-                            mt: 0.5,
-                            opacity: 0.8
-                        }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mt: 0.25, display: 'block' }}>
                             Código: {stop.code}
                         </Typography>
                     )}
                 </Box>
 
-                {/* Fare Preview */}
-                <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'flex-end',
-                    gap: 0.5,
-                    ml: 2
-                }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <LocalAtm sx={{ fontSize: 16, color: 'text.secondary' }} />
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                            Tarifas
-                        </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Typography variant="body2" sx={{ 
-                            color: '#FBC02D', 
-                            fontWeight: 600,
-                            fontSize: '0.9rem'
-                        }}>
-                            ₡{stop.gold_fare}
-                        </Typography>
-                        <Typography variant="body2" sx={{ 
-                            color: 'secondary.main', 
-                            fontWeight: 600,
-                            fontSize: '0.9rem'
-                        }}>
-                            ₡{stop.fare}
-                        </Typography>
-                    </Box>
+                {/* Fare chips */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5, ml: 2 }}>
+                    <Chip
+                        label={`₡${stop.gold_fare}`}
+                        size="small"
+                        color="warning"
+                        sx={{ fontWeight: 700, fontSize: '0.8rem', height: 22 }}
+                    />
+                    <Chip
+                        label={`₡${stop.fare}`}
+                        size="small"
+                        color="secondary"
+                        sx={{ fontWeight: 700, fontSize: '0.8rem', height: 22 }}
+                    />
                 </Box>
             </Box>
         </Box>
     );
-}; 
+};

@@ -20,11 +20,12 @@ import {
     TableRow,
     Paper,
     Checkbox,
-    FormControlLabel,
+    Alert,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { Route as RouteIcon } from "@mui/icons-material";
 import { models } from "../../wailsjs/go/models";
 import { to24HourFormat } from "../util/Helpers";
 
@@ -256,12 +257,13 @@ export const RouteFormDialog: React.FC<RouteFormDialogProps> = ({ open, route, a
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-            <DialogTitle>{isEdit ? "Editar ruta" : "Nueva ruta"}</DialogTitle>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <RouteIcon color="primary" />
+                {isEdit ? "Editar ruta" : "Nueva ruta"}
+            </DialogTitle>
             <DialogContent>
                 {error && (
-                    <Typography color="error" sx={{ mt: 1, mb: 1 }}>
-                        {error}
-                    </Typography>
+                    <Alert severity="error" sx={{ mt: 1, mb: 1 }}>{error}</Alert>
                 )}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
                     <Box sx={{ display: "flex", gap: 2 }}>
@@ -281,7 +283,7 @@ export const RouteFormDialog: React.FC<RouteFormDialogProps> = ({ open, route, a
                         />
                     </Box>
 
-                    <Accordion defaultExpanded>
+                    <Accordion defaultExpanded sx={{ '&.Mui-expanded': { borderLeft: '3px solid', borderLeftColor: 'primary.main' } }}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography>Paradas ({state.stops.length})</Typography>
                         </AccordionSummary>
@@ -289,7 +291,7 @@ export const RouteFormDialog: React.FC<RouteFormDialogProps> = ({ open, route, a
                             <TableContainer component={Paper} variant="outlined">
                                 <Table size="small">
                                     <TableHead>
-                                        <TableRow>
+                                        <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 700, bgcolor: 'background.default', fontSize: '0.8rem' } }}>
                                             <TableCell>Nombre</TableCell>
                                             <TableCell>Código</TableCell>
                                             <TableCell align="right">Tarifa</TableCell>
@@ -359,7 +361,7 @@ export const RouteFormDialog: React.FC<RouteFormDialogProps> = ({ open, route, a
                         </AccordionDetails>
                     </Accordion>
 
-                    <Accordion defaultExpanded>
+                    <Accordion defaultExpanded sx={{ '&.Mui-expanded': { borderLeft: '3px solid', borderLeftColor: 'primary.main' } }}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography>Horario regular ({state.timetable.length})</Typography>
                         </AccordionSummary>
@@ -412,7 +414,7 @@ export const RouteFormDialog: React.FC<RouteFormDialogProps> = ({ open, route, a
                         </AccordionDetails>
                     </Accordion>
 
-                    <Accordion defaultExpanded>
+                    <Accordion defaultExpanded sx={{ '&.Mui-expanded': { borderLeft: '3px solid', borderLeftColor: 'primary.main' } }}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography>Horario festivos ({state.holiday_timetable.length})</Typography>
                         </AccordionSummary>

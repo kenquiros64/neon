@@ -348,7 +348,7 @@ const LatestReportsTable: React.FC<LatestReportsTableProps> = ({
                 <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
                     <Table size="small" stickyHeader>
                         <TableHead>
-                            <TableRow>
+                            <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 700, bgcolor: 'background.default', fontSize: '0.8rem' } }}>
                                 <TableCell>ID</TableCell>
                                 <TableCell>Usuario</TableCell>
                                 <TableCell>Creado</TableCell>
@@ -370,7 +370,7 @@ const LatestReportsTable: React.FC<LatestReportsTableProps> = ({
                                 const statusColor =
                                     status === "closed" ? "success" : status === "pending" ? "warning" : "default";
                                 return (
-                                    <TableRow key={pastReport.id} hover>
+                                    <TableRow key={pastReport.id} hover sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
                                         <TableCell>#{pastReport.id}</TableCell>
                                         <TableCell>{pastReport.username}</TableCell>
                                         <TableCell sx={{ whiteSpace: "nowrap" }}>{formatDateShort(pastReport.created_at)}</TableCell>

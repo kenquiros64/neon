@@ -3,17 +3,14 @@ import {
     List,
     ListItem,
     ListItemButton,
-    ListItemAvatar,
     ListItemText,
-    Avatar,
     Typography,
-    Badge,
-    Box
+    Box,
+    Chip,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
-import { People } from "@mui/icons-material";
+import { DirectionsBus, PeopleAlt, StarRounded } from "@mui/icons-material";
 import { useTheme } from "../themes/ThemeProvider";
-import stopList from "../assets/images/stop_list.svg";
 import { models } from '../../wailsjs/go/models';
 
 interface StopListProps {
@@ -36,57 +33,54 @@ export const StopList: React.FC<StopListProps> = ({
     const getItemStyles = (isSelected: boolean) => ({
         cursor: "pointer",
         display: "flex",
-        justifyContent: "space-between", 
-        alignItems: "center", 
-        padding: "12px 15px",
-        minHeight: "80px",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "10px 14px",
+        minHeight: "72px",
         borderRadius: 2,
         margin: "0 8px",
-        backgroundColor: isSelected 
-            ? (theme === "light" ? 'rgba(76, 175, 80, 0.12)' : 'rgba(129, 199, 132, 0.12)')
+        borderLeft: isSelected
+            ? (theme === "light" ? '4px solid rgba(76, 175, 80, 1)' : '4px solid rgba(129, 199, 132, 1)')
+            : '4px solid transparent',
+        backgroundColor: isSelected
+            ? (theme === "light" ? 'rgba(76, 175, 80, 0.08)' : 'rgba(129, 199, 132, 0.08)')
             : 'transparent',
-        border: isSelected 
-            ? (theme === "light" ? '2px solid rgba(76, 175, 80, 0.3)' : '2px solid rgba(129, 199, 132, 0.3)')
-            : '2px solid transparent',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
-            backgroundColor: isSelected 
-                ? (theme === "light" ? 'rgba(76, 175, 80, 0.16)' : 'rgba(129, 199, 132, 0.16)')
+            backgroundColor: isSelected
+                ? (theme === "light" ? 'rgba(76, 175, 80, 0.12)' : 'rgba(129, 199, 132, 0.12)')
                 : (theme === "light" ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)'),
             transform: 'translateY(-1px)',
-            boxShadow: theme === "light" 
-                ? '0 4px 12px rgba(0, 0, 0, 0.1)' 
+            boxShadow: theme === "light"
+                ? '0 4px 12px rgba(0, 0, 0, 0.08)'
                 : '0 4px 12px rgba(0, 0, 0, 0.3)',
         },
-        boxShadow: isSelected 
-            ? (theme === "light" ? '0 2px 8px rgba(76, 175, 80, 0.2)' : '0 2px 8px rgba(129, 199, 132, 0.2)')
-            : 'none',
     });
 
-    const getAvatarStyles = (isSelected: boolean) => ({
-        width: 56, 
-        height: 56,
+    const getIconContainerStyles = (isSelected: boolean) => ({
+        width: 40,
+        height: 40,
         borderRadius: 2,
-        border: isSelected 
-            ? (theme === "light" ? '2px solid rgba(76, 175, 80, 0.3)' : '2px solid rgba(129, 199, 132, 0.3)')
-            : '2px solid transparent',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: isSelected
+            ? (theme === "light" ? 'rgba(76, 175, 80, 0.12)' : 'rgba(129, 199, 132, 0.12)')
+            : (theme === "light" ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'),
+        flexShrink: 0,
     });
 
-    const getBadgeStyles = (isSelected: boolean) => ({
-        "& .MuiBadge-badge": {
-            backgroundColor: isSelected ? 'success.main' : 'secondary.main',
-            color: "#fff",
-            minWidth: "28px",
-            height: "28px",
-            fontSize: "14px",
-            fontWeight: 700,
-            borderRadius: "50%",
-            lineHeight: "20px",
-            padding: "0",
-            border: '2px solid white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-        },
-        mr: 2,
+    const getPassengerPillStyles = (isSelected: boolean) => ({
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.5,
+        borderRadius: 3,
+        px: 1,
+        py: 0.5,
+        backgroundColor: isSelected
+            ? (theme === "light" ? 'rgba(76, 175, 80, 0.12)' : 'rgba(129, 199, 132, 0.12)')
+            : (theme === "light" ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'),
+        flexShrink: 0,
     });
 
     return (
@@ -94,95 +88,85 @@ export const StopList: React.FC<StopListProps> = ({
             {stops.map((stop) => {
                 const isSelected = stop.code === selectedStopID;
                 const passengerCount = getCount(stop);
-                
+
                 return (
-                    <ListItem key={stop.code} disablePadding sx={{ mb: 1 }}>
+                    <ListItem key={stop.code} disablePadding sx={{ mb: 0.5 }}>
                         <ListItemButton
-                            key={stop.code}
                             selected={isSelected}
                             onClick={() => onStopSelect(stop.code)}
                             sx={getItemStyles(isSelected)}
                         >
-                            <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
-                                <ListItemAvatar>
-                                    <Avatar
-                                        variant="rounded"
-                                        src={stopList}
-                                        sx={getAvatarStyles(isSelected)}
-                                    />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={
-                                        <Typography
-                                            variant="subtitle1" 
-                                            component="span"  
-                                            sx={{ 
-                                                fontWeight: 700,
-                                                color: isSelected 
-                                                    ? 'success.main' 
-                                                    : 'text.primary',
-                                                fontSize: '1.1rem',
-                                            }}
-                                        >
-                                            {stop.name}
-                                            {stop.is_main && (
-                                                <Typography 
-                                                    component="span" 
-                                                    sx={{ 
-                                                        ml: 1, 
-                                                        color: '#FBC02D', 
-                                                        fontSize: '1rem',
-                                                    }}
-                                                >
-                                                    ⭐
-                                                </Typography>
-                                            )}
-                                        </Typography>
-                                    }
-                                    secondary={
-                                        <Typography
-                                            variant="body2"
-                                            sx={{ 
-                                                color: 'text.secondary',
-                                                fontSize: '0.9rem',
-                                                fontWeight: 500,
-                                            }}
-                                        >
-                                            📍 Código: <Typography component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                                                {stop.code}
-                                            </Typography>
-                                        </Typography>
-                                    }
-                                    sx={{
-                                        marginLeft: 2, 
-                                    }}
+                            {/* Icon container */}
+                            <Box sx={getIconContainerStyles(isSelected)}>
+                                <DirectionsBus
+                                    fontSize="small"
+                                    sx={{ color: isSelected ? 'success.main' : 'action.active' }}
                                 />
                             </Box>
-                            
-                            {/* Passenger Count Badge */}
-                            <Badge
-                                showZero
-                                color="secondary"
-                                badgeContent={passengerCount}
-                                anchorOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'right',
-                                }}
-                                max={99}
-                                sx={getBadgeStyles(isSelected)}
-                            >
-                                <People 
-                                    fontSize="large" 
-                                    sx={{ 
+
+                            {/* Text content */}
+                            <ListItemText
+                                primary={
+                                    <Typography
+                                        variant="subtitle2"
+                                        component="span"
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: isSelected ? 'success.main' : 'text.primary',
+                                            fontSize: '0.95rem',
+                                            lineHeight: 1.3,
+                                        }}
+                                    >
+                                        {stop.name}
+                                    </Typography>
+                                }
+                                secondary={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.5, flexWrap: 'wrap' }}>
+                                        <Chip
+                                            label={stop.code}
+                                            size="small"
+                                            variant="outlined"
+                                            sx={{ fontSize: '0.7rem', height: 20, '& .MuiChip-label': { px: 0.75 } }}
+                                        />
+                                        {stop.is_main && (
+                                            <Chip
+                                                icon={<StarRounded sx={{ fontSize: '0.85rem !important' }} />}
+                                                label="Principal"
+                                                size="small"
+                                                color="warning"
+                                                sx={{ fontSize: '0.7rem', height: 20, '& .MuiChip-label': { px: 0.5 } }}
+                                            />
+                                        )}
+                                    </Box>
+                                }
+                                sx={{ ml: 1.5, my: 0 }}
+                            />
+
+                            {/* Passenger count pill */}
+                            <Box sx={getPassengerPillStyles(isSelected)}>
+                                <PeopleAlt
+                                    sx={{
+                                        fontSize: '1rem',
                                         color: isSelected ? 'success.main' : 'action.active',
-                                        fontSize: '2rem'
                                     }}
                                 />
-                            </Badge>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        fontWeight: 700,
+                                        color: isSelected ? 'success.main' : 'text.secondary',
+                                        lineHeight: 1,
+                                        minWidth: '16px',
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    {Math.min(passengerCount, 99)}
+                                </Typography>
+                            </Box>
                         </ListItemButton>
                     </ListItem>
                 );
             })}
         </List>
     );
-}; 
+};

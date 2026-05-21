@@ -26,6 +26,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SyncIcon from "@mui/icons-material/Sync";
 import PeopleIcon from "@mui/icons-material/People";
+import Tooltip from "@mui/material/Tooltip";
 import { models } from "../../wailsjs/go/models";
 import { GetUsers, AddUser, UpdateUser, DeleteUser } from "../../wailsjs/go/services/UserService";
 import { SyncUsers } from "../../wailsjs/go/services/SyncService";
@@ -161,7 +162,7 @@ const AdminUsers: React.FC = () => {
                         <TableContainer component={Paper} variant="outlined">
                             <Table size="small">
                                 <TableHead>
-                                    <TableRow>
+                                    <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 700, bgcolor: 'background.default', fontSize: '0.8rem' } }}>
                                         <TableCell>Usuario</TableCell>
                                         <TableCell>Nombre</TableCell>
                                         <TableCell>Rol</TableCell>
@@ -171,20 +172,24 @@ const AdminUsers: React.FC = () => {
                                 </TableHead>
                                 <TableBody>
                                     {users.map((u) => (
-                                        <TableRow key={u.username}>
+                                        <TableRow key={u.username} sx={{ '&:hover': { bgcolor: 'action.hover', cursor: 'pointer' } }}>
                                             <TableCell>
-                                                <Typography fontWeight={500}>{u.username}</Typography>
+                                                <Typography fontWeight={600}>{u.username}</Typography>
                                             </TableCell>
                                             <TableCell>{u.name}</TableCell>
                                             <TableCell>{u.role}</TableCell>
                                             <TableCell>{u.created_at ? new Date(u.created_at).toLocaleDateString("es-CR") : "—"}</TableCell>
                                             <TableCell align="right">
-                                                <IconButton size="small" onClick={() => handleEdit(u)} title="Editar">
-                                                    <EditIcon />
-                                                </IconButton>
-                                                <IconButton size="small" color="error" onClick={() => handleDeleteClick(u)} title="Eliminar">
-                                                    <DeleteOutlineIcon />
-                                                </IconButton>
+                                                <Tooltip title="Editar">
+                                                    <IconButton size="small" onClick={() => handleEdit(u)}>
+                                                        <EditIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Eliminar">
+                                                    <IconButton size="small" color="error" onClick={() => handleDeleteClick(u)}>
+                                                        <DeleteOutlineIcon />
+                                                    </IconButton>
+                                                </Tooltip>
                                             </TableCell>
                                         </TableRow>
                                     ))}

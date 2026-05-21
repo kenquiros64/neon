@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, CardMedia } from "@mui/material";
+import { Box, Typography, Chip, CardMedia, Divider } from "@mui/material";
 import { Route as RouteIcon, TripOrigin, LocationOn } from "@mui/icons-material";
 import { useTheme } from "../themes/ThemeProvider";
 import routeLight from "../assets/images/route_light.svg";
@@ -18,84 +18,67 @@ export const RouteInfoCard: React.FC<RouteInfoCardProps> = ({ route }) => {
     return (
         <Box
             sx={{
-                backgroundColor: theme === "light" ? 'rgba(25, 118, 210, 0.08)' : 'rgba(144, 202, 249, 0.08)', 
-                borderRadius: 0, 
+                backgroundColor: theme === "light" ? 'rgba(25, 118, 210, 0.06)' : 'rgba(144, 202, 249, 0.06)',
+                borderRadius: 0,
                 p: 2,
                 minHeight: '140px',
                 height: '140px',
-                border: theme === "light" ? '1px solid rgba(25, 118, 210, 0.2)' : '1px solid rgba(144, 202, 249, 0.2)',
-                borderLeft: 'none',
-                borderRight: 'none',
+                borderTop: theme === "light" ? '1px solid rgba(25, 118, 210, 0.15)' : '1px solid rgba(144, 202, 249, 0.15)',
+                borderBottom: theme === "light" ? '1px solid rgba(25, 118, 210, 0.15)' : '1px solid rgba(144, 202, 249, 0.15)',
                 display: 'flex',
                 flexDirection: 'column',
             }}
         >
-            {/* Route Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <RouteIcon color="primary" fontSize="small" />
-                    <Typography variant="body2" color="primary" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
-                        RUTA ACTIVA
+            {/* Header row */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <RouteIcon color="primary" sx={{ fontSize: 16 }} />
+                    <Typography variant="overline" color="primary" sx={{ fontWeight: 700, fontSize: '0.65rem', lineHeight: 1 }}>
+                        Ruta Activa
                     </Typography>
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ 
-                    backgroundColor: 'action.hover', 
-                    px: 1, 
-                    py: 0.3,
-                    borderRadius: 1,
-                    fontSize: '0.7rem'
-                }}>
-                    {route.stops?.length || 0} PARADAS
-                </Typography>
+                <Chip
+                    label={`${route.stops?.length || 0} paradas`}
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                    sx={{ height: 20, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }}
+                />
             </Box>
 
-            {/* Route Content */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                {/* Left Side - Route Image */}
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minWidth: '80px',
-                        height: '80px',
-                    }}
-                >
+            <Divider sx={{ opacity: 0.5, mb: 1 }} />
+
+            {/* Content row */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minWidth: '64px' }}>
                     <CardMedia
                         component="img"
                         image={theme === "light" ? routeLight : routeDark}
                         title="route"
-                        sx={{
-                            height: 'auto',   
-                            maxWidth: '70px',
-                            objectFit: 'contain',
-                        }}
+                        sx={{ height: 'auto', maxWidth: '60px', objectFit: 'contain' }}
                     />
                 </Box>
 
-                {/* Right Side - Route Details */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
-                    {/* Departure */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <TripOrigin sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1, gap: 0.75 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <TripOrigin sx={{ fontSize: 14, color: 'text.secondary' }} />
                         <Box>
-                            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: "400", fontSize: '0.75rem', lineHeight: 1 }}>
+                            <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 400, lineHeight: 1, display: 'block' }}>
                                 Salida
                             </Typography>
-                            <Typography variant="h6" sx={{ color: "text.primary", fontWeight: "700", lineHeight: 1 }}>
+                            <Typography variant="subtitle2" sx={{ color: "text.primary", fontWeight: 700, lineHeight: 1.1 }}>
                                 {route.departure}
                             </Typography>
                         </Box>
                     </Box>
 
-                    {/* Destination */}
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <LocationOn sx={{ fontSize: 16, color: 'primary.main', mr: 1 }} />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <LocationOn sx={{ fontSize: 14, color: 'primary.main' }} />
                         <Box>
-                            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: "400", fontSize: '0.75rem', lineHeight: 1 }}>
+                            <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 400, lineHeight: 1, display: 'block' }}>
                                 Destino
                             </Typography>
-                            <Typography variant="h6" sx={{ color: "text.primary", fontWeight: "700", lineHeight: 1 }}>
+                            <Typography variant="subtitle2" sx={{ color: "text.primary", fontWeight: 700, lineHeight: 1.1 }}>
                                 {route.destination}
                             </Typography>
                         </Box>
@@ -104,4 +87,4 @@ export const RouteInfoCard: React.FC<RouteInfoCardProps> = ({ route }) => {
             </Box>
         </Box>
     );
-}; 
+};

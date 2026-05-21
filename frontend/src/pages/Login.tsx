@@ -87,149 +87,103 @@ const Login: React.FC = () => {
     return (
         <Grid container sx={{height: "100vh", margin: 0}}>
             <CssBaseline/>
-            {/* Left Side */}
+
+            {/* Left Side — branding panel */}
             <Grid size={{xs: 12, md: 6}} style={{height: "100%"}}>
                 <Box
                     sx={{
-                        position: "relative", // Required to position the text over the image
+                        position: "relative",
                         backgroundImage: `url(${backgroundLogo})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                         height: "100%",
                         width: "100%",
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        textAlign: "center",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
                     }}
                 >
-                    <Grid container style={{height: "100vh", width: "100%"}}>
-                        <Grid size={12} rowSpacing={2}>
-                            <Paper
-                                variant="outlined"
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    padding: "16px",
-                                    backgroundColor: "transparent", // Makes it transparent
-                                    boxShadow: "none", // Removes any shadow if needed
-                                    border: "none", // Removes the border if not needed
-                                }}
-                            >
-                                {/* Image on the left */}
-                                <Box
-                                    component="img"
-                                    src={logo}
-                                    alt="Logo"
-                                    sx={{
-                                        width: "150px",
-                                        height: "110px",
-                                        marginRight: "16px",
-                                        objectFit: "contain",
-                                    }}
-                                />
+                    {/* Gradient overlay */}
+                    <Box sx={{
+                        position: "absolute",
+                        inset: 0,
+                        background: 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%)',
+                        pointerEvents: 'none',
+                    }} />
 
-                                {/* Texts on the right */}
-                                <Box sx={{textAlign: "left"}}>
-                                    <Typography
-                                        variant="h4"
-                                        component="div"
-                                        fontWeight="bold"
-                                        color={"grey.300"}
-                                    >
-                                        Transportes
-                                    </Typography>
-                                    <Typography
-                                        variant="h6"
-                                        component="div"
-                                        color={"grey.300"}
-                                        fontWeight={200}
-                                    >
-                                        El Puma Pardo S.A
-                                    </Typography>
-                                </Box>
-                            </Paper>
-                        </Grid>
+                    {/* Top: logo */}
+                    <Box sx={{ position: 'relative', p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                            component="img"
+                            src={logo}
+                            alt="Logo"
+                            sx={{ width: 64, height: 'auto', objectFit: "contain" }}
+                        />
+                    </Box>
 
-                        <Grid
-                            size={12}
-                            rowSpacing={2}
-                            sx={{
-                                position: "absolute",
-                                bottom: 0,
-                                right: 0,
-                                padding: "8px",
-                                textAlign: "right",
-                            }}
-                        >
-                            <Typography
-                                variant="body2"
-                                component={"div"}
-                                color={"grey.300"}
-                                fontWeight={200}
-                                fontSize={14}
-                            >
-                                oxygen 1.0.0
-                            </Typography>
-                        </Grid>
-                    </Grid>
+                    {/* Bottom: company name */}
+                    <Box sx={{ position: 'relative', p: 4 }}>
+                        <Typography variant="h3" fontWeight={700} color="white" lineHeight={1.1}>
+                            Transportes
+                        </Typography>
+                        <Typography variant="h4" fontWeight={300} color="rgba(255,255,255,0.85)">
+                            El Puma Pardo S.A
+                        </Typography>
+                        <Typography variant="body2" color="rgba(255,255,255,0.5)" sx={{ mt: 1 }}>
+                            oxygen 1.0.0
+                        </Typography>
+                    </Box>
                 </Box>
             </Grid>
 
-            {/* Right Side */}
+            {/* Right Side — login form */}
             <Grid size={{xs: 12, md: 6}} style={{height: "100%"}}>
-                <Box sx={{width: "100%"}}>
+                <Box sx={{
+                    position: 'relative',
+                    width: "100%",
+                    height: "100%",
+                    display: 'flex',
+                    flexDirection: 'column',
+                }}>
                     <ThemeSwitch
                         checked={theme === "dark"}
                         onClick={toggleTheme}
-                        sx={{
-                            position: "absolute",
-                            top: 5,
-                            right: 5,
-                        }}
+                        sx={{ position: "absolute", top: 12, right: 12 }}
                     />
-                    <Grid
-                        container
-                        sx={{
-                            width: "100%",
-                            height: "100vh",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                        }}
-                    >
-                        <Grid
-                            size={{xs: 12}}
+
+                    <Box sx={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        px: 4,
+                    }}>
+                        <Paper
+                            elevation={0}
                             sx={{
-                                margin: 10,
-                                width: "100%",
+                                width: '100%',
+                                maxWidth: 420,
+                                p: 4,
+                                borderRadius: 3,
+                                border: '1px solid',
+                                borderColor: 'divider',
                             }}
                         >
-                            <Typography variant="h2" textAlign="left">
+                            <Typography variant="h4" fontWeight={700} mb={0.5}>
                                 Bienvenidos
                             </Typography>
                             <Typography
-                                variant="subtitle1"
-                                textAlign="left"
-                                mb={5}
-                                color={"primary"}
-                                fontWeight={200}
+                                variant="body1"
+                                color="text.secondary"
+                                mb={4}
+                                fontWeight={400}
                             >
                                 Gestión rápida y sencilla para el transporte de pasajeros
                             </Typography>
 
-                            <Typography
-                                variant="h5"
-                                textAlign="center"
-                                mb={2}
-                                fontWeight={200}
-                            >
-                                Iniciar Sesión
-                            </Typography>
-                            {/* Fields */}
-                            <Box component="form" noValidate>
+                            <Box component="form" noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                                 <TextField
-                                    label="Username"
+                                    label="Usuario"
                                     variant="outlined"
                                     fullWidth
                                     value={username}
@@ -238,11 +192,10 @@ const Login: React.FC = () => {
                                         setInputError((prev) => ({...prev, username: ""}));
                                     }}
                                     error={inputError.username !== ""}
-                                    helperText={inputError.username ? inputError.username : ""}
-                                    style={{marginBottom: "2rem"}}
+                                    helperText={inputError.username || ""}
                                 />
                                 <TextField
-                                    label="Password"
+                                    label="Contraseña"
                                     type="password"
                                     variant="outlined"
                                     fullWidth
@@ -252,28 +205,26 @@ const Login: React.FC = () => {
                                         setInputError((prev) => ({...prev, password: ""}));
                                     }}
                                     error={inputError.password !== ""}
-                                    helperText={inputError.password ? inputError.password : ""}
-                                    style={{marginBottom: "2rem"}}
+                                    helperText={inputError.password || ""}
                                 />
 
-                                {/* Login Button */}
                                 <Button
                                     fullWidth
                                     loading={loading}
-                                    loadingPosition={"end"}
+                                    loadingPosition="end"
                                     disabled={!isReady}
-                                    size={"large"}
+                                    size="large"
                                     variant="contained"
-                                    color="secondary"
-                                    sx={{fontSize: 17, fontWeight: "200"}}
+                                    color="primary"
+                                    sx={{ mt: 1, fontWeight: 700, py: 1.5 }}
                                     onClick={handleLogin}
                                     endIcon={<ArrowForward/>}
                                 >
                                     Ingresar
                                 </Button>
                             </Box>
-                        </Grid>
-                    </Grid>
+                        </Paper>
+                    </Box>
                 </Box>
             </Grid>
         </Grid>

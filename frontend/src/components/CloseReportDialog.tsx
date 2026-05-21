@@ -7,9 +7,10 @@ import {
     Button,
     TextField,
     Typography,
-    InputAdornment
+    InputAdornment,
+    Box,
 } from "@mui/material";
-import { LocalAtm } from "@mui/icons-material";
+import { LocalAtm, Warning, Cancel } from "@mui/icons-material";
 import { toast } from "react-toastify";
 
 interface CloseReportDialogProps {
@@ -52,7 +53,10 @@ const CloseReportDialog: React.FC<CloseReportDialogProps> = ({
 
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-            <DialogTitle>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ color: closeType === 'partial' ? 'warning.main' : 'error.main', display: 'flex' }}>
+                    {closeType === 'partial' ? <Warning /> : <Cancel />}
+                </Box>
                 {closeType === 'partial' ? 'Cierre Parcial de Reporte' : 'Cierre Total de Reporte'}
             </DialogTitle>
             <DialogContent>

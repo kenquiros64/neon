@@ -25,7 +25,8 @@ import {
     LocationOn,
     Person,
     Star,
-    LocalAtm
+    LocalAtm,
+    CalendarToday,
 } from '@mui/icons-material';
 import { useTheme } from '../themes/ThemeProvider';
 import { to12HourFormat } from '../util/Helpers';
@@ -191,19 +192,9 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
 
             <DialogContent sx={{ pb: 2 }}>
                 {/* Ticket Information Card */}
-                <Paper 
-                    elevation={2} 
-                    sx={{ 
-                        p: 3, 
-                        mb: 3, 
-                        borderRadius: 2,
-                        backgroundColor: theme === 'light' 
-                            ? 'rgba(25, 118, 210, 0.05)' 
-                            : 'rgba(144, 202, 249, 0.05)',
-                        border: theme === 'light' 
-                            ? '1px solid rgba(25, 118, 210, 0.1)' 
-                            : '1px solid rgba(144, 202, 249, 0.1)'
-                    }}
+                <Paper
+                    variant="outlined"
+                    sx={{ p: 3, mb: 3, borderRadius: 2 }}
                 >
                     <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
                         Información del Boleto
@@ -253,14 +244,17 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
                         </Grid>
                         
                         <Grid size={6}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                                    📅 Fecha
-                                </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                                <CalendarToday color="action" fontSize="small" />
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                                        Fecha
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ fontWeight: 600, textTransform: 'capitalize' }}>
+                                        {getCurrentDate()}
+                                    </Typography>
+                                </Box>
                             </Box>
-                            <Typography variant="body1" sx={{ fontWeight: 600, textTransform: 'capitalize' }}>
-                                {getCurrentDate()}
-                            </Typography>
                         </Grid>
                     </Grid>
                 </Paper>
@@ -302,36 +296,37 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
                                 Cantidad:
                             </Typography>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <IconButton 
-                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                <Button
+                                    variant="outlined"
                                     size="small"
+                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                     disabled={quantity <= 1}
+                                    sx={{ minWidth: 36, px: 0 }}
                                 >
-                                    <Remove />
-                                </IconButton>
+                                    <Remove fontSize="small" />
+                                </Button>
                                 <TextField
                                     value={quantity}
                                     onChange={(e) => handleQuantityChange(e.target.value)}
                                     inputRef={quantityRef}
-                                    sx={{ width: '80px' }}
+                                    sx={{ width: '72px' }}
                                     slotProps={{
                                         input: {
-                                            style: { textAlign: 'center', fontWeight: 600, fontSize: '1.1rem' },
-                                            inputProps: {
-                                                min: 1,
-                                                max: 99
-                                            }
+                                            style: { textAlign: 'center', fontWeight: 700, fontSize: '1.1rem' },
+                                            inputProps: { min: 1, max: 99 }
                                         }
                                     }}
                                     type="number"
                                 />
-                                <IconButton 
-                                    onClick={() => setQuantity(Math.min(99, quantity + 1))}
+                                <Button
+                                    variant="outlined"
                                     size="small"
+                                    onClick={() => setQuantity(Math.min(99, quantity + 1))}
                                     disabled={quantity >= 99}
+                                    sx={{ minWidth: 36, px: 0 }}
                                 >
-                                    <Add />
-                                </IconButton>
+                                    <Add fontSize="small" />
+                                </Button>
                             </Box>
                         </Box>
                     )}
@@ -387,18 +382,13 @@ const TicketPurchaseDialog: React.FC<TicketPurchaseDialogProps> = ({
                 >
                     Cancelar
                 </Button>
-                <Button 
+                <Button
                     onClick={handleConfirm}
                     variant="contained"
                     size="large"
+                    color={ticketType === 'gold' ? 'warning' : 'primary'}
                     disabled={ticketType === 'gold' && !idNumber.trim()}
-                    sx={{ 
-                        minWidth: '120px',
-                        backgroundColor: ticketType === 'gold' ? 'warning.main' : 'primary.main',
-                        '&:hover': {
-                            backgroundColor: ticketType === 'gold' ? 'warning.dark' : 'primary.dark'
-                        }
-                    }}
+                    sx={{ minWidth: '120px' }}
                 >
                     Confirmar Venta
                 </Button>

@@ -26,6 +26,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SyncIcon from "@mui/icons-material/Sync";
 import { Route as RouteIcon } from "@mui/icons-material";
+import Tooltip from "@mui/material/Tooltip";
 import { models } from "../../wailsjs/go/models";
 import { AddRoute, UpdateRoute, DeleteRoute } from "../../wailsjs/go/services/RouteService";
 import { SyncRoutes } from "../../wailsjs/go/services/SyncService";
@@ -149,7 +150,7 @@ const AdminRoutes: React.FC = () => {
                         <TableContainer component={Paper} variant="outlined">
                             <Table size="small">
                                 <TableHead>
-                                    <TableRow>
+                                    <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 700, bgcolor: 'background.default', fontSize: '0.8rem' } }}>
                                         <TableCell>Ruta</TableCell>
                                         <TableCell>Paradas</TableCell>
                                         <TableCell>Horarios reg.</TableCell>
@@ -159,20 +160,24 @@ const AdminRoutes: React.FC = () => {
                                 </TableHead>
                                 <TableBody>
                                     {routes.map((route) => (
-                                        <TableRow key={fullRouteName(route)}>
+                                        <TableRow key={fullRouteName(route)} sx={{ '&:hover': { bgcolor: 'action.hover', cursor: 'pointer' } }}>
                                             <TableCell>
-                                                <Typography fontWeight={500}>{fullRouteName(route)}</Typography>
+                                                <Typography fontWeight={600}>{fullRouteName(route)}</Typography>
                                             </TableCell>
                                             <TableCell>{route.stops?.length ?? 0}</TableCell>
                                             <TableCell>{route.timetable?.length ?? 0}</TableCell>
                                             <TableCell>{route.holiday_timetable?.length ?? 0}</TableCell>
                                             <TableCell align="right">
-                                                <IconButton size="small" onClick={() => handleEdit(route)} title="Editar">
-                                                    <EditIcon />
-                                                </IconButton>
-                                                <IconButton size="small" color="error" onClick={() => handleDeleteClick(route)} title="Eliminar">
-                                                    <DeleteOutlineIcon />
-                                                </IconButton>
+                                                <Tooltip title="Editar">
+                                                    <IconButton size="small" onClick={() => handleEdit(route)}>
+                                                        <EditIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Eliminar">
+                                                    <IconButton size="small" color="error" onClick={() => handleDeleteClick(route)}>
+                                                        <DeleteOutlineIcon />
+                                                    </IconButton>
+                                                </Tooltip>
                                             </TableCell>
                                         </TableRow>
                                     ))}

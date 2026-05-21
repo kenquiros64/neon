@@ -111,7 +111,7 @@ const HomeLayout: React.FC = () => {
                 <Chip
                   icon={printerStatus === "ready" ? <Print /> : <Warning />}
                   label={printerStatus === "ready" ? `Impresora: ${defaultPrinter}` : statusMessage || "Impresora no disponible"}
-                  color={printerStatus === "ready" ? "success" : "default"}
+                  color={printerStatus === "ready" ? "success" : "warning"}
                   size="small"
                   variant="outlined"
                   sx={{ color: "inherit", borderColor: "currentColor" }}
@@ -120,13 +120,13 @@ const HomeLayout: React.FC = () => {
               </>
             )}
             {/* Username */}
-            <Typography variant="body1">
-              <span style={{ fontWeight: 200 }}>Bienvenido(a)</span>{" "}
-              <span style={{ fontWeight: "bold" }}>{user?.name}</span>
+            <Typography variant="body2" sx={{ fontWeight: 400 }}>
+              Bienvenido(a){" "}
+              <strong>{user?.name}</strong>
             </Typography>
             <Divider orientation="vertical" flexItem />
             {/* Current Time */}
-            <Typography variant="body1">{currentTime}</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>{currentTime}</Typography>
             <Divider orientation="vertical" flexItem />
              {/* Switch Button */}
              <ThemeSwitch
@@ -144,159 +144,80 @@ const HomeLayout: React.FC = () => {
           </IconButton>
         </HomeDrawerHeader>
         <Divider />
-        <List>
-          <ListItem disablePadding sx={{ display: "block" }}>
-            <ListItemButton
-              sx={[
-                {
-                  minHeight: 48,
-                  px: 2.5,
-                },
-                open ? { justifyContent: "initial" } : { justifyContent: "center" },
-              ]}
-              onClick={() => navigate("ticket")}
-              selected={location.pathname === "/home/ticket" || location.pathname === "/home"}
-            >
-              <ListItemIcon
-                sx={[
-                  {
-                    minWidth: 0,
-                    justifyContent: "center",
-                  },
-                  open ? { mr: 3 } : { mr: "auto" },
-                ]}
-              >
-                <DirectionsBus />
-              </ListItemIcon>
-              <ListItemText
-                primary={"Boleteria"}
-                sx={[open ? { opacity: 1 } : { opacity: 0 }]}
-              />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding sx={{ display: "block" }}>
-            <ListItemButton
-              sx={[
-                {
-                  minHeight: 48,
-                  px: 2.5,
-                },
-                open ? { justifyContent: "initial" } : { justifyContent: "center" },
-              ]}
-              selected={location.pathname === "/home/reports"}
-              onClick={() => navigate("reports")}
-            >
-              <ListItemIcon
-                sx={[
-                  {
-                    minWidth: 0,
-                    justifyContent: "center",
-                  },
-                  open ? { mr: 3 } : { mr: "auto" },
-                ]}
-              >
-                <NotesOutlined />
-              </ListItemIcon>
-              <ListItemText
-                primary={"Reportes"}
-                sx={[open ? { opacity: 1 } : { opacity: 0 }]}
-              />
-            </ListItemButton>
-          </ListItem>
-          {isAdmin && (
-            <>
-              <ListItem disablePadding sx={{ display: "block" }}>
+        <List sx={{ px: 1 }}>
+          {[
+            { label: "Boleteria", icon: <DirectionsBus />, path: "ticket", match: ["/home/ticket", "/home"] },
+            { label: "Reportes", icon: <NotesOutlined />, path: "reports", match: ["/home/reports"] },
+            ...(isAdmin ? [
+              { label: "Rutas", icon: <RouteIcon />, path: "admin/routes", match: ["/home/admin/routes"] },
+              { label: "Usuarios", icon: <People />, path: "admin/users", match: ["/home/admin/users"] },
+            ] : []),
+          ].map(({ label, icon, path, match }) => {
+            const isSelected = match.includes(location.pathname);
+            return (
+              <ListItem key={label} disablePadding sx={{ display: "block", mb: 0.5 }}>
                 <ListItemButton
+                  selected={isSelected}
+                  onClick={() => navigate(path)}
                   sx={[
                     {
-                      minHeight: 48,
-                      px: 2.5,
+                      minHeight: 44,
+                      px: 1.5,
+                      borderRadius: 2,
+                      borderLeft: isSelected ? '3px solid' : '3px solid transparent',
+                      borderLeftColor: isSelected ? 'primary.main' : 'transparent',
+                      backgroundColor: isSelected ? 'rgba(33, 150, 243, 0.1)' : 'transparent',
+                      '&:hover': {
+                        backgroundColor: isSelected ? 'rgba(33, 150, 243, 0.14)' : 'action.hover',
+                      },
                     },
                     open ? { justifyContent: "initial" } : { justifyContent: "center" },
                   ]}
-                  selected={location.pathname === "/home/admin/routes"}
-                  onClick={() => navigate("admin/routes")}
                 >
                   <ListItemIcon
                     sx={[
-                      {
-                        minWidth: 0,
-                        justifyContent: "center",
-                      },
-                      open ? { mr: 3 } : { mr: "auto" },
+                      { minWidth: 0, justifyContent: "center", color: isSelected ? 'primary.main' : 'inherit' },
+                      open ? { mr: 2 } : { mr: "auto" },
                     ]}
                   >
-                    <RouteIcon />
+                    {icon}
                   </ListItemIcon>
                   <ListItemText
-                    primary={"Rutas"}
+                    primary={label}
+                    primaryTypographyProps={{ fontWeight: isSelected ? 700 : 400, fontSize: '0.9rem' }}
                     sx={[open ? { opacity: 1 } : { opacity: 0 }]}
                   />
                 </ListItemButton>
               </ListItem>
-              <ListItem disablePadding sx={{ display: "block" }}>
-                <ListItemButton
-                  sx={[
-                    {
-                      minHeight: 48,
-                      px: 2.5,
-                    },
-                    open ? { justifyContent: "initial" } : { justifyContent: "center" },
-                  ]}
-                  selected={location.pathname === "/home/admin/users"}
-                  onClick={() => navigate("admin/users")}
-                >
-                  <ListItemIcon
-                    sx={[
-                      {
-                        minWidth: 0,
-                        justifyContent: "center",
-                      },
-                      open ? { mr: 3 } : { mr: "auto" },
-                    ]}
-                  >
-                    <People />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={"Usuarios"}
-                    sx={[open ? { opacity: 1 } : { opacity: 0 }]}
-                  />
-                </ListItemButton>
-              </ListItem>
-            </>
-          )}
+            );
+          })}
         </List>
         <Divider />
-        <List>
+        <List sx={{ px: 1 }}>
           <ListItem disablePadding sx={{ display: "block" }}>
             <ListItemButton
               sx={[
-                {
-                  minHeight: 48,
-                  px: 2.5,
-                },
+                { minHeight: 44, px: 1.5, borderRadius: 2 },
                 open ? { justifyContent: "initial" } : { justifyContent: "center" },
               ]}
-                onClick={() => {
-                  resetRoutesState();
-                  resetTicketState();
-                  resetReportState();
-                  logout();
-                }}
+              onClick={() => {
+                resetRoutesState();
+                resetTicketState();
+                resetReportState();
+                logout();
+              }}
             >
               <ListItemIcon
                 sx={[
-                  {
-                    minWidth: 0,
-                    justifyContent: "center",
-                  },
-                  open ? { mr: 3 } : { mr: "auto" },
+                  { minWidth: 0, justifyContent: "center" },
+                  open ? { mr: 2 } : { mr: "auto" },
                 ]}
               >
                 <Logout />
               </ListItemIcon>
               <ListItemText
                 primary={"Cerrar Sesión"}
+                primaryTypographyProps={{ fontSize: '0.9rem' }}
                 sx={[open ? { opacity: 1 } : { opacity: 0 }]}
               />
             </ListItemButton>

@@ -38,7 +38,7 @@ export const StopList: React.FC<StopListProps> = ({
         display: "flex",
         justifyContent: "space-between", 
         alignItems: "center", 
-        padding: "18px 20px",
+        padding: "12px 15px",
         minHeight: "80px",
         borderRadius: 2,
         margin: "0 8px",

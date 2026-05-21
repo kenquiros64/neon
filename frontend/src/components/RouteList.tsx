@@ -33,7 +33,7 @@ export const RouteList: React.FC<RouteListProps> = ({
 
     const getItemStyles = (routeKey: String, isSelected: boolean) => ({
         cursor: "pointer",
-        padding: "18px 20px", 
+        padding: "12px 15px", 
         minHeight: "80px",
         display: "flex",
         alignItems: "center",

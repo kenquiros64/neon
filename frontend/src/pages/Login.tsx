@@ -3,7 +3,7 @@ import {TextField, Box, Typography, Grid, Paper} from "@mui/material";
 import { Button } from '@mui/material'
 import {useNavigate} from "react-router";
 
-import backgroundLogo from "../assets/images/background.png";
+import heroBanner from "../assets/images/hero-banner.png";
 import logo from "../assets/images/white_logo.png";
 
 import {useTheme} from "../themes/ThemeProvider";
@@ -88,67 +88,26 @@ const Login: React.FC = () => {
         <Grid container sx={{height: "100vh", margin: 0}}>
             <CssBaseline/>
 
-            {/* Left Side — branding panel */}
-            <Grid size={{xs: 12, md: 6}} style={{height: "100%"}}>
-                <Box
-                    sx={{
-                        position: "relative",
-                        backgroundImage: `url(${backgroundLogo})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        height: "100%",
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between",
-                    }}
-                >
-                    {/* Gradient overlay */}
-                    <Box sx={{
-                        position: "absolute",
-                        inset: 0,
-                        background: 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%)',
-                        pointerEvents: 'none',
-                    }} />
-
-                    {/* Top: logo */}
-                    <Box sx={{ position: 'relative', p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box
-                            component="img"
-                            src={logo}
-                            alt="Logo"
-                            sx={{ width: 64, height: 'auto', objectFit: "contain" }}
-                        />
-                    </Box>
-
-                    {/* Bottom: company name */}
-                    <Box sx={{ position: 'relative', p: 4 }}>
-                        <Typography variant="h3" fontWeight={700} color="white" lineHeight={1.1}>
-                            Transportes
-                        </Typography>
-                        <Typography variant="h4" fontWeight={300} color="rgba(255,255,255,0.85)">
-                            El Puma Pardo S.A
-                        </Typography>
-                        <Typography variant="body2" color="rgba(255,255,255,0.5)" sx={{ mt: 1 }}>
-                            oxygen 1.0.0
-                        </Typography>
-                    </Box>
-                </Box>
-            </Grid>
-
-            {/* Right Side — login form */}
-            <Grid size={{xs: 12, md: 6}} style={{height: "100%"}}>
+            {/* Left — login form (keeps bus & ticket visible on the right panel) */}
+            <Grid
+                size={{xs: 12, md: 5, lg: 5}}
+                sx={{
+                    height: "100%",
+                    order: {xs: 2, md: 1},
+                }}
+            >
                 <Box sx={{
                     position: 'relative',
                     width: "100%",
                     height: "100%",
                     display: 'flex',
                     flexDirection: 'column',
+                    bgcolor: 'background.default',
                 }}>
                     <ThemeSwitch
                         checked={theme === "dark"}
                         onClick={toggleTheme}
-                        sx={{ position: "absolute", top: 12, right: 12 }}
+                        sx={{ position: "absolute", top: 12, right: 12, zIndex: 1 }}
                     />
 
                     <Box sx={{
@@ -156,7 +115,8 @@ const Login: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        px: 4,
+                        px: {xs: 3, md: 4, lg: 6},
+                        py: {xs: 4, md: 0},
                     }}>
                         <Paper
                             elevation={0}
@@ -224,6 +184,64 @@ const Login: React.FC = () => {
                                 </Button>
                             </Box>
                         </Paper>
+                    </Box>
+                </Box>
+            </Grid>
+
+            {/* Right — hero banner (bus & ticket artwork) */}
+            <Grid
+                size={{xs: 12, md: 7, lg: 7}}
+                sx={{
+                    height: {xs: 280, md: "100%"},
+                    order: {xs: 1, md: 2},
+                }}
+            >
+                <Box
+                    sx={{
+                        position: "relative",
+                        backgroundImage: `url(${heroBanner})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "right center",
+                        backgroundRepeat: "no-repeat",
+                        height: "100%",
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                    }}
+                >
+                    <Box sx={{
+                        position: "absolute",
+                        inset: 0,
+                        background: 'linear-gradient(90deg, rgba(8, 18, 38, 0.92) 0%, rgba(8, 18, 38, 0.35) 45%, rgba(8, 18, 38, 0.1) 100%)',
+                        pointerEvents: 'none',
+                    }} />
+                    <Box sx={{
+                        position: "absolute",
+                        inset: 0,
+                        background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%)',
+                        pointerEvents: 'none',
+                    }} />
+
+                    <Box sx={{ position: 'relative', p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                            component="img"
+                            src={logo}
+                            alt="Logo"
+                            sx={{ width: 64, height: 'auto', objectFit: "contain" }}
+                        />
+                    </Box>
+
+                    <Box sx={{ position: 'relative', p: 4, textAlign: {xs: 'center', md: 'right'} }}>
+                        <Typography variant="h3" fontWeight={700} color="white" lineHeight={1.1}>
+                            Transportes
+                        </Typography>
+                        <Typography variant="h4" fontWeight={300} color="rgba(255,255,255,0.85)">
+                            El Puma Pardo S.A
+                        </Typography>
+                        <Typography variant="body2" color="rgba(255,255,255,0.5)" sx={{ mt: 1 }}>
+                            oxygen 1.0.0
+                        </Typography>
                     </Box>
                 </Box>
             </Grid>

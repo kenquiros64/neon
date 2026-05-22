@@ -233,7 +233,7 @@ neon/
 
 ## Author
 
-**Ken Quiros** — [github.com/kenquiros64](https://github.com/kenquiros64)
+**Kenneth Quiros** — [github.com/kenquiros64](https://github.com/kenquiros64)
 
 Desktop operations software: native performance, offline resilience, and a cashier-first UI.
 

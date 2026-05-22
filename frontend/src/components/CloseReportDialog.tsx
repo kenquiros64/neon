@@ -12,11 +12,15 @@ import {
 } from "@mui/material";
 import { LocalAtm, Warning, Cancel } from "@mui/icons-material";
 import { toast } from "react-toastify";
+import { formatCurrency, getDepositAmount } from "../util/reportHelpers";
+import { models } from "../../wailsjs/go/models";
+import { Alert } from "@mui/material";
 
 interface CloseReportDialogProps {
     open: boolean;
     closeType: 'partial' | 'total';
     reportLoading: boolean;
+    report: models.Report | null;
     onClose: () => void;
     onCloseReport: (cashAmount: number, type: 'partial' | 'total') => Promise<void>;
 }
@@ -25,9 +29,11 @@ const CloseReportDialog: React.FC<CloseReportDialogProps> = ({
     open,
     closeType,
     reportLoading,
+    report,
     onClose,
     onCloseReport
 }) => {
+    const depositHint = report ? getDepositAmount(report, closeType) : 0;
     const [finalCash, setFinalCash] = useState<string>('');
 
     const handleClose = () => {
@@ -60,12 +66,18 @@ const CloseReportDialog: React.FC<CloseReportDialogProps> = ({
                 {closeType === 'partial' ? 'Cierre Parcial de Reporte' : 'Cierre Total de Reporte'}
             </DialogTitle>
             <DialogContent>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     {closeType === 'partial' 
                         ? 'El cierre parcial permite continuar vendiendo tiquetes pero registra el estado actual.'
                         : 'El cierre total finaliza completamente el reporte. No se podrán vender más tiquetes.'
                     }
-                </Typography>   
+                </Typography>
+                {report && depositHint > 0 && (
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                        Efectivo a depositar según ventas del sistema: <strong>{formatCurrency(depositHint)}</strong>.
+                        Cuente el efectivo físico e ingrese el monto real abajo.
+                    </Alert>
+                )}
                 <TextField
                     fullWidth
                     label="Efectivo final contado"

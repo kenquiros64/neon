@@ -1,18 +1,13 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Box,
-    Card,
-    CardContent,
-    Typography,
     Grid,
     Divider,
     Alert,
-    CircularProgress
+    CircularProgress,
+    Typography,
 } from "@mui/material";
-import {
-    Receipt,
-    Assignment
-} from "@mui/icons-material";
+import { Assignment } from "@mui/icons-material";
 import { useReportCheck } from "../hooks/useReportCheck";
 import { useReportState } from "../states/ReportState";
 import { useAuthState } from "../states/AuthState";
@@ -24,12 +19,12 @@ import ReportStatsCards from "../components/ReportStatsCards";
 import LatestReportsTable from "../components/LatestReportsTable";
 import ReportActionsPanel from "../components/ReportActionsPanel";
 import CloseReportDialog from "../components/CloseReportDialog";
-import { models } from "../../wailsjs/go/models";
+import { DepositSummaryCard } from "../components/DepositSummaryCard";
+import { DashboardPageHeader } from "../components/dashboard/DashboardPageHeader";
+import { dashboardPageSx, dashboardPanelSx } from "../theme/dashboardTheme";
 import {
     formatCurrency,
     formatDateTime,
-    getReportDeliveriesTotal,
-    getReportDifference,
     getTimetableLabel,
 } from "../util/reportHelpers";
 
@@ -43,8 +38,8 @@ const Reports: React.FC = () => {
     const [closeDialogOpen, setCloseDialogOpen] = useState(false);
     const [closeType, setCloseType] = useState<'partial' | 'total'>('partial');
 
-    const handlePrintReport = async (reportToPrint: models.Report) => {
-        if (!defaultPrinter) {
+    const handlePrintReport = async (reportToPrint: typeof report) => {
+        if (!reportToPrint || !defaultPrinter) {
             toast.error('No hay impresora configurada');
             return;
         }
@@ -78,47 +73,49 @@ const Reports: React.FC = () => {
         } else {
             await totalCloseReport(report.id, cashAmount, closedBy);
             toast.success('Reporte cerrado totalmente');
-            // After total close, fetch latest reports to show the newly closed report
             await fetchLatestReports();
         }
     };
 
     useEffect(() => {
-        checkReportStatus()
+        checkReportStatus();
     }, []);
 
-    // Load latest reports when component mounts or when report status changes
     useEffect(() => {
         if (reportStatusChecked) {
             fetchLatestReports();
         }
-    }, [reportStatusChecked]);
+    }, [reportStatusChecked, user?.username]);
 
     if (!reportStatusChecked || reportLoading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <Box sx={{ ...dashboardPageSx, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <CircularProgress />
             </Box>
         );
     }
 
+    const tableBlock = (
+        <Box sx={{ ...dashboardPanelSx, p: 2 }}>
+            <LatestReportsTable
+                latestReports={latestReports}
+                onPrintReport={handlePrintReport}
+            />
+        </Box>
+    );
+
     if (!report) {
         return (
-            <Box sx={{ p: 3, mx: 'auto', mt: 4 }}>
-                <Alert severity="info" sx={{ mb: 3 }}>
-                    <Typography variant="h6">No hay reporte activo</Typography>
-                    <Typography>No se encontró un reporte abierto o pendiente. Vaya a la página de tiquetes para iniciar uno nuevo.</Typography>
+            <Box sx={dashboardPageSx}>
+                <DashboardPageHeader
+                    breadcrumb="Operaciones"
+                    title="Reportes"
+                    subtitle="Historial de sus últimos reportes cerrados"
+                />
+                <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
+                    No hay reporte activo. Vaya a Boletería para iniciar uno nuevo.
                 </Alert>
-
-                {/* Latest Reports Table when no active report */}
-                <Card>
-                    <CardContent>
-                        <LatestReportsTable 
-                            latestReports={latestReports}
-                            onPrintReport={handlePrintReport}
-                        />
-                    </CardContent>
-                </Card>
+                {tableBlock}
             </Box>
         );
     }
@@ -126,177 +123,70 @@ const Reports: React.FC = () => {
     const isPendingReport = report.partial_closed_at !== null && report.closed_at === null;
 
     return (
-        <Box sx={{ p: 3, mx: 'auto' }}>
-            {/* Report Status Header */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Receipt color="primary" />
-                    Gestión de Reportes
-                </Typography>
-                
-                {isPendingReport && (
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                        <Typography variant="h6">Reporte Pendiente de Verificación</Typography>
-                        <Typography>Este reporte tiene efectivo sin verificar. Complete la verificación para cerrarlo totalmente.</Typography>
-                    </Alert>
-                )}
-            </Box>
+        <Box sx={dashboardPageSx}>
+            <DashboardPageHeader
+                breadcrumb="Operaciones"
+                title="Reportes"
+                subtitle={`Reporte activo #${report.id}`}
+            />
+
+            {isPendingReport && (
+                <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>
+                    Reporte pendiente de verificación. Complete el cierre total con el efectivo del turno final.
+                </Alert>
+            )}
+
+            <DepositSummaryCard report={report} isPendingReport={isPendingReport} />
 
             <Grid container spacing={3}>
-                {/* Current Report Details */}
-                <Grid size={{ xs: 12, md: 8 }}>
-                    <Card sx={{ mb: 3 }}>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Assignment color="primary" />
-                                Reporte Actual - ID #{report.id}
-                            </Typography>
-                            
-                            <ReportStatsCards 
-                                report={report} 
-                                isPendingReport={isPendingReport} 
-                            />
+                <Grid size={{ xs: 12, lg: 8 }}>
+                    <Box sx={{ ...dashboardPanelSx, p: 2.5 }}>
+                        <Typography variant="h6" fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                            <Assignment color="primary" />
+                            Reporte actual
+                        </Typography>
 
-                            <Divider sx={{ my: 3 }} />
+                        <ReportStatsCards report={report} isPendingReport={isPendingReport} />
 
-                            {/* Desglose detallado */}
-                            <Typography variant="subtitle1" fontWeight={600} color="text.secondary" gutterBottom>
-                                Desglose detallado
-                            </Typography>
+                        <Divider sx={{ my: 3 }} />
 
-                            <Grid container spacing={2} sx={{ mb: 2 }}>
-                                <Grid size={{ xs: 12, sm: 4 }}>
-                                    <Box
-                                        sx={{
-                                            textAlign: "center",
-                                            p: 2,
-                                            minHeight: 80,
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            justifyContent: "center",
-                                            bgcolor: "action.hover",
-                                            borderRadius: 1,
-                                        }}
-                                    >
-                                        <Typography variant="caption" color="text.secondary">Regulares</Typography>
-                                        <Typography variant="h6">{report.total_regular}</Typography>
-                                        <Typography variant="body2">{formatCurrency(report.total_regular_cash)}</Typography>
+                        <Typography variant="subtitle2" color="text.secondary" fontWeight={600} gutterBottom>
+                            Desglose
+                        </Typography>
+                        <Grid container spacing={2} sx={{ mb: 2 }}>
+                            {[
+                                { label: 'Regulares', count: report.total_regular, cash: report.total_regular_cash },
+                                { label: 'Gold', count: report.total_gold, cash: report.total_gold_cash },
+                                { label: 'Anulados', count: report.total_null, cash: report.total_null_cash },
+                            ].map((row) => (
+                                <Grid size={{ xs: 12, sm: 4 }} key={row.label}>
+                                    <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                                        <Typography variant="caption" color="text.secondary">{row.label}</Typography>
+                                        <Typography variant="h6">{row.count}</Typography>
+                                        <Typography variant="body2">{formatCurrency(row.cash)}</Typography>
                                     </Box>
                                 </Grid>
-                                <Grid size={{ xs: 12, sm: 4 }}>
-                                    <Box
-                                        sx={{
-                                            textAlign: "center",
-                                            p: 2,
-                                            minHeight: 80,
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            justifyContent: "center",
-                                            bgcolor: "action.hover",
-                                            borderRadius: 1,
-                                        }}
-                                    >
-                                        <Typography variant="caption" color="text.secondary">Gold</Typography>
-                                        <Typography variant="h6">{report.total_gold}</Typography>
-                                        <Typography variant="body2">{formatCurrency(report.total_gold_cash)}</Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid size={{ xs: 12, sm: 4 }}>
-                                    <Box
-                                        sx={{
-                                            textAlign: "center",
-                                            p: 2,
-                                            minHeight: 80,
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            justifyContent: "center",
-                                            bgcolor: "action.hover",
-                                            borderRadius: 1,
-                                        }}
-                                    >
-                                        <Typography variant="caption" color="text.secondary">Anulados</Typography>
-                                        <Typography variant="h6">{report.total_null}</Typography>
-                                        <Typography variant="body2">{formatCurrency(report.total_null_cash)}</Typography>
-                                    </Box>
-                                </Grid>
+                            ))}
+                        </Grid>
+
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography variant="body2" color="text.secondary">Usuario</Typography>
+                                <Typography fontWeight={500}>{report.username}</Typography>
                             </Grid>
-
-                            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: "block", mb: 1 }}>
-                                Información
-                            </Typography>
-                            <Grid container spacing={2}>
-                                <Grid size={{ xs: 12, sm: 6 }}>
-                                    <Typography variant="body2" color="text.secondary">Usuario</Typography>
-                                    <Typography variant="body1" fontWeight={500}>{report.username}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, sm: 6 }}>
-                                    <Typography variant="body2" color="text.secondary">Creado</Typography>
-                                    <Typography variant="body1">{formatDateTime(report.created_at)}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, sm: 6 }}>
-                                    <Typography variant="body2" color="text.secondary">Horario</Typography>
-                                    <Typography variant="body1">{getTimetableLabel(report.timetable)}</Typography>
-                                </Grid>
-                                {report.partial_closed_at && (
-                                    <>
-                                        <Grid size={{ xs: 12, sm: 6 }}>
-                                            <Typography variant="body2" color="text.secondary">Cierre parcial</Typography>
-                                            <Typography variant="body1">{formatDateTime(report.partial_closed_at)}</Typography>
-                                            {report.partial_closed_by && (
-                                                <Typography variant="body2" color="text.secondary">por {report.partial_closed_by}</Typography>
-                                            )}
-                                        </Grid>
-                                        <Grid size={{ xs: 12, sm: 6 }}>
-                                            <Typography variant="body2" color="text.secondary">Tiquetes en cierre parcial</Typography>
-                                            <Typography variant="body1">{report.partial_tickets}</Typography>
-                                            {report.partial_cash != null && report.partial_cash > 0 && (
-                                                <Typography variant="body2" color="text.secondary">{formatCurrency(report.partial_cash)} efectivo contado</Typography>
-                                            )}
-                                        </Grid>
-                                    </>
-                                )}
-                                {report.closed_at && (
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography variant="body2" color="text.secondary">Cierre total</Typography>
-                                        <Typography variant="body1">{formatDateTime(report.closed_at)}</Typography>
-                                        {report.closed_by && (
-                                            <Typography variant="body2" color="text.secondary">por {report.closed_by}</Typography>
-                                        )}
-                                    </Grid>
-                                )}
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography variant="body2" color="text.secondary">Horario</Typography>
+                                <Typography>{getTimetableLabel(report.timetable)}</Typography>
                             </Grid>
-
-                            <Divider sx={{ my: 3 }} />
-
-                            <Typography variant="subtitle1" fontWeight={600} color="text.secondary" gutterBottom>
-                                Entregas y cierre
-                            </Typography>
-                            <Grid container spacing={2}>
-                                <Grid size={{ xs: 12, sm: 4 }}>
-                                    <Box sx={{ p: 2, bgcolor: "warning.light", color: "warning.contrastText", borderRadius: 1 }}>
-                                        <Typography variant="caption">Entrega parcial</Typography>
-                                        <Typography variant="h6">{formatCurrency(report.partial_cash_received)}</Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid size={{ xs: 12, sm: 4 }}>
-                                    <Box sx={{ p: 2, bgcolor: "success.light", color: "success.contrastText", borderRadius: 1 }}>
-                                        <Typography variant="caption">Entrega cierre</Typography>
-                                        <Typography variant="h6">{formatCurrency(report.final_cash_received)}</Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid size={{ xs: 12, sm: 4 }}>
-                                    <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
-                                        <Typography variant="caption" color="text.secondary">Entregado total</Typography>
-                                        <Typography variant="h6">{formatCurrency(getReportDeliveriesTotal(report))}</Typography>
-                                    </Box>
-                                </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <Typography variant="body2" color="text.secondary">Creado</Typography>
+                                <Typography>{formatDateTime(report.created_at)}</Typography>
                             </Grid>
-                        </CardContent>
-                    </Card>
+                        </Grid>
+                    </Box>
                 </Grid>
 
-                {/* Action Panel */}
-                <Grid size={{ xs: 12, md: 4 }}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <ReportActionsPanel
                         isPendingReport={isPendingReport}
                         reportLoading={reportLoading}
@@ -305,23 +195,15 @@ const Reports: React.FC = () => {
                     />
                 </Grid>
 
-                {/* Latest Reports Table */}
                 <Grid size={12}>
-                    <Card>
-                        <CardContent>
-                            <LatestReportsTable 
-                                latestReports={latestReports}
-                                onPrintReport={handlePrintReport}
-                            />
-                        </CardContent>
-                    </Card>
+                    {tableBlock}
                 </Grid>
             </Grid>
 
-            {/* Close Report Dialog */}
             <CloseReportDialog
                 open={closeDialogOpen}
                 closeType={closeType}
+                report={report}
                 reportLoading={reportLoading}
                 onClose={() => setCloseDialogOpen(false)}
                 onCloseReport={handleCloseReport}

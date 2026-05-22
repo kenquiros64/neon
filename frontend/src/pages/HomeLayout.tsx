@@ -21,6 +21,7 @@ import {
   People,
   Print,
   Warning,
+  Settings,
 } from "@mui/icons-material";
 import Chip from "@mui/material/Chip";
 import {useNavigate} from "react-router";
@@ -37,6 +38,7 @@ const routes: { [key: string]: string } = {
   "/home": "Boleteria",
   "/home/ticket": "Boleteria",
   "/home/reports": "Reportes",
+  "/home/admin/settings": "Impresión",
   "/home/admin/routes": "Rutas",
   "/home/admin/users": "Usuarios",
 };
@@ -151,6 +153,7 @@ const HomeLayout: React.FC = () => {
             ...(isAdmin ? [
               { label: "Rutas", icon: <RouteIcon />, path: "admin/routes", match: ["/home/admin/routes"] },
               { label: "Usuarios", icon: <People />, path: "admin/users", match: ["/home/admin/users"] },
+              { label: "Impresión", icon: <Settings />, path: "admin/settings", match: ["/home/admin/settings"] },
             ] : []),
           ].map(({ label, icon, path, match }) => {
             const isSelected = match.includes(location.pathname);

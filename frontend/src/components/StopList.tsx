@@ -1,172 +1,302 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
     Typography,
     Box,
-    Chip,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
-import { DirectionsBus, PeopleAlt, StarRounded } from "@mui/icons-material";
+import { People } from "@mui/icons-material";
 import { useTheme } from "../themes/ThemeProvider";
+import { useTicketState } from '../states/TicketState';
+import { generateCounterKey } from '../util/Helpers';
 import { models } from '../../wailsjs/go/models';
+
+function stopPassengerCount(
+    stop: models.Stop,
+    route: models.Route,
+    time: models.Time,
+    routeTimeCounts: Record<string, number>
+): number {
+    const regular =
+        routeTimeCounts[generateCounterKey(route, stop, time, false)] ?? 0;
+    const gold =
+        routeTimeCounts[generateCounterKey(route, stop, time, true)] ?? 0;
+    return regular + gold;
+}
 
 interface StopListProps {
     stops: models.Stop[];
     selectedStopID: String | null;
     onStopSelect: (id: String) => void;
-    getCount: (stop: models.Stop) => number;
     sx?: SxProps<Theme>;
+}
+
+function TimelineMarker({
+    index,
+    total,
+    isSelected,
+}: {
+    index: number;
+    total: number;
+    isSelected: boolean;
+}) {
+    const isFirst = index === 0;
+    const isLast = index === total - 1;
+
+    let borderColor = 'primary.main';
+    let bgcolor = 'transparent';
+    let innerDot: string | null = null;
+
+    if (isFirst) {
+        bgcolor = 'primary.main';
+        innerDot = '#fff';
+    } else if (isLast) {
+        borderColor = 'success.main';
+        bgcolor = 'success.main';
+        innerDot = '#fff';
+    } else if (isSelected) {
+        borderColor = 'primary.light';
+        bgcolor = 'primary.main';
+        innerDot = '#fff';
+    }
+
+    return (
+        <Box
+            sx={{
+                width: 18,
+                height: 18,
+                borderRadius: '50%',
+                border: '3px solid',
+                borderColor,
+                bgcolor,
+                flexShrink: 0,
+                zIndex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxSizing: 'border-box',
+            }}
+        >
+            {innerDot && (
+                <Box
+                    sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        bgcolor: innerDot,
+                    }}
+                />
+            )}
+        </Box>
+    );
 }
 
 export const StopList: React.FC<StopListProps> = ({
     stops,
     selectedStopID,
     onStopSelect,
-    getCount,
     sx,
 }) => {
     const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
-    const getItemStyles = (isSelected: boolean) => ({
-        cursor: "pointer",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "10px 14px",
-        minHeight: "72px",
-        borderRadius: 2,
-        margin: "0 8px",
-        borderLeft: isSelected
-            ? (theme === "light" ? '4px solid rgba(76, 175, 80, 1)' : '4px solid rgba(129, 199, 132, 1)')
-            : '4px solid transparent',
-        backgroundColor: isSelected
-            ? (theme === "light" ? 'rgba(76, 175, 80, 0.08)' : 'rgba(129, 199, 132, 0.08)')
-            : 'transparent',
-        transition: 'all 0.2s ease-in-out',
-        '&:hover': {
-            backgroundColor: isSelected
-                ? (theme === "light" ? 'rgba(76, 175, 80, 0.12)' : 'rgba(129, 199, 132, 0.12)')
-                : (theme === "light" ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)'),
-            transform: 'translateY(-1px)',
-            boxShadow: theme === "light"
-                ? '0 4px 12px rgba(0, 0, 0, 0.08)'
-                : '0 4px 12px rgba(0, 0, 0, 0.3)',
-        },
-    });
+    const routeTimeCounts = useTicketState((state) => state.routeTimeCounts);
+    const selectedTime = useTicketState((state) => state.selectedTime);
+    const selectedRoute = useTicketState((state) => state.selectedRoute);
 
-    const getIconContainerStyles = (isSelected: boolean) => ({
-        width: 40,
-        height: 40,
-        borderRadius: 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: isSelected
-            ? (theme === "light" ? 'rgba(76, 175, 80, 0.12)' : 'rgba(129, 199, 132, 0.12)')
-            : (theme === "light" ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'),
-        flexShrink: 0,
-    });
+    const passengerCounts = useMemo(
+        () =>
+            stops.map((stop) =>
+                stopPassengerCount(stop, selectedRoute, selectedTime, routeTimeCounts)
+            ),
+        [stops, selectedRoute, selectedTime, routeTimeCounts]
+    );
 
-    const getPassengerPillStyles = (isSelected: boolean) => ({
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0.5,
-        borderRadius: 3,
-        px: 1,
-        py: 0.5,
-        backgroundColor: isSelected
-            ? (theme === "light" ? 'rgba(76, 175, 80, 0.12)' : 'rgba(129, 199, 132, 0.12)')
-            : (theme === "light" ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'),
-        flexShrink: 0,
-    });
+    const totalPassengers = useMemo(
+        () => passengerCounts.reduce((sum, n) => sum + n, 0),
+        [passengerCounts]
+    );
 
     return (
-        <List sx={[{ p: 0, mt: 1 }, ...(sx ? (Array.isArray(sx) ? sx : [sx]) : [])]}>
-            {stops.map((stop) => {
-                const isSelected = stop.code === selectedStopID;
-                const passengerCount = getCount(stop);
+        <Box
+            sx={[
+                {
+                    flex: 1,
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                },
+                ...(sx ? (Array.isArray(sx) ? sx : [sx]) : []),
+            ]}
+        >
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 2, pb: 1 }}>
+                <Box sx={{ position: 'relative', py: 0.5 }}>
+                    {stops.map((stop, index) => {
+                        const isSelected = stop.code === selectedStopID;
+                        const isFirst = index === 0;
+                        const isLast = index === stops.length - 1;
+                        const passengerCount = passengerCounts[index];
+                        const showLine = !isLast;
 
-                return (
-                    <ListItem key={stop.code} disablePadding sx={{ mb: 0.5 }}>
-                        <ListItemButton
-                            selected={isSelected}
-                            onClick={() => onStopSelect(stop.code)}
-                            sx={getItemStyles(isSelected)}
-                        >
-                            {/* Icon container */}
-                            <Box sx={getIconContainerStyles(isSelected)}>
-                                <DirectionsBus
-                                    fontSize="small"
-                                    sx={{ color: isSelected ? 'success.main' : 'action.active' }}
-                                />
-                            </Box>
+                        return (
+                            <Box
+                                key={stop.code}
+                                onClick={() => onStopSelect(stop.code)}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.5,
+                                    py: 1.25,
+                                    px: 1,
+                                    borderRadius: 2,
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    bgcolor: isSelected
+                                        ? (isDark ? 'rgba(25, 118, 210, 0.22)' : 'rgba(25, 118, 210, 0.1)')
+                                        : 'transparent',
+                                    transition: 'background-color 0.15s',
+                                    '&:hover': {
+                                        bgcolor: isDark
+                                            ? 'rgba(255, 255, 255, 0.04)'
+                                            : 'rgba(0, 0, 0, 0.03)',
+                                    },
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 28,
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        position: 'relative',
+                                        alignSelf: 'stretch',
+                                        minHeight: 48,
+                                    }}
+                                >
+                                    {showLine && (
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                left: '50%',
+                                                top: 22,
+                                                bottom: -24,
+                                                width: 3,
+                                                transform: 'translateX(-50%)',
+                                                bgcolor: 'primary.main',
+                                                opacity: isDark ? 0.85 : 0.55,
+                                                borderRadius: 1,
+                                            }}
+                                        />
+                                    )}
+                                    <Box sx={{ mt: 0.5 }}>
+                                        <TimelineMarker
+                                            index={index}
+                                            total={stops.length}
+                                            isSelected={isSelected}
+                                        />
+                                    </Box>
+                                </Box>
 
-                            {/* Text content */}
-                            <ListItemText
-                                primary={
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Typography
-                                        variant="subtitle2"
-                                        component="span"
+                                        variant="body1"
                                         sx={{
-                                            fontWeight: 700,
-                                            color: isSelected ? 'success.main' : 'text.primary',
-                                            fontSize: '0.95rem',
-                                            lineHeight: 1.3,
+                                            fontWeight: isSelected || isFirst ? 700 : 500,
+                                            color: isSelected ? 'primary.main' : 'text.primary',
+                                            lineHeight: 1.2,
                                         }}
                                     >
                                         {stop.name}
-                                    </Typography>
-                                }
-                                secondary={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 0.5, flexWrap: 'wrap' }}>
-                                        <Chip
-                                            label={stop.code}
-                                            size="small"
-                                            variant="outlined"
-                                            sx={{ fontSize: '0.7rem', height: 20, '& .MuiChip-label': { px: 0.75 } }}
-                                        />
                                         {stop.is_main && (
-                                            <Chip
-                                                icon={<StarRounded sx={{ fontSize: '0.85rem !important' }} />}
-                                                label="Principal"
-                                                size="small"
-                                                color="warning"
-                                                sx={{ fontSize: '0.7rem', height: 20, '& .MuiChip-label': { px: 0.5 } }}
-                                            />
+                                            <Typography
+                                                component="span"
+                                                sx={{ ml: 0.75, color: 'warning.main', fontSize: '0.85rem' }}
+                                            >
+                                                ★
+                                            </Typography>
                                         )}
-                                    </Box>
-                                }
-                                sx={{ ml: 1.5, my: 0 }}
-                            />
+                                    </Typography>
+                                    {isSelected && (
+                                        <Typography variant="caption" color="text.secondary">
+                                            Código {stop.code}
+                                        </Typography>
+                                    )}
+                                </Box>
 
-                            {/* Passenger count pill */}
-                            <Box sx={getPassengerPillStyles(isSelected)}>
-                                <PeopleAlt
+                                <Box
                                     sx={{
-                                        fontSize: '1rem',
-                                        color: isSelected ? 'success.main' : 'action.active',
-                                    }}
-                                />
-                                <Typography
-                                    variant="caption"
-                                    sx={{
-                                        fontWeight: 700,
-                                        color: isSelected ? 'success.main' : 'text.secondary',
-                                        lineHeight: 1,
-                                        minWidth: '16px',
-                                        textAlign: 'center',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 0.5,
+                                        px: 1.25,
+                                        py: 0.75,
+                                        borderRadius: 2,
+                                        bgcolor: isLast || isSelected
+                                            ? (isDark ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.12)')
+                                            : (isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)'),
+                                        border: '1px solid',
+                                        borderColor: isLast || isSelected
+                                            ? 'success.main'
+                                            : 'divider',
+                                        flexShrink: 0,
                                     }}
                                 >
-                                    {Math.min(passengerCount, 99)}
-                                </Typography>
+                                    <People
+                                        sx={{
+                                            fontSize: 18,
+                                            color: isLast || isSelected ? 'success.main' : 'action.active',
+                                        }}
+                                    />
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
+                                            fontWeight: 700,
+                                            minWidth: 20,
+                                            textAlign: 'center',
+                                            color: isLast || isSelected ? 'success.main' : 'text.primary',
+                                        }}
+                                    >
+                                        {passengerCount}
+                                    </Typography>
+                                </Box>
                             </Box>
-                        </ListItemButton>
-                    </ListItem>
-                );
-            })}
-        </List>
+                        );
+                    })}
+                </Box>
+            </Box>
+
+            <Box
+                sx={{
+                    flexShrink: 0,
+                    px: 2,
+                    pb: 2,
+                    pt: 1,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                }}
+            >
+                <Box
+                    sx={{
+                        p: 1.5,
+                        borderRadius: 2,
+                        bgcolor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                    }}
+                >
+                    <People sx={{ color: 'primary.main' }} />
+                    <Box>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                            Pasajeros a bordo
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.1 }}>
+                            {totalPassengers}
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
+        </Box>
     );
 };

@@ -195,16 +195,9 @@ const HomeCard: React.FC<HomeCardProps> = ({ onShowDialog }) => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                         <People sx={{ fontSize: 16, color: 'text.secondary' }} />
                         <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, fontSize: '0.65rem', lineHeight: 1 }}>
-                            Conteo Actual
+                            Venta
                         </Typography>
                     </Box>
-                    <Chip
-                        icon={<People sx={{ fontSize: '0.9rem !important' }} />}
-                        label={`${currentCount + currentGoldCount} Total`}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontWeight: 700, height: 22, fontSize: '0.75rem' }}
-                    />
                 </Box>
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>

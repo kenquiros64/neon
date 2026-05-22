@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
     Box,
-    Card,
-    CardContent,
-    Typography,
     Button,
     IconButton,
     Table,
@@ -25,8 +22,9 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SyncIcon from "@mui/icons-material/Sync";
-import { Route as RouteIcon } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
+import { AdminPageShell } from "../components/admin/AdminPageShell";
+import { dashboardPanelSx } from "../theme/dashboardTheme";
 import { models } from "../../wailsjs/go/models";
 import { AddRoute, UpdateRoute, DeleteRoute } from "../../wailsjs/go/services/RouteService";
 import { SyncRoutes } from "../../wailsjs/go/services/SyncService";
@@ -115,78 +113,61 @@ const AdminRoutes: React.FC = () => {
     }
 
     return (
-        <Box sx={{ p: 3, mx: "auto" }}>
-            <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
-                <Typography variant="h4" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <RouteIcon color="primary" />
-                    Administrar rutas
-                </Typography>
+        <AdminPageShell
+            title="Rutas"
+            subtitle="Paradas, tarifas y horarios sincronizados con el servidor"
+            action={
                 <Box sx={{ display: "flex", gap: 1 }}>
-                    <Button
-                        variant="outlined"
-                        startIcon={<SyncIcon />}
-                        onClick={handleSync}
-                        disabled={syncing}
-                    >
+                    <Button variant="outlined" startIcon={<SyncIcon />} onClick={handleSync} disabled={syncing}>
                         {syncing ? "Sincronizando…" : "Sincronizar"}
                     </Button>
                     <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
                         Nueva ruta
                     </Button>
                 </Box>
-            </Box>
-
-            <Alert severity="info" sx={{ mb: 2 }}>
+            }
+        >
+            <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
                 Las rutas se guardan remotamente y luego se sincronizan al almacenamiento local.
             </Alert>
 
-            <Card>
-                <CardContent>
-                    {routes.length === 0 ? (
-                        <Typography color="text.secondary">
-                            No hay rutas. Sincronice o cree una nueva ruta.
-                        </Typography>
-                    ) : (
-                        <TableContainer component={Paper} variant="outlined">
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 700, bgcolor: 'background.default', fontSize: '0.8rem' } }}>
-                                        <TableCell>Ruta</TableCell>
-                                        <TableCell>Paradas</TableCell>
-                                        <TableCell>Horarios reg.</TableCell>
-                                        <TableCell>Horarios fest.</TableCell>
-                                        <TableCell align="right">Acciones</TableCell>
+            <Box sx={{ ...dashboardPanelSx, p: 0 }}>
+                {routes.length === 0 ? (
+                    <Box sx={{ p: 3 }}>No hay rutas. Sincronice o cree una nueva ruta.</Box>
+                ) : (
+                    <TableContainer component={Paper} elevation={0}>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 700, bgcolor: 'background.default' } }}>
+                                    <TableCell>Ruta</TableCell>
+                                    <TableCell>Paradas</TableCell>
+                                    <TableCell>Horarios reg.</TableCell>
+                                    <TableCell>Horarios fest.</TableCell>
+                                    <TableCell align="right">Acciones</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {routes.map((route) => (
+                                    <TableRow key={fullRouteName(route)} hover>
+                                        <TableCell sx={{ fontWeight: 600 }}>{fullRouteName(route)}</TableCell>
+                                        <TableCell>{route.stops?.length ?? 0}</TableCell>
+                                        <TableCell>{route.timetable?.length ?? 0}</TableCell>
+                                        <TableCell>{route.holiday_timetable?.length ?? 0}</TableCell>
+                                        <TableCell align="right">
+                                            <Tooltip title="Editar">
+                                                <IconButton size="small" onClick={() => handleEdit(route)}><EditIcon /></IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Eliminar">
+                                                <IconButton size="small" color="error" onClick={() => handleDeleteClick(route)}><DeleteOutlineIcon /></IconButton>
+                                            </Tooltip>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {routes.map((route) => (
-                                        <TableRow key={fullRouteName(route)} sx={{ '&:hover': { bgcolor: 'action.hover', cursor: 'pointer' } }}>
-                                            <TableCell>
-                                                <Typography fontWeight={600}>{fullRouteName(route)}</Typography>
-                                            </TableCell>
-                                            <TableCell>{route.stops?.length ?? 0}</TableCell>
-                                            <TableCell>{route.timetable?.length ?? 0}</TableCell>
-                                            <TableCell>{route.holiday_timetable?.length ?? 0}</TableCell>
-                                            <TableCell align="right">
-                                                <Tooltip title="Editar">
-                                                    <IconButton size="small" onClick={() => handleEdit(route)}>
-                                                        <EditIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title="Eliminar">
-                                                    <IconButton size="small" color="error" onClick={() => handleDeleteClick(route)}>
-                                                        <DeleteOutlineIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
-                </CardContent>
-            </Card>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+            </Box>
 
             <RouteFormDialog
                 open={formOpen}
@@ -210,7 +191,7 @@ const AdminRoutes: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Box>
+        </AdminPageShell>
     );
 };
 

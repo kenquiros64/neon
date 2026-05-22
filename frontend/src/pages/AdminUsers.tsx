@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
     Box,
-    Card,
-    CardContent,
-    Typography,
     Button,
     IconButton,
     Table,
@@ -25,8 +22,9 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SyncIcon from "@mui/icons-material/Sync";
-import PeopleIcon from "@mui/icons-material/People";
 import Tooltip from "@mui/material/Tooltip";
+import { AdminPageShell } from "../components/admin/AdminPageShell";
+import { dashboardPanelSx } from "../theme/dashboardTheme";
 import { models } from "../../wailsjs/go/models";
 import { GetUsers, AddUser, UpdateUser, DeleteUser } from "../../wailsjs/go/services/UserService";
 import { SyncUsers } from "../../wailsjs/go/services/SyncService";
@@ -127,78 +125,61 @@ const AdminUsers: React.FC = () => {
     }
 
     return (
-        <Box sx={{ p: 3, mx: "auto" }}>
-            <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
-                <Typography variant="h4" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <PeopleIcon color="primary" />
-                    Administrar usuarios
-                </Typography>
+        <AdminPageShell
+            title="Usuarios"
+            subtitle="Crear, editar y sincronizar cuentas de cajeros"
+            action={
                 <Box sx={{ display: "flex", gap: 1 }}>
-                    <Button
-                        variant="outlined"
-                        startIcon={<SyncIcon />}
-                        onClick={handleSync}
-                        disabled={syncing}
-                    >
+                    <Button variant="outlined" startIcon={<SyncIcon />} onClick={handleSync} disabled={syncing}>
                         {syncing ? "Sincronizando…" : "Sincronizar"}
                     </Button>
                     <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
                         Nuevo usuario
                     </Button>
                 </Box>
-            </Box>
-
-            <Alert severity="info" sx={{ mb: 2 }}>
+            }
+        >
+            <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
                 Los usuarios se guardan remotamente y luego se sincronizan al almacenamiento local.
             </Alert>
 
-            <Card>
-                <CardContent>
-                    {users.length === 0 ? (
-                        <Typography color="text.secondary">
-                            No hay usuarios. Sincronice o cree un nuevo usuario.
-                        </Typography>
-                    ) : (
-                        <TableContainer component={Paper} variant="outlined">
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 700, bgcolor: 'background.default', fontSize: '0.8rem' } }}>
-                                        <TableCell>Usuario</TableCell>
-                                        <TableCell>Nombre</TableCell>
-                                        <TableCell>Rol</TableCell>
-                                        <TableCell>Creado</TableCell>
-                                        <TableCell align="right">Acciones</TableCell>
+            <Box sx={{ ...dashboardPanelSx, p: 0 }}>
+                {users.length === 0 ? (
+                    <Box sx={{ p: 3 }}>No hay usuarios. Sincronice o cree un nuevo usuario.</Box>
+                ) : (
+                    <TableContainer component={Paper} elevation={0}>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 700, bgcolor: 'background.default' } }}>
+                                    <TableCell>Usuario</TableCell>
+                                    <TableCell>Nombre</TableCell>
+                                    <TableCell>Rol</TableCell>
+                                    <TableCell>Creado</TableCell>
+                                    <TableCell align="right">Acciones</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {users.map((u) => (
+                                    <TableRow key={u.username} hover>
+                                        <TableCell sx={{ fontWeight: 600 }}>{u.username}</TableCell>
+                                        <TableCell>{u.name}</TableCell>
+                                        <TableCell>{u.role}</TableCell>
+                                        <TableCell>{u.created_at ? new Date(u.created_at).toLocaleDateString("es-CR") : "—"}</TableCell>
+                                        <TableCell align="right">
+                                            <Tooltip title="Editar">
+                                                <IconButton size="small" onClick={() => handleEdit(u)}><EditIcon /></IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Eliminar">
+                                                <IconButton size="small" color="error" onClick={() => handleDeleteClick(u)}><DeleteOutlineIcon /></IconButton>
+                                            </Tooltip>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {users.map((u) => (
-                                        <TableRow key={u.username} sx={{ '&:hover': { bgcolor: 'action.hover', cursor: 'pointer' } }}>
-                                            <TableCell>
-                                                <Typography fontWeight={600}>{u.username}</Typography>
-                                            </TableCell>
-                                            <TableCell>{u.name}</TableCell>
-                                            <TableCell>{u.role}</TableCell>
-                                            <TableCell>{u.created_at ? new Date(u.created_at).toLocaleDateString("es-CR") : "—"}</TableCell>
-                                            <TableCell align="right">
-                                                <Tooltip title="Editar">
-                                                    <IconButton size="small" onClick={() => handleEdit(u)}>
-                                                        <EditIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title="Eliminar">
-                                                    <IconButton size="small" color="error" onClick={() => handleDeleteClick(u)}>
-                                                        <DeleteOutlineIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
-                </CardContent>
-            </Card>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+            </Box>
 
             <UserFormDialog
                 open={formOpen}
@@ -221,7 +202,7 @@ const AdminUsers: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Box>
+        </AdminPageShell>
     );
 };
 

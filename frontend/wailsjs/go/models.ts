@@ -1,5 +1,23 @@
 export namespace models {
 	
+	export class AppSettings {
+	    print_header_line1: string;
+	    print_header_line2: string;
+	    print_header_phone: string;
+	    print_footer: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AppSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.print_header_line1 = source["print_header_line1"];
+	        this.print_header_line2 = source["print_header_line2"];
+	        this.print_header_phone = source["print_header_phone"];
+	        this.print_footer = source["print_footer"];
+	    }
+	}
 	export class Count {
 	    key: string;
 	    value: number;

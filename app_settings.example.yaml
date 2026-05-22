@@ -1,0 +1,6 @@
+# Copy to ~/.config/neon/app_settings.yaml
+
+print_header_line1: "TRANSPORTES"
+print_header_line2: "EL PUMA PARDO S.A"
+print_header_phone: "TEL: 2765-1349"
+print_footer: "BUEN VIAJE"

@@ -154,7 +154,7 @@ func (r *ReportService) StartReport(username string, timetable string) (*models.
 	return output, nil
 }
 
-// CheckIfThereIsAnOpenOrPendingReport checks if a report is open or pending (cash not verified)
+// CheckIfThereIsAnOpenOrPendingReport checks if a report is open or pending
 func (r *ReportService) CheckIfThereIsAnOpenOrPendingReport() (*models.Report, error) {
 	repository := local.NewReportRepository(r.ctx, r.localDB)
 
@@ -239,7 +239,7 @@ func (r *ReportService) TotalCloseReport(
 	return report, nil
 }
 
-// GetLatestReportsByUsername gets the latest 5 closed reports for a specific user
+// GetLatestReportsByUsername gets the latest 10 closed reports for a user
 func (r *ReportService) GetLatestReportsByUsername(username string) ([]*models.Report, error) {
 	repository := local.NewReportRepository(r.ctx, r.localDB)
 

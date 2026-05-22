@@ -72,7 +72,7 @@ const ReportActionsPanel: React.FC<ReportActionsPanelProps> = ({
     return (
         <>
             {/* Close Report Actions */}
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
                 <CardContent>
                     <Typography variant="h6" gutterBottom>
                         Acciones de Cierre

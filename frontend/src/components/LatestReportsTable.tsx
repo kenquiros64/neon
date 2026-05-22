@@ -336,9 +336,9 @@ const LatestReportsTable: React.FC<LatestReportsTableProps> = ({
         <>
             <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Timeline color="primary" />
-                Últimos Reportes
+                Últimos 10 reportes
                 <Typography variant="body2" color="text.secondary" sx={{ ml: "auto" }}>
-                    Ver detalle para estadísticas completas
+                    Máximo 10 registros
                 </Typography>
             </Typography>
 

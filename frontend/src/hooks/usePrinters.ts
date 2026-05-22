@@ -1,6 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { GetInstalledPrinters, GetPrinterStatus } from '../../wailsjs/go/services/PrintService';
 
+function printerErrorMessage(error: unknown): string {
+    if (error == null) return 'Error al conectar con la impresora';
+    if (typeof error === 'string') return error;
+    if (error instanceof Error) return error.message;
+    return String(error);
+}
+
 export interface PrinterState {
     printers: string[];
     defaultPrinter: string;

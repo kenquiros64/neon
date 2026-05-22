@@ -16,10 +16,11 @@ import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useTicketState } from "../states/TicketState";
 import { useAuthState } from "../states/AuthState";
 import { useReportState } from '../states/ReportState';
+import { fullRouteName } from '../util/Helpers';
 
 
 const Ticket: React.FC = () => {
-    const { selectedRoute, selectedTime, getCount, incrementCount } = useTicketState();
+    const { selectedRoute, selectedTime, incrementCount } = useTicketState();
     const { user } = useAuthState();
     const { reportLoading } = useReportState();
 
@@ -86,8 +87,23 @@ const Ticket: React.FC = () => {
         return null;
     }
 
-    // Get the selected stop for display
     const selectedStop = selectedRoute.stops.find(stop => stop.code === selectedStopID) || null;
+    const selectedRouteIndex = Math.max(
+        0,
+        routes.findIndex((r) => fullRouteName(r) === selectedRouteID)
+    );
+
+    const panelSx = {
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
+        height: '100%',
+        overflow: 'hidden',
+        bgcolor: 'background.paper',
+        borderLeft: '1px solid',
+        borderRight: '1px solid',
+        borderColor: 'divider',
+    };
 
     return (
         <Box
@@ -123,59 +139,26 @@ const Ticket: React.FC = () => {
             <Divider sx={{ height: "100%" }} orientation="vertical" flexItem />
 
             {/* Middle Panel - Routes */}
-            <Grid
-                size="grow"
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    minHeight: 0,
-                    height: "100%",
-                    overflow: "hidden",
-                }}
-            >
-                <Box sx={{ flexShrink: 0 }}>
-                    <RouteInfoCard route={selectedRoute} />
-                </Box>
+            <Grid size="grow" sx={panelSx}>
+                <RouteInfoCard route={selectedRoute} routeIndex={selectedRouteIndex} />
                 <RouteList
                     routes={routes}
                     selectedRouteID={selectedRouteID}
                     onRouteSelect={handleRouteSelect}
                     report={report}
-                    sx={{
-                        flex: 1,
-                        minHeight: 0,
-                        overflowY: "auto",
-                    }}
                 />
             </Grid>
 
             <Divider sx={{ height: "100%" }} orientation="vertical" flexItem />
 
             {/* Right Panel - Stops */}
-            <Grid
-                size="grow"
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    minHeight: 0,
-                    height: "100%",
-                    overflow: "hidden",
-                }}
-            >
-                <Box sx={{ flexShrink: 0 }}>
-                    <StopInfoCard stop={selectedStop} route={selectedRoute} />
-                </Box>
+            <Grid size="grow" sx={panelSx}>
+                <StopInfoCard route={selectedRoute} routeIndex={selectedRouteIndex} />
                 {selectedRoute && (
                     <StopList
                         stops={selectedRoute.stops}
                         selectedStopID={selectedStopID}
                         onStopSelect={handleStopSelect}
-                        getCount={getCount}
-                        sx={{
-                            flex: 1,
-                            minHeight: 0,
-                            overflowY: "auto",
-                        }}
                     />
                 )}
             </Grid>

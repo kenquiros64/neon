@@ -6,6 +6,7 @@ import Ticket from "./pages/Ticket";
 import Reports from "./pages/Reports";
 import AdminRoutes from "./pages/AdminRoutes";
 import AdminUsers from "./pages/AdminUsers";
+import Settings from "./pages/Settings";
 import "./App.css";
 import {useAuthState} from "./states/AuthState";
 import {ToastContainer} from "react-toastify";
@@ -54,6 +55,7 @@ const App: React.FC = () => {
                     <Route index element={<Ticket />} /> {/* Default route */}
                     <Route path="ticket" element={<Ticket />} />
                     <Route path="reports" element={<Reports />} />
+                    <Route path="admin/settings" element={<AdminRoute><Settings /></AdminRoute>} />
                     <Route path="admin/routes" element={<AdminRoute><AdminRoutes /></AdminRoute>} />
                     <Route path="admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
                 </Route>

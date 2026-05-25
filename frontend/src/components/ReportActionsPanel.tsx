@@ -13,7 +13,8 @@ import {
     Warning,
     Cancel,
     Search,
-    RotateLeft
+    RotateLeft,
+    Print,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { NullifyTicket } from "../../wailsjs/go/services/TicketService";
@@ -24,13 +25,17 @@ interface ReportActionsPanelProps {
     reportLoading: boolean;
     reportId: number;
     onOpenCloseDialog: (type: 'partial' | 'total') => void;
+    onPrintPartialReport?: () => void;
+    printDisabled?: boolean;
 }
 
 const ReportActionsPanel: React.FC<ReportActionsPanelProps> = ({ 
     isPendingReport, 
     reportLoading, 
     reportId,
-    onOpenCloseDialog
+    onOpenCloseDialog,
+    onPrintPartialReport,
+    printDisabled = false,
 }) => {
     const [ticketIDToNull, setTicketIDToNull] = useState<string>('');
     const [nullifyLoading, setNullifyLoading] = useState(false);
@@ -87,6 +92,17 @@ const ReportActionsPanel: React.FC<ReportActionsPanelProps> = ({
                                 disabled={reportLoading}
                             >
                                 Cierre Parcial
+                            </Button>
+                        )}
+                        {isPendingReport && onPrintPartialReport && (
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<Print />}
+                                onClick={onPrintPartialReport}
+                                disabled={reportLoading || printDisabled}
+                            >
+                                Imprimir cierre parcial
                             </Button>
                         )}
                         <Button

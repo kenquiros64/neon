@@ -293,111 +293,172 @@ func (p *PrintService) PrintTickets(tickets []models.Ticket, printerName string)
 	})
 }
 
-// PrintReport prints a report summary receipt.
+func reportTimetableLabel(timetable enums.Timetable) string {
+	if timetable == enums.Holiday {
+		return "Feriado"
+	}
+	return "Regular"
+}
+
+func isPartialCloseOnly(report models.Report) bool {
+	return report.PartialClosedAt != nil && report.ClosedAt == nil
+}
+
+func printReportDivider(printer escpos.Printer) {
+	printer.Justify(escpos.CenterJustify)
+	printer.Println("--------------------------------")
+	printer.Justify(escpos.LeftJustify)
+}
+
+func printRFC3339Line(printer escpos.Printer, label string, value *string) error {
+	if value == nil {
+		return nil
+	}
+	date, err := time.Parse(time.RFC3339, *value)
+	if err != nil {
+		return err
+	}
+	printer.Println(fmt.Sprintf("%s %s", label, date.Format("02/01/2006 15:04:05")))
+	return nil
+}
+
+func printSalesBreakdown(printer escpos.Printer, report models.Report) {
+	printer.Println(fmt.Sprintf("Regulares: %d", report.TotalRegular))
+	printer.Println(fmt.Sprintf("Total:     C %s", strconv.Itoa(report.TotalRegularCash)))
+
+	printReportDivider(printer)
+
+	printer.Println(fmt.Sprintf("Oro:       %d", report.TotalGold))
+	printer.Println(fmt.Sprintf("Total:     C %s", strconv.Itoa(report.TotalGoldCash)))
+
+	printReportDivider(printer)
+
+	printer.Println(fmt.Sprintf("Anulados:  %d", report.TotalNull))
+	printer.Println(fmt.Sprintf("Total:     C %s", strconv.Itoa(report.TotalNullCash)))
+}
+
+func printPartialCloseReceipt(printer escpos.Printer, report models.Report) error {
+	printer.SelectPrintMode(escpos.ThinFont)
+	printer.SetCharacterSize(1, 1)
+	printer.Justify(escpos.CenterJustify)
+	printer.SetBold(true)
+	printer.Println("CIERRE PARCIAL")
+	printer.SetBold(false)
+	printer.Print(fmt.Sprintf("REPORTE %d", report.ID))
+	printer.LF()
+
+	printer.Justify(escpos.LeftJustify)
+	printer.Println(fmt.Sprintf("Usuario:     %s", report.Username))
+	if report.PartialClosedBy != nil {
+		printer.Println(fmt.Sprintf("Parcial por: %s", *report.PartialClosedBy))
+	}
+
+	printReportDivider(printer)
+
+	if err := printRFC3339Line(printer, "Inicio: ", report.CreatedAt); err != nil {
+		return err
+	}
+	if err := printRFC3339Line(printer, "Parcial: ", report.PartialClosedAt); err != nil {
+		return err
+	}
+	printer.Println(fmt.Sprintf("Horario: %s", reportTimetableLabel(report.Timetable)))
+
+	printReportDivider(printer)
+
+	printSalesBreakdown(printer, report)
+
+	printReportDivider(printer)
+	printer.Justify(escpos.CenterJustify)
+	printer.Println("ENTREGA PARCIAL")
+	printer.Justify(escpos.LeftJustify)
+
+	printer.Println(fmt.Sprintf("Tiquetes:   %d", report.PartialTickets))
+	printer.Println(fmt.Sprintf("Esperado:   C %s", strconv.Itoa(report.PartialCash)))
+	printer.Println(fmt.Sprintf("Recibido:   C %s", strconv.Itoa(report.PartialCashReceived)))
+	printer.Println(fmt.Sprintf("Diferencia: C %s", strconv.Itoa(report.PartialCashReceived-report.PartialCash)))
+
+	printer.LF()
+	printer.Justify(escpos.CenterJustify)
+	printer.SetBold(true)
+	printer.Println("Puede continuar vendiendo")
+	printer.SetBold(false)
+
+	printer.LF()
+	printer.FeedLines(4)
+	return printer.Cut()
+}
+
+func printFullCloseReceipt(printer escpos.Printer, report models.Report) error {
+	printer.SelectPrintMode(escpos.ThinFont)
+	printer.SetCharacterSize(1, 1)
+	printer.Justify(escpos.CenterJustify)
+	printer.SetBold(true)
+	printer.Print(fmt.Sprintf("REPORTE %d", report.ID))
+	printer.SetBold(false)
+	printer.LF()
+
+	printer.Justify(escpos.LeftJustify)
+	printer.Println(fmt.Sprintf("Usuario:     %s", report.Username))
+
+	if report.PartialClosedBy != nil {
+		printer.Println(fmt.Sprintf("Parcial por: %s", *report.PartialClosedBy))
+	}
+
+	if report.ClosedBy != nil {
+		printer.Println(fmt.Sprintf("Cerrado por: %s", *report.ClosedBy))
+	}
+
+	printReportDivider(printer)
+
+	if err := printRFC3339Line(printer, "Fecha:   ", report.CreatedAt); err != nil {
+		return err
+	}
+	if err := printRFC3339Line(printer, "Parcial: ", report.PartialClosedAt); err != nil {
+		return err
+	}
+	if err := printRFC3339Line(printer, "Cerrado: ", report.ClosedAt); err != nil {
+		return err
+	}
+	printer.Println(fmt.Sprintf("Horario: %s", reportTimetableLabel(report.Timetable)))
+
+	printReportDivider(printer)
+
+	printSalesBreakdown(printer, report)
+
+	printReportDivider(printer)
+	printer.Justify(escpos.CenterJustify)
+	printer.Println("ENTREGAS")
+	printer.Justify(escpos.LeftJustify)
+
+	printer.Println(fmt.Sprintf("Parcial: C %s", strconv.Itoa(report.PartialCash)))
+	printer.Println(fmt.Sprintf("Cierre:  C %s", strconv.Itoa(report.FinalCash)))
+	printer.Println(fmt.Sprintf("Total:   C %s", strconv.Itoa(report.PartialCash+report.FinalCash)))
+
+	printReportDivider(printer)
+	printer.Justify(escpos.CenterJustify)
+	printer.Println("CIERRE")
+	printer.Justify(escpos.LeftJustify)
+
+	printer.Println(fmt.Sprintf("Vendidos:   %d", report.PartialTickets+report.FinalTickets))
+	printer.Println(fmt.Sprintf("Total:      C %s", strconv.Itoa(report.PartialCashReceived+report.FinalCashReceived)))
+	printer.Println(fmt.Sprintf("Diferencia: C %s", strconv.Itoa(report.PartialCashReceived+report.FinalCashReceived-report.PartialCash-report.FinalCash)))
+
+	printer.LF()
+	printer.FeedLines(4)
+	return printer.Cut()
+}
+
+// PrintReport prints a partial-close or full-close summary receipt.
 func (p *PrintService) PrintReport(report models.Report, printerName string) error {
 	return p.printerSession(printerName, func(printer escpos.Printer) error {
 		if err := printer.Initialize(); err != nil {
 			return err
 		}
 
-		printer.SelectPrintMode(escpos.ThinFont)
-		printer.SetCharacterSize(1, 1)
-		printer.Justify(escpos.CenterJustify)
-		printer.SetBold(true)
-		printer.Print(fmt.Sprintf("REPORTE %d", report.ID))
-		printer.SetBold(false)
-		printer.LF()
-
-		printer.Justify(escpos.LeftJustify)
-		printer.Println(fmt.Sprintf("Usuario:     %s", report.Username))
-
-		if report.PartialClosedBy != nil {
-			printer.Println(fmt.Sprintf("Parcial por: %s", *report.PartialClosedBy))
+		if isPartialCloseOnly(report) {
+			return printPartialCloseReceipt(printer, report)
 		}
-
-		if report.ClosedBy != nil {
-			printer.Println(fmt.Sprintf("Cerrado por: %s", *report.ClosedBy))
-		}
-
-		printer.Justify(escpos.CenterJustify)
-		printer.Println("--------------------------------")
-		printer.Justify(escpos.LeftJustify)
-
-		var timetable string
-		if report.Timetable == enums.Holiday {
-			timetable = "Feriado"
-		} else {
-			timetable = "Regular"
-		}
-
-		if report.CreatedAt != nil {
-			date, err := time.Parse(time.RFC3339, *report.CreatedAt)
-			if err != nil {
-				return err
-			}
-			printer.Println(fmt.Sprintf("Fecha:   %s", date.Format("02/01/2006 15:04:05")))
-		}
-
-		if report.PartialClosedAt != nil {
-			date, err := time.Parse(time.RFC3339, *report.PartialClosedAt)
-			if err != nil {
-				return err
-			}
-			printer.Println(fmt.Sprintf("Parcial: %s", date.Format("02/01/2006 15:04:05")))
-		}
-
-		if report.ClosedAt != nil {
-			date, err := time.Parse(time.RFC3339, *report.ClosedAt)
-			if err != nil {
-				return err
-			}
-			printer.Println(fmt.Sprintf("Cerrado: %s", date.Format("02/01/2006 15:04:05")))
-		}
-
-		printer.Println(fmt.Sprintf("Horario: %s", timetable))
-
-		printer.Justify(escpos.CenterJustify)
-		printer.Println("--------------------------------")
-		printer.Justify(escpos.LeftJustify)
-
-		printer.Println(fmt.Sprintf("Regulares: %d", report.TotalRegular))
-		printer.Println(fmt.Sprintf("Total:     C %s", strconv.Itoa(report.TotalRegularCash)))
-
-		printer.Justify(escpos.CenterJustify)
-		printer.Println("--------------------------------")
-		printer.Justify(escpos.LeftJustify)
-		printer.Println(fmt.Sprintf("Oro:       %d", report.TotalGold))
-		printer.Println(fmt.Sprintf("Total:     C %s", strconv.Itoa(report.TotalGoldCash)))
-
-		printer.Justify(escpos.CenterJustify)
-		printer.Println("--------------------------------")
-		printer.Justify(escpos.LeftJustify)
-
-		printer.Println(fmt.Sprintf("Anulados:  %d", report.TotalNull))
-		printer.Println(fmt.Sprintf("Total:     C %s", strconv.Itoa(report.TotalNullCash)))
-
-		printer.Justify(escpos.CenterJustify)
-		printer.Println("--------------------------------")
-		printer.Println("ENTREGAS")
-		printer.Justify(escpos.LeftJustify)
-
-		printer.Println(fmt.Sprintf("Parcial: C %s", strconv.Itoa(report.PartialCash)))
-		printer.Println(fmt.Sprintf("Cierre:  C %s", strconv.Itoa(report.FinalCash)))
-		printer.Println(fmt.Sprintf("Total:   C %s", strconv.Itoa(report.PartialCash+report.FinalCash)))
-
-		printer.Justify(escpos.CenterJustify)
-		printer.Println("--------------------------------")
-		printer.Println("CIERRE")
-		printer.Justify(escpos.LeftJustify)
-
-		printer.Println(fmt.Sprintf("Vendidos:   %d", report.PartialTickets+report.FinalTickets))
-		printer.Println(fmt.Sprintf("Total:      C %s", strconv.Itoa(report.PartialCashReceived+report.FinalCashReceived)))
-		printer.Println(fmt.Sprintf("Diferencia: C %s", strconv.Itoa(report.PartialCashReceived+report.FinalCashReceived-report.PartialCash-report.FinalCash)))
-
-		printer.LF()
-		printer.FeedLines(4)
-
-		return printer.Cut()
+		return printFullCloseReceipt(printer, report)
 	})
 }
 

@@ -15,6 +15,7 @@ import { useLatestReports } from "../hooks/useLatestReports";
 import { usePrinters } from "../hooks/usePrinters";
 import { toast } from "react-toastify";
 import { PrintReport } from "../../wailsjs/go/services/PrintService";
+import { models } from "../../wailsjs/go/models";
 import ReportStatsCards from "../components/ReportStatsCards";
 import LatestReportsTable from "../components/LatestReportsTable";
 import ReportActionsPanel from "../components/ReportActionsPanel";
@@ -38,16 +39,21 @@ const Reports: React.FC = () => {
     const [closeDialogOpen, setCloseDialogOpen] = useState(false);
     const [closeType, setCloseType] = useState<'partial' | 'total'>('partial');
 
-    const handlePrintReport = async (reportToPrint: typeof report) => {
+    const handlePrintReport = async (reportToPrint: models.Report | null | undefined) => {
         if (!reportToPrint || !defaultPrinter) {
             toast.error('No hay impresora configurada');
             return;
         }
         try {
             await PrintReport(reportToPrint, defaultPrinter);
-            toast.success('Reporte enviado a la impresora');
-        } catch (error: any) {
-            toast.error(error?.message || 'Error al imprimir el reporte');
+            toast.success(
+                reportToPrint.partial_closed_at && !reportToPrint.closed_at
+                    ? 'Cierre parcial enviado a la impresora'
+                    : 'Reporte enviado a la impresora'
+            );
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Error al imprimir el reporte';
+            toast.error(message);
         }
     };
 
@@ -68,8 +74,17 @@ const Reports: React.FC = () => {
         }
 
         if (type === 'partial') {
-            await partialCloseReport(report.id, cashAmount, closedBy);
+            const updated = await partialCloseReport(report.id, cashAmount, closedBy);
             toast.success('Reporte cerrado parcialmente');
+            if (defaultPrinter) {
+                try {
+                    await PrintReport(updated, defaultPrinter);
+                    toast.success('Cierre parcial impreso');
+                } catch (printError: unknown) {
+                    const message = printError instanceof Error ? printError.message : 'Error al imprimir';
+                    toast.warn(`Cierre guardado, pero no se pudo imprimir: ${message}`);
+                }
+            }
         } else {
             await totalCloseReport(report.id, cashAmount, closedBy);
             toast.success('Reporte cerrado totalmente');
@@ -192,6 +207,8 @@ const Reports: React.FC = () => {
                         reportLoading={reportLoading}
                         reportId={report.id}
                         onOpenCloseDialog={handleOpenCloseDialog}
+                        onPrintPartialReport={() => handlePrintReport(report)}
+                        printDisabled={!defaultPrinter}
                     />
                 </Grid>
 
